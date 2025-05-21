@@ -42,7 +42,8 @@ func main() {
     gothic.Store = store
 
 	goth.UseProviders(
-		google.New(clientID, clientSecret, clientCallbackURL))
+		google.New(clientID, clientSecret, clientCallbackURL, "email", "profile"),
+    )
 
 	r.LoadHTMLGlob("templates/*")
 	

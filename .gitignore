@@ -25,3 +25,4 @@ go.work.sum
 .env
 
 testdata/
+tic_tac_toe.fun
