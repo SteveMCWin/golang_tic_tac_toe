@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fmt"
+	// "fmt"
 	"html/template"
 	"log"
 	"net/http"
@@ -15,7 +15,7 @@ import (
     "github.com/gorilla/sessions"
 )
 
-
+var user goth.User
 
 func main() {
 	r := gin.Default()
@@ -83,32 +83,26 @@ func callbackHandler(c *gin.Context) {
 	q.Add("provider", provider)
 	c.Request.URL.RawQuery = q.Encode()
 
-	_, err := gothic.CompleteUserAuth(c.Writer, c.Request)
+    var err error
+	user, err = gothic.CompleteUserAuth(c.Writer, c.Request)
 	if err != nil {
 		c.AbortWithError(http.StatusInternalServerError, err)
 		return
 	}
 	
-
 	c.Redirect(http.StatusTemporaryRedirect, "/success")
 }
 
 func Success(c *gin.Context) {
-	c.Data(http.StatusOK, "text/html; charset=utf-8", []byte(fmt.Sprintf(`
-      <div style="
-          background-color: #fff;
-          padding: 40px;
-          border-radius: 8px;
-          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-          text-align: center;
-      ">
-          <h1 style="
-              color: #333;
-              margin-bottom: 20px;">
-              You have Successfully signed in!
-          </h1>
-          
-          </div>
-      </div>
-  `)))
+    tmpl, err := template.ParseFiles("templates/success.html")
+    if err != nil {
+        c.AbortWithStatus(http.StatusInternalServerError)
+        return
+    }
+
+    err = tmpl.Execute(c.Writer, user)
+    if err != nil {
+        c.AbortWithStatus(http.StatusInternalServerError)
+        return
+    }
 }
