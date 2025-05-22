@@ -1,7 +1,7 @@
 package main
 
 import (
-	// "fmt"
+	"fmt"
 	"html/template"
 	"log"
 	"net/http"
@@ -21,6 +21,16 @@ var user goth.User
 var SessionToken string
 var CSRFToken string
 
+type User struct {
+    Id              int
+    UserName        string
+    Email           string
+    SessionToken    string
+    CSRFToken       string
+}
+
+var users map[string]User
+
 // type Login struct {
 //     user goth.User
 //     SessionToken string
@@ -38,12 +48,13 @@ func main() {
 	clientID := os.Getenv("CLIENT_ID")
 	clientSecret := os.Getenv("CLIENT_SECRET")
 	clientCallbackURL := os.Getenv("CLIENT_CALLBACK_URL")
+    sessionKey := os.Getenv("SESSION_KEY")
 
 	if clientID == "" || clientSecret == "" || clientCallbackURL == "" {
 		log.Fatal("Environment variables (CLIENT_ID, CLIENT_SECRET, CLIENT_CALLBACK_URL) are required")
 	}
 
-    store := sessions.NewCookieStore([]byte("random_str1found50m3wh3r3"))
+    store := sessions.NewCookieStore([]byte(sessionKey))
     store.MaxAge(90)
     store.Options.Path = "/"
     store.Options.HttpOnly = true
@@ -61,18 +72,18 @@ func main() {
 	r.GET("/auth/:provider", signInWithProvider)
 	r.GET("/auth/:provider/callback/", callbackHandler)
     r.GET("/logout/:provider/", logoutHandler)
-	r.GET("/success", Success)
+	r.GET("/profile", profilePageHandler)
 
 	r.RunTLS(":5000", "./testdata/server.pem", "./testdata/server.key")
 }
 
 func home(c *gin.Context) {
-    // cookie, err := c.Cookie("session_token")
+
+    // test_val, err := gothic.GetFromSession("test_key", c.Request)
     // if err != nil {
-    //     fmt.Println("NO COOKIEEES")
+    //     fmt.Println("no cookie with name test_key found")
     // } else {
-    //     fmt.Println("I FOUND DA COOKIEEEEE YIPPPIIIEE")
-    //     fmt.Println("%v", cookie)
+    //     fmt.Println("cookie test_key found with value:", test_val)
     // }
 
 	tmpl, err := template.ParseFiles("templates/index.html")
@@ -99,7 +110,7 @@ func signInWithProvider(c *gin.Context) {
 
         gothic.BeginAuthHandler(c.Writer, c.Request)
     } else {
-        c.Redirect(http.StatusTemporaryRedirect, "/success")
+        c.Redirect(http.StatusTemporaryRedirect, "/profile")
     }
 }
 
@@ -116,17 +127,18 @@ func callbackHandler(c *gin.Context) {
 		return
 	}
 
-    sessionToken := generateToken(32)
-    csrfToken := generateToken(32)
+    // sessionToken := generateToken(32)
+    // csrfToken := generateToken(32)
 
-    c.SetCookie("session_token", sessionToken, 60, "/", "localhost", true, true)
-    c.SetCookie("csrf_token", csrfToken, 60, "/", "localhost", true, false)
+    // c.SetCookie("session_token", sessionToken, 60, "/", "localhost", true, true)
+    // c.SetCookie("csrf_token", csrfToken, 60, "/", "localhost", true, false)
+    gothic.StoreInSession("test_key", "test_value", c.Request, c.Writer)
 	
-	c.Redirect(http.StatusTemporaryRedirect, "/success")
+	c.Redirect(http.StatusTemporaryRedirect, "/profile")
 }
 
-func Success(c *gin.Context) {
-    tmpl, err := template.ParseFiles("templates/success.html")
+func profilePageHandler(c *gin.Context) {
+    tmpl, err := template.ParseFiles("templates/profile.html")
     if err != nil {
         c.AbortWithStatus(http.StatusInternalServerError)
         return
