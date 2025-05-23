@@ -96,7 +96,7 @@ func ProfilePageHandler(c *gin.Context) {
 
     this_user, err := users.LoadUserData(c)
     if err != nil {
-        log.Fatal("Couldn't load user")
+        log.Fatal("Couldn't load user, error: ", err)
     }
     err = tmpl.Execute(c.Writer, this_user)
     if err != nil {

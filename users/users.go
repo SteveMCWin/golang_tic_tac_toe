@@ -1,8 +1,7 @@
 package users
 
 import (
-    // "fmt"
-    // "log"
+    "log"
     "errors"
 
 	"github.com/gin-gonic/gin"
@@ -22,15 +21,9 @@ type User struct {
 
 var Db *sql.DB
 
-var Users map[string]User
-
-
-// usr_name := gothic.GetFromSession("username", )
-
 func init() {
-    Users = make(map[string]User)
     var err error
-    Db, err = sql.Open("sqlite3", "users.db")
+    Db, err = sql.Open("sqlite3", "users/users.db")
     if err != nil {
         panic(err)
     }
@@ -67,27 +60,36 @@ func LoadUserData(c *gin.Context) (usr User, err error) {
     if usr.SessionToken != sess || usr.CSRFToken != csrf {
         usr = User{}
         err = errors.New("Session token or csrf token missmatch")
+        log.Println("EXPECTED")
+        log.Println("sess:\t", sess)
+        log.Println("csrf:\t", csrf)
     }
 
     return
 }
 
 func (usr *User) AddUser() (err error) {
-    err = Db.QueryRow("select id where username like '?'", usr.UserName).Scan(&usr.Id)
+    log.Println("Trying to get user named: ", usr.UserName)
+    err = Db.QueryRow("select id from users where username like ?", usr.UserName).Scan(&usr.Id)
 
     // the user hasn't logged in before so load him into the data base
     if err != nil {
+        log.Println("IT DID NOT RECOGNIZE THE USER")
         statement := "insert into users (username, email, session_token, csrf_token, provider) values (?, ?, ?, ?, ?) returning id"
         var stmt *sql.Stmt
         stmt, err = Db.Prepare(statement)
         if err != nil {
-            // panic(err)
             return
         }
         defer stmt.Close()
         err = stmt.QueryRow(usr.UserName, usr.Email, usr.SessionToken, usr.CSRFToken, usr.Provider).Scan(&usr.Id)
         return
     }
+
+    log.Println("IT RECOGNIZED THE USER FROM BEFORE")
+    log.Println("THE NEW COOKIES ARE")
+    log.Println("sess:\t", usr.SessionToken)
+    log.Println("csrf:\t", usr.CSRFToken)
 
     // the user has logged in before so just update the tokens
     _, err = Db.Exec("update users set session_token = ?, csrf_token = ? where id = ?", usr.SessionToken, usr.CSRFToken, usr.Id)
