@@ -28,10 +28,11 @@ func init() {
 	clientCallbackURL := os.Getenv("CLIENT_CALLBACK_URL")
     sessionKey := os.Getenv("SESSION_KEY")
 
-	if clientID == "" || clientSecret == "" || clientCallbackURL == "" {
+	if clientID == "" || clientSecret == "" || clientCallbackURL == "" || sessionKey == "" {
 		log.Fatal("Environment variables (CLIENT_ID, CLIENT_SECRET, CLIENT_CALLBACK_URL) are required")
 	}
 
+    log.Println("making store")
     store := sessions.NewCookieStore([]byte(sessionKey))
     store.MaxAge(90)
     store.Options.Path = "/"
@@ -72,9 +73,27 @@ func CallbackHandler(c *gin.Context) {
 
     users.AddActiveUser(user.Name, user.Email, sessionToken, csrfToken)
 
-    gothic.StoreInSession("username", user.Name, c.Request, c.Writer)
-    gothic.StoreInSession("session_token", sessionToken, c.Request, c.Writer)
-    gothic.StoreInSession("csrf_token", csrfToken, c.Request, c.Writer)
+    c.SetCookie("username", user.Name, 90, "/", "localhost", true, true)
+    c.SetCookie("session_token", sessionToken, 90, "/", "localhost", true, true)
+    c.SetCookie("csrf_token", csrfToken, 90, "/", "localhost", true, true)
+
+    // log.Println("storing stuff in session")
+    // // gothic.StoreInSession("session_token", sessionToken, c.Request, c.Writer)
+    // // gothic.StoreInSession("csrf_token", csrfToken, c.Request, c.Writer)
+    // // gothic.StoreInSession("username", user.Name, c.Request, c.Writer)
+    // session, err := gothic.Store.Get(c.Request, gothic.SessionName)
+    // if err != nil {
+    //     c.AbortWithError(http.StatusInternalServerError, err)
+    // }
+    // session.Values["username"] = user.Name
+    // session.Values["csrf_token"] = csrfToken
+    // session.Values["session_token"] = sessionToken
+    // log.Println("STORE SESSION VALUES:", session.Values)
+    // err = gothic.Store.Save(c.Request, c.Writer, session)
+    //
+    // if err != nil {
+    //     log.Fatal("COULDN'T SAVE SESSION")
+    // }
 
 	c.Redirect(http.StatusTemporaryRedirect, "/profile")
 }
@@ -86,13 +105,34 @@ func ProfilePageHandler(c *gin.Context) {
         return
     }
 
-    usr, _ := gothic.GetFromSession("username", c.Request)
-    // if err != nil {
-    //     log.Println("yeah got stuck here :<")
-    //     c.AbortWithStatus(http.StatusInternalServerError)
-    //     return
-    // }
-    err = tmpl.Execute(c.Writer, users.Users[usr])
+    user, err := c.Cookie("username")
+    if err != nil {
+        log.Println("BRUHHHHHHHHHHHHHHH(username)")
+    } else {
+        log.Println("username", user)
+    }
+
+    csrf, err := c.Cookie("csrf_token")
+    if err != nil {
+        log.Println("BRUHHHHHHHHHHHHHHH(csrf)")
+    } else {
+        log.Println("csrf_token", csrf)
+    }
+
+    sess, err := c.Cookie("session_token")
+    if err != nil {
+        log.Println("BRUHHHHHHHHHHHHHHH(sess)")
+    } else {
+        log.Println("session_token", sess)
+    }
+
+    this_user, found := users.Users[user]
+    if found != true {
+        log.Fatal("man...")
+    } else {
+        log.Println("this_user:", this_user)
+    }
+    err = tmpl.Execute(c.Writer, this_user)
     if err != nil {
         c.AbortWithStatus(http.StatusInternalServerError)
         return
