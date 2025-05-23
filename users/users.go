@@ -13,6 +13,7 @@ type User struct {
     Email           string
     SessionToken    string
     CSRFToken       string
+    Provider        string
 }
 
 var Db *sql.DB
@@ -31,9 +32,9 @@ func init() {
     }
 }
 
-func AddActiveUser(username, email, sessionToken, csrfToken string) {
+func AddActiveUser(username, email, sessionToken, csrfToken, provider string) {
     log.Println("Added", username)
-    Users[username] = User{-1, username, email, sessionToken, csrfToken}
+    Users[username] = User{-1, username, email, sessionToken, csrfToken, provider}
     log.Println("map: ", Users)
 }
 

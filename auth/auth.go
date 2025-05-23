@@ -71,7 +71,7 @@ func CallbackHandler(c *gin.Context) {
     sessionToken := generateToken(32)
     csrfToken := generateToken(32)
 
-    users.AddActiveUser(user.Name, user.Email, sessionToken, csrfToken)
+    users.AddActiveUser(user.Name, user.Email, sessionToken, csrfToken, provider)
 
     c.SetCookie("username", user.Name, 90, "/", "localhost", true, true)
     c.SetCookie("session_token", sessionToken, 90, "/", "localhost", true, true)
