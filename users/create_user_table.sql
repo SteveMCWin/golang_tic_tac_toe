@@ -3,5 +3,6 @@ CREATE TABLE users (
     username TEXT NOT NULL UNIQUE,
     email TEXT NOT NULL,
     session_token TEXT NOT NULL,
-    csrf_token TEXT NOT NULL
+    csrf_token TEXT NOT NULL,
+    provider TEXT NOT NULL
 );

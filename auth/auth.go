@@ -1,8 +1,9 @@
 package auth
 
 import (
-    "log"
     "os"
+    "log"
+    "strconv"
     "net/http"
     "crypto/rand"
 	"html/template"
@@ -48,6 +49,7 @@ func init() {
 }
 
 func SignInWithProvider(c *gin.Context) {
+
     provider := c.Param("provider")
     q := c.Request.URL.Query()
     q.Add("provider", provider)
@@ -62,7 +64,7 @@ func CallbackHandler(c *gin.Context) {
 	q.Add("provider", provider)
 	c.Request.URL.RawQuery = q.Encode()
 
-    user, err := gothic.CompleteUserAuth(c.Writer, c.Request)
+    g_user, err := gothic.CompleteUserAuth(c.Writer, c.Request)
 	if err != nil {
 		c.AbortWithError(http.StatusInternalServerError, err)
 		return
@@ -71,29 +73,16 @@ func CallbackHandler(c *gin.Context) {
     sessionToken := generateToken(32)
     csrfToken := generateToken(32)
 
-    users.AddActiveUser(user.Name, user.Email, sessionToken, csrfToken, provider)
+    usr := users.User{-1, g_user.Name, g_user.Email, sessionToken, csrfToken, provider}
+    err = usr.AddUser()
 
-    c.SetCookie("username", user.Name, 90, "/", "localhost", true, true)
+    if err != nil {
+        panic(err)
+    }
+
+    c.SetCookie("user_id", strconv.Itoa(usr.Id), 90, "/", "localhost", true, true)
     c.SetCookie("session_token", sessionToken, 90, "/", "localhost", true, true)
     c.SetCookie("csrf_token", csrfToken, 90, "/", "localhost", true, true)
-
-    // log.Println("storing stuff in session")
-    // // gothic.StoreInSession("session_token", sessionToken, c.Request, c.Writer)
-    // // gothic.StoreInSession("csrf_token", csrfToken, c.Request, c.Writer)
-    // // gothic.StoreInSession("username", user.Name, c.Request, c.Writer)
-    // session, err := gothic.Store.Get(c.Request, gothic.SessionName)
-    // if err != nil {
-    //     c.AbortWithError(http.StatusInternalServerError, err)
-    // }
-    // session.Values["username"] = user.Name
-    // session.Values["csrf_token"] = csrfToken
-    // session.Values["session_token"] = sessionToken
-    // log.Println("STORE SESSION VALUES:", session.Values)
-    // err = gothic.Store.Save(c.Request, c.Writer, session)
-    //
-    // if err != nil {
-    //     log.Fatal("COULDN'T SAVE SESSION")
-    // }
 
 	c.Redirect(http.StatusTemporaryRedirect, "/profile")
 }
@@ -105,32 +94,9 @@ func ProfilePageHandler(c *gin.Context) {
         return
     }
 
-    user, err := c.Cookie("username")
+    this_user, err := users.LoadUserData(c)
     if err != nil {
-        log.Println("BRUHHHHHHHHHHHHHHH(username)")
-    } else {
-        log.Println("username", user)
-    }
-
-    csrf, err := c.Cookie("csrf_token")
-    if err != nil {
-        log.Println("BRUHHHHHHHHHHHHHHH(csrf)")
-    } else {
-        log.Println("csrf_token", csrf)
-    }
-
-    sess, err := c.Cookie("session_token")
-    if err != nil {
-        log.Println("BRUHHHHHHHHHHHHHHH(sess)")
-    } else {
-        log.Println("session_token", sess)
-    }
-
-    this_user, found := users.Users[user]
-    if found != true {
-        log.Fatal("man...")
-    } else {
-        log.Println("this_user:", this_user)
+        log.Fatal("Couldn't load user")
     }
     err = tmpl.Execute(c.Writer, this_user)
     if err != nil {
@@ -140,6 +106,7 @@ func ProfilePageHandler(c *gin.Context) {
 }
 
 func LogoutHandler(c *gin.Context) {
+    // gotta erase the cookies here
     gothic.Logout(c.Writer, c.Request)
     c.Redirect(http.StatusTemporaryRedirect, "/")
 }

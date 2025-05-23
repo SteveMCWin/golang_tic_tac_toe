@@ -14,8 +14,6 @@ import (
 func main() {
 	r := gin.Default()
 
-	
-
 	r.LoadHTMLGlob("templates/*")
 	
 	r.GET("/", home)
@@ -29,14 +27,7 @@ func main() {
 
 func home(c *gin.Context) {
 
-    // test_val, err := gothic.GetFromSession("test_key", c.Request)
-    // if err != nil {
-    //     fmt.Println("no cookie with name test_key found")
-    // } else {
-    //     fmt.Println("cookie test_key found with value:", test_val)
-    // }
-
-	tmpl, err := template.ParseFiles("templates/index.html")
+    tmpl, err := template.ParseFiles("templates/index.html")
 	if err != nil {
 		c.AbortWithStatus(http.StatusInternalServerError)
 		return
