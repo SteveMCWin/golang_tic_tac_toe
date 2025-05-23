@@ -5,7 +5,6 @@ import (
     "errors"
 
 	"github.com/gin-gonic/gin"
-
     "database/sql"
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -38,6 +37,8 @@ func LoadUserData(c *gin.Context) (usr User, err error) {
         return
     }
 
+    log.Println("user_id:", user)
+
     csrf, err := c.Cookie("csrf_token")
     if err != nil {
         return
@@ -48,7 +49,7 @@ func LoadUserData(c *gin.Context) (usr User, err error) {
         return
     }
 
-    err = Db.QueryRow("select id, username, email, session_token, csrftoken, provider from users where id = ?", user).Scan(
+    err = Db.QueryRow("select id, username, email, session_token, csrf_token, provider from users where id = ?", user).Scan(
         &usr.Id,
         &usr.UserName,
         &usr.Email,
@@ -57,12 +58,20 @@ func LoadUserData(c *gin.Context) (usr User, err error) {
         &usr.Provider,
     )
 
+    if err != nil {
+        log.Println("The user wasn't loaded for comparing\n")
+        log.Println("error:", err)
+    }
+
     if usr.SessionToken != sess || usr.CSRFToken != csrf {
         usr = User{}
         err = errors.New("Session token or csrf token missmatch")
         log.Println("EXPECTED")
         log.Println("sess:\t", sess)
         log.Println("csrf:\t", csrf)
+        log.Println("RECIEVED")
+        log.Println("sess:\t", usr.SessionToken)
+        log.Println("csrf:\t", usr.CSRFToken)
     }
 
     return
