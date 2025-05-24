@@ -80,9 +80,9 @@ func CallbackHandler(c *gin.Context) {
         panic(err)
     }
 
-    c.SetCookie("user_id", strconv.Itoa(usr.Id), 90, "/", "localhost", true, true)
-    c.SetCookie("session_token", sessionToken, 90, "/", "localhost", true, true)
-    c.SetCookie("csrf_token", csrfToken, 90, "/", "localhost", true, true)
+    c.SetCookie("user_id", strconv.Itoa(usr.Id), 86400 * 30, "/", "localhost", true, true)
+    c.SetCookie("session_token", sessionToken, 86400 * 30, "/", "localhost", true, true)
+    c.SetCookie("csrf_token", csrfToken, 86400 * 30, "/", "localhost", true, true)
 
 	c.Redirect(http.StatusTemporaryRedirect, "/profile")
 }
@@ -96,8 +96,10 @@ func ProfilePageHandler(c *gin.Context) {
 
     this_user, err := users.LoadUserData(c)
     if err != nil {
-        log.Fatal("Couldn't load user, error: ", err)
+        log.Println("Couldn't load user, error: ", err)
+        c.Redirect(http.StatusTemporaryRedirect, "/")
     }
+
     err = tmpl.Execute(c.Writer, this_user)
     if err != nil {
         c.AbortWithStatus(http.StatusInternalServerError)
@@ -107,6 +109,9 @@ func ProfilePageHandler(c *gin.Context) {
 
 func LogoutHandler(c *gin.Context) {
     // gotta erase the cookies here
+    c.SetCookie("user_id", "", -1, "/", "localhost", true, true)
+    c.SetCookie("session_token", "", -1, "/", "localhost", true, true)
+    c.SetCookie("csrf_token", "", -1, "/", "localhost", true, true)
     gothic.Logout(c.Writer, c.Request)
     c.Redirect(http.StatusTemporaryRedirect, "/")
 }

@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Tic-Tac-Toe (WebSocket)</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      background: #f4f4f4;
+    }
+
+    .board {
+      display: grid;
+      grid-template-columns: repeat(3, 100px);
+      grid-template-rows: repeat(3, 100px);
+      gap: 5px;
+    }
+
+    .cell {
+      background-color: white;
+      border: 2px solid #444;
+      font-size: 2.5rem;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      user-select: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="board" id="board"></div>
+
+  <script>
+    const board = document.getElementById('board');
+    const socket = new WebSocket('ws://' + window.location.host + '/ws');
+
+    // Render board from array like: ["X", "O", "", ...]
+    function renderBoard(state) {
+      Array.from(board.children).forEach((cell, i) => {
+        cell.textContent = state[i] || '';
+      });
+    }
+
+    // Handle incoming messages
+    socket.onmessage = event => {
+      const msg = JSON.parse(event.data);
+      if (msg.type === 'state' && Array.isArray(msg.board)) {
+        renderBoard(msg.board);
+      }
+    };
+
+    // Send a move to the server
+    function handleClick(index) {
+      socket.send(JSON.stringify({ type: 'move', index }));
+    }
+
+    // Create 9 clickable cells
+    for (let i = 0; i < 9; i++) {
+      const cell = document.createElement('div');
+      cell.className = 'cell';
+      cell.addEventListener('click', () => handleClick(i));
+      board.appendChild(cell);
+    }
+  </script>
+</body>
+</html>
+

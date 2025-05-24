@@ -78,6 +78,7 @@ func LoadUserData(c *gin.Context) (usr User, err error) {
 }
 
 func (usr *User) AddUser() (err error) {
+    // should search by mail instead
     log.Println("Trying to get user named: ", usr.UserName)
     err = Db.QueryRow("select id from users where username like ?", usr.UserName).Scan(&usr.Id)
 
@@ -101,6 +102,7 @@ func (usr *User) AddUser() (err error) {
     log.Println("csrf:\t", usr.CSRFToken)
 
     // the user has logged in before so just update the tokens
+    // should also update the name in case the user changed their name on google
     _, err = Db.Exec("update users set session_token = ?, csrf_token = ? where id = ?", usr.SessionToken, usr.CSRFToken, usr.Id)
     return
 }

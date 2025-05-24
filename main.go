@@ -21,6 +21,7 @@ func main() {
 	r.GET("/auth/:provider/callback/", auth.CallbackHandler)
     r.GET("/logout/:provider/", auth.LogoutHandler)
 	r.GET("/profile", auth.ProfilePageHandler)
+    r.GET("/game", game.HandleGame)
 
 	r.RunTLS(":5000", "./testdata/server.pem", "./testdata/server.key")
 }
