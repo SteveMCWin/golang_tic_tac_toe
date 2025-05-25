@@ -11,17 +11,19 @@ import (
 
 type Board [9]byte
 
-func (b *Board) MakeMove(pos int, player byte) (err error) {
+func (b *Board) MakeMove(pos int, player byte) (b_state [9]byte, err error) {
     if pos < 0 || pos > 8 || player != byte('x') || player != byte('o') {
         err = errors.New("invalid call to make_move:\nExpected pos 0-8, got", pos, "\nExpected player x or o, got", player)
         return
     }
 
-    if b[pos] != 0 {
+    if b.Board[pos] != 0 {
         return errors.New("invlaid call to make_move:\nCannov overwrite already played field")
     }
 
-    b[pos] = player
+    b.Board[pos] = player
+
+    copy(b_state, b.Board)
 
     return
 }
