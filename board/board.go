@@ -40,6 +40,13 @@ func (b *Board) MakeMove(pos byte, player byte) (b_state []byte, err error) {
         b_state[i] = b[i]
     }
 
+    for i := 0; i < 9; i++ {
+        fmt.Printf("%d\t", b_state[i])
+        if (i+1)%3 == 0 {
+            fmt.Println()
+        }
+    }
+
     return
 }
 
@@ -55,10 +62,27 @@ func (b *Board) CheckForWin() (res bool) {
             res = true
             return
         }
+        if b[3*i] == 0 {
+            continue
+        }
         if b[3*i] == b[3*i+1] && b[3*i] == b[3*i+2] {
             res = true
             return
         }
+    }
+
+    if b[4] == 0 {
+        return
+    }
+
+    if b[0] == b[4] && b[0] == b[8] {
+        res = true
+        return
+    }
+
+    if b[2] == b[4] && b[2] == b[6] {
+        res = true
+        return
     }
 
     return

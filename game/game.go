@@ -2,6 +2,7 @@ package game
 
 import (
     "log"
+    "encoding/json"
 
     "tic_tac_toe.fun/board"
 
@@ -20,7 +21,7 @@ func NewGame(p1, p2 *Player) *Game {
     g.players[1] = p2
     g.b = &board.Board{}
     g.p1move = true // player 1 makes the first move
-    // update the player stat: games played
+    // TODO: update the player stat: games played
     return g
 }
 
@@ -39,11 +40,11 @@ func (g *Game) Run() {
                 if err != nil {
                     log.Println(err)
                 } else {
-                    g.players[0].board_state <- b_state
-                    g.players[1].board_state <- b_state
+                    g.players[0].board_state <- parseBoardToJSON(b_state)
+                    g.players[1].board_state <- parseBoardToJSON(b_state)
                     if res := g.b.CheckForWin(); res == true {
                         log.Println("PLAYER 1 WINS")
-                        // do some other stuff ig
+                        // TODO: do some other stuff ig
                         return
                     }
                     g.p1move = false
@@ -57,11 +58,11 @@ func (g *Game) Run() {
                 if err != nil {
                     log.Println(err)
                 } else {
-                    g.players[0].board_state <- b_state
-                    g.players[1].board_state <- b_state
+                    g.players[0].board_state <- parseBoardToJSON(b_state)
+                    g.players[1].board_state <- parseBoardToJSON(b_state)
                     if res := g.b.CheckForWin(); res == true {
                         log.Println("PLAYER 2 WINS")
-                        // do some other stuff ig
+                        // TODO: do some other stuff ig
                         return
                     }
                     g.p1move = true
@@ -71,6 +72,37 @@ func (g *Game) Run() {
             }
         }
     }
+}
+
+func parseBoardToJSON(b_state []byte) []byte {
+
+    var board []string
+    for _, cell := range b_state {
+        if cell == 'x' {
+            board = append(board, "x")
+        } else if cell == 'o' {
+            board = append(board, "o")
+        } else {
+            board = append(board, "")
+        }
+    }
+
+    msg := struct {
+        Type string     `json:"type"`
+        Board []string  `json:"board"`
+    }{
+        Type    : "state",
+        Board   : board,
+    }
+
+    res, err := json.Marshal(msg)
+    // log.Println("No encoding:", b_state)
+    // log.Println("Json encoding:", string(res))
+    if err != nil {
+        log.Println("ERROR PARSING BOARD STATE TO JSON:")
+        log.Println(err)
+    }
+    return res
 }
 
 func Play(c *gin.Context) {

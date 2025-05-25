@@ -46,7 +46,7 @@ type Player struct {
 }
 
 func MakePlayer(hub *Hub, c *gin.Context) {
-    log.Println("MADE DA PLAYAA")
+    // log.Println("MADE DA PLAYAA")
     usr, _ := users.LoadUserData(c) // TODO: handle the error in some way instead of ignoring it
 
     connection, err := upgrader.Upgrade(c.Writer, c.Request, nil)
