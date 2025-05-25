@@ -2,10 +2,9 @@ package main
 
 import (
 	// "fmt"
-	"html/template"
 	// "log"
+	"html/template"
 	"net/http"
-	// "os"
     "tic_tac_toe.fun/auth"
     "tic_tac_toe.fun/game"
 
@@ -14,7 +13,7 @@ import (
 
 func main() {
 
-    var hub *game.Hub
+    hub := &game.Hub{Games: make([]*game.Game, 0), PlayerQueue: make(chan *game.Player, 2)}
     go hub.HandleGames()
 
 	r := gin.Default()

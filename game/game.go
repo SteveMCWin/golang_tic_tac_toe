@@ -14,12 +14,14 @@ type Game struct {
     p1move bool
 }
 
-func NewGame(p1, p2 *Player) (g *Game) {
+func NewGame(p1, p2 *Player) *Game {
+    g := &Game{}
     g.players[0] = p1
     g.players[1] = p2
+    g.b = &board.Board{}
     g.p1move = true // player 1 makes the first move
     // update the player stat: games played
-    return
+    return g
 }
 
 func (g *Game) Run() {
@@ -72,5 +74,5 @@ func (g *Game) Run() {
 }
 
 func Play(c *gin.Context) {
-    c.File("../templates/board.html")
+    c.File("templates/board.html")
 }

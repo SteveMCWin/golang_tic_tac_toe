@@ -2,14 +2,15 @@ package game
 
 import (
 
+    "log"
     // "tic_tac_toe.fun/users"
 
 	// "github.com/gin-gonic/gin"
 )
 
 type Hub struct {
-    games []*Game
-    player_queue chan *Player
+    Games []*Game
+    PlayerQueue chan *Player
 }
 
 func (h *Hub) HandleGames() {
@@ -18,12 +19,15 @@ func (h *Hub) HandleGames() {
     // run the game i guess
     
     for {
-        p1 := <-h.player_queue
-        p2 := <-h.player_queue
+        log.Println("Waiting for playa oneeeee")
+        p1 := <-h.PlayerQueue
+        log.Println("Waiting for playa twooooo")
+        p2 := <-h.PlayerQueue
 
+        log.Println("MADE DA GAMEEEE")
         g := NewGame(p1, p2)
         go g.Run()
-        h.games = append(h.games, g)
+        h.Games = append(h.Games, g)
 
     }
 

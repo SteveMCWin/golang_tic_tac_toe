@@ -39,7 +39,7 @@
 
   <script>
     const board = document.getElementById('board');
-    const socket = new WebSocket('ws://' + window.location.host + '/ws');
+    const socket = new WebSocket('wss://' + window.location.host + '/ws');
 
     // Render board from array like: ["X", "O", "", ...]
     function renderBoard(state) {
@@ -58,7 +58,7 @@
 
     // Send a move to the server
     function handleClick(index) {
-      socket.send(JSON.stringify({ type: 'move', index }));
+      socket.send(index);
     }
 
     // Create 9 clickable cells

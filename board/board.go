@@ -13,8 +13,17 @@ import (
 type Board [9]byte
 
 func (b *Board) MakeMove(pos byte, player byte) (b_state []byte, err error) {
-    if pos < 0 || pos > 8 || player != byte('x') || player != byte('o') {
-        err = fmt.Errorf("invalid call to make_move:\nExpected pos 0-8, got %d\nExpected player x or o, got %c", pos, player)
+    if pos >= '0' && pos <= '9' {
+        pos = pos - '0'
+    }
+
+    if pos < 0 || pos > 8 {
+        err = fmt.Errorf("invalid call to make_move:\nExpected pos 0-8, got %d", pos)
+        return
+    }
+
+    if player != byte('x') && player != byte('o') {
+        err = fmt.Errorf("invalid call to make_move:\nExpected player x or o, got %c", player)
         return
     }
 

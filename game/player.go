@@ -46,6 +46,7 @@ type Player struct {
 }
 
 func MakePlayer(hub *Hub, c *gin.Context) {
+    log.Println("MADE DA PLAYAA")
     usr, _ := users.LoadUserData(c) // TODO: handle the error in some way instead of ignoring it
 
     connection, err := upgrader.Upgrade(c.Writer, c.Request, nil)
@@ -53,7 +54,7 @@ func MakePlayer(hub *Hub, c *gin.Context) {
         log.Println(err)
         return
     }
-    hub.player_queue <- &Player{u: &usr, conn: connection, move: make(chan byte), board_state: make(chan []byte)}
+    hub.PlayerQueue <- &Player{u: &usr, conn: connection, move: make(chan byte), board_state: make(chan []byte)}
 }
 
 func (p *Player) ListenToSocket() {
