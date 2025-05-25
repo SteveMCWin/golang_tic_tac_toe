@@ -12,6 +12,8 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+
+
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
@@ -43,13 +45,15 @@ type Player struct {
     board_state chan []byte // used to updated the state of the board
 }
 
-func MakePlayer(c *gin.Context, usr *users.User) (*Player, error) {
+func MakePlayer(hub *Hub, c *gin.Context) {
+    usr, _ := users.LoadUserData(c) // TODO: handle the error in some way instead of ignoring it
+
     connection, err := upgrader.Upgrade(c.Writer, c.Request, nil)
     if err != nil {
-        // log.Println(err)
-        return nil, err
+        log.Println(err)
+        return
     }
-    return &Player{u: usr, conn: connection, move: make(chan byte), board_state: make(chan []byte)}, nil
+    hub.player_queue <- &Player{u: &usr, conn: connection, move: make(chan byte), board_state: make(chan []byte)}
 }
 
 func (p *Player) ListenToSocket() {

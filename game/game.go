@@ -3,7 +3,6 @@ package game
 import (
     "log"
 
-    "tic_tac_toe.fun/users"
     "tic_tac_toe.fun/board"
 
 	"github.com/gin-gonic/gin"
@@ -15,19 +14,12 @@ type Game struct {
     p1move bool
 }
 
-func (g *Game) NewGame(c *gin.Context, u1 *users.User, u2 *users.User) error {
-    var err error
-    g.players[0], err = MakePlayer(c, u1)
-    if err != nil {
-        return err
-    }
-    g.players[1], err = MakePlayer(c, u2)
-    if err != nil {
-        return err
-    }
+func NewGame(p1, p2 *Player) (g *Game) {
+    g.players[0] = p1
+    g.players[1] = p2
     g.p1move = true // player 1 makes the first move
     // update the player stat: games played
-    return nil
+    return
 }
 
 func (g *Game) Run() {
@@ -79,6 +71,6 @@ func (g *Game) Run() {
     }
 }
 
-func HandleGame(c *gin.Context) {
-
+func Play(c *gin.Context) {
+    c.File("../templates/board.html")
 }

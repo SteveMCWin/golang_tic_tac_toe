@@ -13,6 +13,10 @@ import (
 )
 
 func main() {
+
+    var hub *game.Hub
+    go hub.HandleGames()
+
 	r := gin.Default()
 
 	r.LoadHTMLGlob("templates/*")
@@ -22,7 +26,8 @@ func main() {
 	r.GET("/auth/:provider/callback/", auth.CallbackHandler)
     r.GET("/logout/:provider/", auth.LogoutHandler)
 	r.GET("/profile", auth.ProfilePageHandler)
-    r.GET("/game", game.HandleGame)
+    r.GET("/hub", game.Play)
+    r.GET("/ws", func (c *gin.Context) { game.MakePlayer(hub, c) })
 
 	r.RunTLS(":5000", "./testdata/server.pem", "./testdata/server.key")
 }
