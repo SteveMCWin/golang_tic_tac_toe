@@ -7,6 +7,7 @@ import (
 	"net/http"
 	// "os"
     "tic_tac_toe.fun/auth"
+    "tic_tac_toe.fun/game"
 
 	"github.com/gin-gonic/gin"
 )
