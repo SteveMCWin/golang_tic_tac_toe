@@ -21,6 +21,7 @@ type User struct {
     GamesWon        int
 }
 
+// TODO: split the users table into two tables, users and players. they will share the keys
 var Db *sql.DB
 
 func init() {
@@ -85,7 +86,7 @@ func LoadUserData(c *gin.Context) (usr User, err error) {
 func (usr *User) StoreUser() (err error) {
     // should search by mail instead
     log.Println("Trying to get user named: ", usr.UserName)
-    err = Db.QueryRow("select id from users where username like ?", usr.UserName).Scan(&usr.Id)
+    err = Db.QueryRow("select id from users where email like ?", usr.Email).Scan(&usr.Id)
 
     // the user hasn't logged in before so load him into the data base
     if err != nil {
@@ -108,8 +109,8 @@ func (usr *User) StoreUser() (err error) {
 
     // the user has logged in before so just update the tokens
     // TODO: should also update the name in case the user changed their name on google
-    _, err = Db.Exec("update users set username = ?, session_token = ?, csrf_token = ? where id = ?",
-                      usr.UserName, usr.SessionToken, usr.CSRFToken, usr.Id)
+    _, err = Db.Exec("update users set username = ?, session_token = ?, csrf_token = ?, provider = ? where id = ?",
+                      usr.UserName, usr.SessionToken, usr.CSRFToken, usr.Provider, usr.Id)
     return
 }
 

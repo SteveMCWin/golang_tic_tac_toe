@@ -17,6 +17,10 @@ type Game struct {
     p1move bool
 }
 
+func Play(c *gin.Context) {
+    c.File("templates/board.html")
+}
+
 // TODO: add time as a parameter
 func NewGame(p1, p2 *Player) *Game {
     g := &Game{}
@@ -141,6 +145,3 @@ func parseBoardToJSON(b_state []byte) []byte {
     return res
 }
 
-func Play(c *gin.Context) {
-    c.File("templates/board.html")
-}
