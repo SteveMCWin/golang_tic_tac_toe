@@ -21,7 +21,10 @@ func NewGame(p1, p2 *Player) *Game {
     g.players[1] = p2
     g.b = &board.Board{}
     g.p1move = true // player 1 makes the first move
-    // TODO: update the player stat: games played
+    // update user stats
+    g.players[0].u.GamesPlayed += 1
+    g.players[1].u.GamesPlayed += 1
+
     return g
 }
 
@@ -31,6 +34,9 @@ func (g *Game) Run() {
 
     go g.players[0].ListenToServer()
     go g.players[1].ListenToServer()
+
+    defer g.players[0].UpdatePlayerStats()
+    defer g.players[1].UpdatePlayerStats()
 
     for {
         select {
@@ -44,6 +50,7 @@ func (g *Game) Run() {
                     g.players[1].board_state <- parseBoardToJSON(b_state)
                     if res := g.b.CheckForWin(); res == true {
                         log.Println("PLAYER 1 WINS")
+                        g.players[0].u.GamesWon += 1
                         // TODO: do some other stuff ig
                         return
                     }
@@ -62,6 +69,7 @@ func (g *Game) Run() {
                     g.players[1].board_state <- parseBoardToJSON(b_state)
                     if res := g.b.CheckForWin(); res == true {
                         log.Println("PLAYER 2 WINS")
+                        g.players[1].u.GamesWon += 1
                         // TODO: do some other stuff ig
                         return
                     }
@@ -70,6 +78,14 @@ func (g *Game) Run() {
             } else {
                 log.Println("IT'S PLAYER 1'S MOVE")
             }
+        case _ = <- g.players[0].exited:
+            g.players[1].u.GamesWon += 1
+            log.Println("PLAYER 2 WINS")
+            return
+        case _ = <- g.players[1].exited:
+            g.players[0].u.GamesWon += 1
+            log.Println("PLAYER 1 WINS")
+            return
         }
     }
 }
@@ -96,12 +112,11 @@ func parseBoardToJSON(b_state []byte) []byte {
     }
 
     res, err := json.Marshal(msg)
-    // log.Println("No encoding:", b_state)
-    // log.Println("Json encoding:", string(res))
     if err != nil {
         log.Println("ERROR PARSING BOARD STATE TO JSON:")
         log.Println(err)
     }
+
     return res
 }
 

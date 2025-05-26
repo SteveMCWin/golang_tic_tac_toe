@@ -16,6 +16,9 @@ type User struct {
     SessionToken    string
     CSRFToken       string
     Provider        string
+    // Game related
+    GamesPlayed     int
+    GamesWon        int
 }
 
 var Db *sql.DB
@@ -37,8 +40,6 @@ func LoadUserData(c *gin.Context) (usr User, err error) {
         return
     }
 
-    log.Println("user_id:", user)
-
     csrf, err := c.Cookie("csrf_token")
     if err != nil {
         return
@@ -49,13 +50,15 @@ func LoadUserData(c *gin.Context) (usr User, err error) {
         return
     }
 
-    err = Db.QueryRow("select id, username, email, session_token, csrf_token, provider from users where id = ?", user).Scan(
+    err = Db.QueryRow("select id, username, email, session_token, csrf_token, provider, games_played, games_won from users where id = ?", user).Scan(
         &usr.Id,
         &usr.UserName,
         &usr.Email,
         &usr.SessionToken,
         &usr.CSRFToken,
         &usr.Provider,
+        &usr.GamesPlayed,
+        &usr.GamesWon,
     )
 
     if err != nil {
@@ -64,20 +67,20 @@ func LoadUserData(c *gin.Context) (usr User, err error) {
     }
 
     if usr.SessionToken != sess || usr.CSRFToken != csrf {
-        usr = User{}
+        usr = User{}    // make sure to return an empty user if login fails
         err = errors.New("Session token or csrf token missmatch")
-        log.Println("EXPECTED")
-        log.Println("sess:\t", sess)
-        log.Println("csrf:\t", csrf)
-        log.Println("RECIEVED")
-        log.Println("sess:\t", usr.SessionToken)
-        log.Println("csrf:\t", usr.CSRFToken)
+        // log.Println("EXPECTED")
+        // log.Println("sess:\t", sess)
+        // log.Println("csrf:\t", csrf)
+        // log.Println("RECIEVED")
+        // log.Println("sess:\t", usr.SessionToken)
+        // log.Println("csrf:\t", usr.CSRFToken)
     }
 
     return
 }
 
-func (usr *User) AddUser() (err error) {
+func (usr *User) StoreUser() (err error) {
     // should search by mail instead
     log.Println("Trying to get user named: ", usr.UserName)
     err = Db.QueryRow("select id from users where username like ?", usr.UserName).Scan(&usr.Id)
@@ -85,26 +88,42 @@ func (usr *User) AddUser() (err error) {
     // the user hasn't logged in before so load him into the data base
     if err != nil {
         log.Println("IT DID NOT RECOGNIZE THE USER")
-        statement := "insert into users (username, email, session_token, csrf_token, provider) values (?, ?, ?, ?, ?) returning id"
+        statement := "insert into users (username, email, session_token, csrf_token, provider, games_played, games_won) values (?, ?, ?, ?, ?, ?, ?) returning id"
         var stmt *sql.Stmt
         stmt, err = Db.Prepare(statement)
         if err != nil {
             return
         }
         defer stmt.Close()
-        err = stmt.QueryRow(usr.UserName, usr.Email, usr.SessionToken, usr.CSRFToken, usr.Provider).Scan(&usr.Id)
+        err = stmt.QueryRow(usr.UserName, usr.Email, usr.SessionToken, usr.CSRFToken, usr.Provider, usr.GamesPlayed, usr.GamesWon).Scan(&usr.Id)
         return
     }
 
     log.Println("IT RECOGNIZED THE USER FROM BEFORE")
-    log.Println("THE NEW COOKIES ARE")
-    log.Println("sess:\t", usr.SessionToken)
-    log.Println("csrf:\t", usr.CSRFToken)
+    // log.Println("THE NEW COOKIES ARE")
+    // log.Println("sess:\t", usr.SessionToken)
+    // log.Println("csrf:\t", usr.CSRFToken)
 
     // the user has logged in before so just update the tokens
-    // should also update the name in case the user changed their name on google
-    _, err = Db.Exec("update users set session_token = ?, csrf_token = ? where id = ?", usr.SessionToken, usr.CSRFToken, usr.Id)
+    // TODO: should also update the name in case the user changed their name on google
+    _, err = Db.Exec("update users set session_token = ?, csrf_token = ?, games_played = ?, games_won = ? where id = ?",
+                      usr.SessionToken, usr.CSRFToken, usr.GamesPlayed, usr.GamesWon, usr.Id)
     return
 }
+
+func (usr *User) UpdateGameStats() (err error) {
+    if usr.Id == 0 {
+        return // cannot store data for a guest user
+    }
+
+    _, err = Db.Exec("update users set games_played = ?, games_won = ? where id = ?", usr.GamesPlayed, usr.GamesWon, usr.Id)
+
+    return
+
+}
+
+
+
+
 
 

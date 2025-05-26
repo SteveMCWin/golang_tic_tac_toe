@@ -40,12 +40,12 @@ func (b *Board) MakeMove(pos byte, player byte) (b_state []byte, err error) {
         b_state[i] = b[i]
     }
 
-    for i := 0; i < 9; i++ {
-        fmt.Printf("%d\t", b_state[i])
-        if (i+1)%3 == 0 {
-            fmt.Println()
-        }
-    }
+    // for i := 0; i < 9; i++ {
+    //     fmt.Printf("%d\t", b_state[i])
+    //     if (i+1)%3 == 0 {
+    //         fmt.Println()
+    //     }
+    // }
 
     return
 }

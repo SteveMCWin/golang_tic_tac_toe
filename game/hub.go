@@ -7,6 +7,7 @@ import (
 type Hub struct {
     Games []*Game
     PlayerQueue chan *Player
+    PlayerExit chan *Player
 }
 
 func (h *Hub) HandleGames() {

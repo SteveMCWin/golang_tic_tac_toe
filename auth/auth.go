@@ -73,11 +73,11 @@ func CallbackHandler(c *gin.Context) {
     sessionToken := generateToken(32)
     csrfToken := generateToken(32)
 
-    usr := users.User{-1, g_user.Name, g_user.Email, sessionToken, csrfToken, provider}
-    err = usr.AddUser()
+    usr := users.User{-1, g_user.Name, g_user.Email, sessionToken, csrfToken, provider, 0, 0}
+    err = usr.StoreUser()
 
     if err != nil {
-        panic(err)
+        log.Println(err)
     }
 
     c.SetCookie("user_id", strconv.Itoa(usr.Id), 86400 * 30, "/", "localhost", true, true)

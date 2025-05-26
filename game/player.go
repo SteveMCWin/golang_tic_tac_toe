@@ -43,6 +43,7 @@ type Player struct {
     conn *websocket.Conn
     move chan byte  // used to send messages to the game handler
     board_state chan []byte // used to updated the state of the board
+    exited chan bool
 }
 
 func MakePlayer(hub *Hub, c *gin.Context) {
@@ -54,11 +55,13 @@ func MakePlayer(hub *Hub, c *gin.Context) {
         log.Println(err)
         return
     }
-    hub.PlayerQueue <- &Player{u: &usr, conn: connection, move: make(chan byte), board_state: make(chan []byte)}
+    hub.PlayerQueue <- &Player{u: &usr, conn: connection, move: make(chan byte), board_state: make(chan []byte), exited: make(chan bool)}
 }
 
 func (p *Player) ListenToSocket() {
     defer func() {
+        log.Printf("Player %s exited", p.u.UserName)
+        p.exited <- true
         p.conn.Close()
     }()
     p.conn.SetReadLimit(maxMessageSize)
@@ -80,6 +83,7 @@ func (p *Player) ListenToSocket() {
 func (p *Player) ListenToServer() {
     ticker := time.NewTicker(pingPeriod)
 	defer func() {
+        p.exited <- true
 		ticker.Stop()
 		p.conn.Close()
     }()
@@ -110,3 +114,6 @@ func (p *Player) ListenToServer() {
     }
 }
 
+func (p *Player) UpdatePlayerStats() {
+    p.u.UpdateGameStats()
+}

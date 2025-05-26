@@ -6,5 +6,7 @@ CREATE TABLE users (
     email TEXT NOT NULL,
     session_token TEXT NOT NULL,
     csrf_token TEXT NOT NULL,
-    provider TEXT NOT NULL
+    provider TEXT NOT NULL,
+    games_played INTEGER NOT NULL,
+    games_won INTEGER NOT NULL
 );
