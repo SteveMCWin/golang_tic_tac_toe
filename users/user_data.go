@@ -29,6 +29,8 @@ func init() {
     if err != nil {
         panic(err)
     }
+
+    go RunLeaderBoard()
 }
 
 func LoadUserData(c *gin.Context) (usr User, err error) {
