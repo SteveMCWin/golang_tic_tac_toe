@@ -51,6 +51,7 @@ func (g *Game) Run() {
         case pos := <- g.players[0].move:
             if g.p1move == true {
                 g.player_timers[0].Pause()
+                log.Printf("Paused p1 timer at %s", g.player_timers[0].TimeLeft.String())
                 b_state, err := g.b.MakeMove(pos, byte('x'))
                 if err != nil {
                     log.Println(err)
@@ -63,6 +64,7 @@ func (g *Game) Run() {
                     }
                     g.p1move = false
                     g.player_timers[1].Start()
+                    log.Printf("Resumed p2 timer at %s", g.player_timers[1].TimeLeft.String())
                 }
             } else {
                 log.Println("IT'S PLAYER 2'S MOVE")
@@ -70,6 +72,7 @@ func (g *Game) Run() {
         case pos := <- g.players[1].move:
             if g.p1move == false {
                 g.player_timers[1].Pause()
+                log.Printf("Paused p2 timer at %s", g.player_timers[1].TimeLeft.String())
                 b_state, err := g.b.MakeMove(pos, byte('o'))
                 if err != nil {
                     log.Println(err)
@@ -82,6 +85,7 @@ func (g *Game) Run() {
                     }
                     g.p1move = true
                     g.player_timers[0].Start()
+                    log.Printf("Resumed p1 timer at %s", g.player_timers[0].TimeLeft.String())
                 }
             } else {
                 log.Println("IT'S PLAYER 1'S MOVE")
@@ -92,10 +96,10 @@ func (g *Game) Run() {
         case _ = <- g.players[1].exited:
             g.playerWon(0)
             return
-        case _ = <-g.player_timers[0].Tmr.C:
+        case _ = <-g.player_timers[0].Finished:
             g.playerWon(1)
             return
-        case _ = <-g.player_timers[1].Tmr.C:
+        case _ = <-g.player_timers[1].Finished:
             g.playerWon(0)
             return
         }

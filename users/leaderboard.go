@@ -38,10 +38,10 @@ func updateLeaderboard() {
 func RunLeaderBoard() {
     for {
         updateLeaderboard()
-        log.Println("LeaderBoard:")
-        for _, usr := range LeaderBoard {
-            log.Printf("%s:\t%d", usr.UserName, usr.GamesWon)
-        }
+        // log.Println("LeaderBoard:")
+        // for _, usr := range LeaderBoard {
+        //     log.Printf("%s:\t%d", usr.UserName, usr.GamesWon)
+        // }
         time.Sleep(10 * time.Second)
     }
 }
