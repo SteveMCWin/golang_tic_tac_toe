@@ -108,8 +108,8 @@ func (usr *User) StoreUser() (err error) {
 
     // the user has logged in before so just update the tokens
     // TODO: should also update the name in case the user changed their name on google
-    _, err = Db.Exec("update users set session_token = ?, csrf_token = ?, games_played = ?, games_won = ? where id = ?",
-                      usr.SessionToken, usr.CSRFToken, usr.GamesPlayed, usr.GamesWon, usr.Id)
+    _, err = Db.Exec("update users set username = ?, session_token = ?, csrf_token = ? where id = ?",
+                      usr.UserName, usr.SessionToken, usr.CSRFToken, usr.Id)
     return
 }
 

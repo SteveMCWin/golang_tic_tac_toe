@@ -51,7 +51,6 @@ func (g *Game) Run() {
                     if res := g.b.CheckForWin(); res == true {
                         log.Println("PLAYER 1 WINS")
                         g.players[0].u.GamesWon += 1
-                        // TODO: do some other stuff ig
                         return
                     }
                     g.p1move = false
@@ -70,7 +69,6 @@ func (g *Game) Run() {
                     if res := g.b.CheckForWin(); res == true {
                         log.Println("PLAYER 2 WINS")
                         g.players[1].u.GamesWon += 1
-                        // TODO: do some other stuff ig
                         return
                     }
                     g.p1move = true

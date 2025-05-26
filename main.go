@@ -29,7 +29,6 @@ func main() {
     r.GET("/ws", func (c *gin.Context) { game.MakePlayer(hub, c) })
 
 	r.RunTLS(":5000", "./testdata/server.pem", "./testdata/server.key")
-    // TODO: Make leaderboard
 }
 
 func home(c *gin.Context) {
