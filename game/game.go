@@ -4,6 +4,7 @@ import (
     "log"
     "encoding/json"
     "time"
+    "net/http"
 
     "tic_tac_toe.fun/board"
 
@@ -19,7 +20,12 @@ type Game struct {
 
 // TODO: read the duration parameter in the 
 func Play(c *gin.Context) {
-    c.File("templates/board.html")
+    game_mode := c.Query("game_mode")
+    log.Println("game_mode in Play:", game_mode)
+    // c.File("templates/board.html")
+    c.HTML(http.StatusOK, "board.html", gin.H{
+        "game_mode": game_mode,
+    })
 }
 
 // TODO: add time as a parameter
@@ -37,12 +43,15 @@ func NewGame(p1, p2 *Player, mode GameMode) *Game {
     case normal_5s:
         g.player_timers[0] = MakePlayerTimer(5 * time.Second)
         g.player_timers[1] = MakePlayerTimer(5 * time.Second)
+        log.Println("CREATED GAME DURATION 5s")
     case normal_10s:
         g.player_timers[0] = MakePlayerTimer(10 * time.Second)
         g.player_timers[1] = MakePlayerTimer(10 * time.Second)
+        log.Println("CREATED GAME DURATION 10s")
     case normal_15s:
         g.player_timers[0] = MakePlayerTimer(15 * time.Second)
         g.player_timers[1] = MakePlayerTimer(15 * time.Second)
+        log.Println("CREATED GAME DURATION 15s")
     }
 
     return g

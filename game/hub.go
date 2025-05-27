@@ -1,8 +1,9 @@
 package game
 
 import (
-    // "log"
-	// "github.com/gin-gonic/gin"
+    "net/http"
+    "html/template"
+	"github.com/gin-gonic/gin"
 )
 
 type GameMode int
@@ -21,9 +22,19 @@ type Hub struct {
     // PlayerExit chan *Player
 }
 
-// func EnterHub(c *gin.Context) {
-//
-// }
+func EnterHub(c *gin.Context) {
+    tmpl, err := template.ParseFiles("templates/hub.html")
+	if err != nil {
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
+
+	err = tmpl.Execute(c.Writer, gin.H{})
+	if err != nil {
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
+}
 
 func MakeHub() *Hub {
     h := Hub{Games: make([]*Game, 0), PlayerQueues: make(map[GameMode](chan *Player))}

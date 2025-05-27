@@ -26,9 +26,9 @@ func main() {
     r.GET("/logout/:provider/", auth.LogoutHandler)
 	r.GET("/profile", auth.ProfilePageHandler)
     // TODO: make the hub just the hub and add a /game which you get redirected to when you click the join game button in the hub
-    // r.GET("/hub", game.EnterHub)
-    // r.GET("/play", game.Play)
-    r.GET("/hub", game.Play)
+    // r.GET("/hub", game.Play)
+    r.GET("/hub", game.EnterHub)
+    r.GET("/play", game.Play)
     r.GET("/ws", func (c *gin.Context) { game.MakePlayer(hub, c) })
 
 	r.RunTLS(":5000", "./testdata/server.pem", "./testdata/server.key")

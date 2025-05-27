@@ -39,7 +39,8 @@
 
   <script>
     const board = document.getElementById('board');
-    const socket = new WebSocket('wss://' + window.location.host + '/ws');
+    const gameMode = {{ .game_mode | js }}
+    const socket = new WebSocket('wss://' + window.location.host + '/ws?game_mode=' + gameMode);
 
     // Render board from array like: ["X", "O", "", ...]
     function renderBoard(state) {
