@@ -7,11 +7,11 @@ import (
 
 type GameMode int
 
-const ( // NOTE: make sure to keep 3t_5s the first value, or if you change it, change the for loop's i start val in MakeHub() and HandleGames() and in AddPlayer()
+const (
     normal_5s GameMode = iota
     normal_10s
     normal_15s
-    game_mode_size
+    game_mode_size  // make sure to keep this the last on the list
 )
 
 type Hub struct {
@@ -27,14 +27,14 @@ type Hub struct {
 
 func MakeHub() *Hub {
     h := Hub{Games: make([]*Game, 0), PlayerQueues: make(map[GameMode](chan *Player))}
-    for i := normal_5s; i < game_mode_size; i++ {
+    for i := GameMode(0); i < game_mode_size; i++ {
         h.PlayerQueues[i] = make(chan *Player, 20)
     }
     return &h
 }
 
 func (h *Hub) AddPlayer(p *Player, game_mode int) {
-    if GameMode(game_mode) < normal_5s || GameMode(game_mode) > game_mode_size {
+    if game_mode < 0 || game_mode > int(game_mode_size) {
         panic("Invalid game mode when adding player")
     }
     h.PlayerQueues[GameMode(game_mode)] <- p
@@ -45,7 +45,7 @@ func (h *Hub) HandleGames() {
     // get 2 players from the queue and pass them to the NewGame
     // run the game i guess
 
-    for i := normal_5s; i < game_mode_size; i++ {
+    for i := GameMode(0); i < game_mode_size; i++ {
         go func () {
             for {
                 g := NewGame(<-h.PlayerQueues[i], <-h.PlayerQueues[i], i)
