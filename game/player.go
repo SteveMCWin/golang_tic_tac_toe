@@ -3,7 +3,7 @@ package game
 import (
     "log"
     "time"
-    // "bytes"
+    "strconv"
 
     "tic_tac_toe.fun/users"
     // "tic_tac_toe.fun/board"
@@ -60,7 +60,15 @@ func MakePlayer(hub *Hub, c *gin.Context) {
         log.Println(err)
         return
     }
-    hub.PlayerQueue <- &Player{u: &usr, conn: connection, move: make(chan byte), board_state: make(chan []byte), exited: make(chan bool)}
+
+    new_player := &Player{u: &usr, conn: connection, move: make(chan byte), board_state: make(chan []byte), exited: make(chan bool)}
+    game_mode, err := strconv.Atoi(c.Query("game_mode"))
+
+    if err != nil {
+        log.Printf("Unexpected game mode: %s", c.Query("game_mode"))
+    }
+
+    hub.AddPlayer(new_player, game_mode)
 }
 
 func (p *Player) ListenToSocket() {

@@ -17,12 +17,13 @@ type Game struct {
     p1move bool
 }
 
+// TODO: read the duration parameter in the 
 func Play(c *gin.Context) {
     c.File("templates/board.html")
 }
 
 // TODO: add time as a parameter
-func NewGame(p1, p2 *Player) *Game {
+func NewGame(p1, p2 *Player, mode GameMode) *Game {
     g := &Game{}
     g.players[0] = p1
     g.players[1] = p2
@@ -32,8 +33,17 @@ func NewGame(p1, p2 *Player) *Game {
     g.players[0].u.GamesPlayed += 1
     g.players[1].u.GamesPlayed += 1
 
-    g.player_timers[0] = MakePlayerTimer(10 * time.Second)
-    g.player_timers[1] = MakePlayerTimer(10 * time.Second)
+    switch mode {
+    case normal_5s:
+        g.player_timers[0] = MakePlayerTimer(5 * time.Second)
+        g.player_timers[1] = MakePlayerTimer(5 * time.Second)
+    case normal_10s:
+        g.player_timers[0] = MakePlayerTimer(10 * time.Second)
+        g.player_timers[1] = MakePlayerTimer(10 * time.Second)
+    case normal_15s:
+        g.player_timers[0] = MakePlayerTimer(15 * time.Second)
+        g.player_timers[1] = MakePlayerTimer(15 * time.Second)
+    }
 
     return g
 }
@@ -50,6 +60,8 @@ func (g *Game) Run() {
     defer g.players[0].UpdatePlayerStats()
     defer g.players[1].UpdatePlayerStats()
 
+    // TODO: make delay so game doesn't start immediately
+    // TODO: make it so no input is taken before the game actually starts
     for {
         select {
         case pos := <- g.players[0].move:

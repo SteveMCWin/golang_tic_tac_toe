@@ -2,31 +2,65 @@ package game
 
 import (
     // "log"
+	// "github.com/gin-gonic/gin"
+)
+
+type GameMode int
+
+const ( // NOTE: make sure to keep 3t_5s the first value, or if you change it, change the for loop's i start val in MakeHub() and HandleGames() and in AddPlayer()
+    normal_5s GameMode = iota
+    normal_10s
+    normal_15s
+    game_mode_size
 )
 
 type Hub struct {
     Games []*Game
-    PlayerQueue chan *Player
-    PlayerExit chan *Player
+    // PlayerQueue chan *Player
+    PlayerQueues map[GameMode]chan *Player
+    // PlayerExit chan *Player
+}
+
+// func EnterHub(c *gin.Context) {
+//
+// }
+
+func MakeHub() *Hub {
+    h := Hub{Games: make([]*Game, 0), PlayerQueues: make(map[GameMode](chan *Player))}
+    for i := normal_5s; i < game_mode_size; i++ {
+        h.PlayerQueues[i] = make(chan *Player, 20)
+    }
+    return &h
+}
+
+func (h *Hub) AddPlayer(p *Player, game_mode int) {
+    if GameMode(game_mode) < normal_5s || GameMode(game_mode) > game_mode_size {
+        panic("Invalid game mode when adding player")
+    }
+    h.PlayerQueues[GameMode(game_mode)] <- p
 }
 
 func (h *Hub) HandleGames() {
     // make a list of all the players in queue
     // get 2 players from the queue and pass them to the NewGame
     // run the game i guess
-    
-    for {
-        // log.Println("Waiting for playa oneeeee")
-        p1 := <-h.PlayerQueue
-        // log.Println("Waiting for playa twooooo")
-        p2 := <-h.PlayerQueue
 
-        // log.Println("MADE DA GAMEEEE")
-        g := NewGame(p1, p2)
-        go g.Run()
-        h.Games = append(h.Games, g)
-
+    for i := normal_5s; i < game_mode_size; i++ {
+        go func () {
+            for {
+                g := NewGame(<-h.PlayerQueues[i], <-h.PlayerQueues[i], i)
+                go g.Run()
+                h.Games = append(h.Games, g)
+            }
+        }()
     }
+    
+    // for {
+    //     // log.Println("MADE DA GAMEEEE")
+    //     g := NewGame(<-h.PlayerQueue, <-h.PlayerQueue)
+    //     go g.Run()
+    //     h.Games = append(h.Games, g)
+    // }
 
 }
 
