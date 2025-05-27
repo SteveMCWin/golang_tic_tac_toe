@@ -15,8 +15,11 @@ import (
 	"github.com/markbates/goth"
 	"github.com/markbates/goth/gothic"
 	"github.com/markbates/goth/providers/google"
+	"github.com/markbates/goth/providers/github"
     "github.com/gorilla/sessions"
 )
+
+const COOKIE_MAX_AGE = 86400 * 30
 
 func init() {
     err := godotenv.Load()
@@ -24,18 +27,30 @@ func init() {
 		log.Fatal(".env file failed to load!")
 	}
 
-	clientID := os.Getenv("CLIENT_ID")
-	clientSecret := os.Getenv("CLIENT_SECRET")
-	clientCallbackURL := os.Getenv("CLIENT_CALLBACK_URL")
     sessionKey := os.Getenv("SESSION_KEY")
 
-	if clientID == "" || clientSecret == "" || clientCallbackURL == "" || sessionKey == "" {
-		log.Fatal("Environment variables (CLIENT_ID, CLIENT_SECRET, CLIENT_CALLBACK_URL) are required")
+    if sessionKey == "" {
+        log.Fatal("SESSION KEY missing")
+    }
+
+	googleClientID := os.Getenv("GOOGLE_CLIENT_ID")
+	googleClientSecret := os.Getenv("GOOGLE_CLIENT_SECRET")
+	googleCallbackURL := os.Getenv("GOOGLE_CALLBACK_URL")
+
+	if googleClientID == "" || googleClientSecret == "" || googleCallbackURL == "" {
+		log.Fatal("Environment variables (GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_CALLBACK_URL) are required")
 	}
 
-    log.Println("making store")
+    githubClientID := os.Getenv("GITHUB_CLIENT_ID")
+    githubClientSecret := os.Getenv("GITHUB_CLIENT_SECRET")
+    githubCallbackURL := os.Getenv("GITHUB_CALLBACK_URL")
+
+	if githubClientID == "" || githubClientSecret == "" || githubCallbackURL == "" {
+		log.Fatal("Environment variables (GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET, GITHUB_CALLBACK_URL) are required")
+	}
+
     store := sessions.NewCookieStore([]byte(sessionKey))
-    store.MaxAge(90)
+    store.MaxAge(COOKIE_MAX_AGE)
     store.Options.Path = "/"
     store.Options.HttpOnly = true
     store.Options.Secure = true
@@ -43,7 +58,8 @@ func init() {
     gothic.Store = store
 
 	goth.UseProviders(
-		google.New(clientID, clientSecret, clientCallbackURL, "email", "profile"),
+		google.New(googleClientID, googleClientSecret, googleCallbackURL, "email", "profile"),
+        github.New(githubClientID, githubClientSecret, githubCallbackURL, "user"),
     )
 
 }
@@ -73,16 +89,18 @@ func CallbackHandler(c *gin.Context) {
     sessionToken := generateToken(32)
     csrfToken := generateToken(32)
 
-    usr := users.User{-1, g_user.Name, g_user.Email, sessionToken, csrfToken, provider, 0, 0}
+    // TODO: try and get the avatar image
+    // TODO: handle empty email
+    usr := users.User{-1, g_user.NickName, g_user.Email, sessionToken, csrfToken, provider, 0, 0}
     err = usr.StoreUser()
 
     if err != nil {
         log.Println(err)
     }
 
-    c.SetCookie("user_id", strconv.Itoa(usr.Id), 86400 * 30, "/", "localhost", true, true)
-    c.SetCookie("session_token", sessionToken, 86400 * 30, "/", "localhost", true, true)
-    c.SetCookie("csrf_token", csrfToken, 86400 * 30, "/", "localhost", true, true)
+    c.SetCookie("user_id", strconv.Itoa(usr.Id), COOKIE_MAX_AGE, "/", "localhost", true, true)
+    c.SetCookie("session_token", sessionToken, COOKIE_MAX_AGE, "/", "localhost", true, true)
+    c.SetCookie("csrf_token", csrfToken, COOKIE_MAX_AGE, "/", "localhost", true, true)
 
 	c.Redirect(http.StatusTemporaryRedirect, "/profile")
 }

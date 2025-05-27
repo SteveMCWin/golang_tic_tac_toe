@@ -65,19 +65,12 @@ func LoadUserData(c *gin.Context) (usr User, err error) {
     )
 
     if err != nil {
-        log.Println("The user wasn't loaded for comparing\n")
-        log.Println("error:", err)
+        return
     }
 
     if usr.SessionToken != sess || usr.CSRFToken != csrf {
         usr = User{}    // make sure to return an empty user if login fails
         err = errors.New("Session token or csrf token missmatch")
-        // log.Println("EXPECTED")
-        // log.Println("sess:\t", sess)
-        // log.Println("csrf:\t", csrf)
-        // log.Println("RECIEVED")
-        // log.Println("sess:\t", usr.SessionToken)
-        // log.Println("csrf:\t", usr.CSRFToken)
     }
 
     return
@@ -88,6 +81,7 @@ func (usr *User) StoreUser() (err error) {
     log.Println("Trying to get user named: ", usr.UserName)
     err = Db.QueryRow("select id from users where email like ?", usr.Email).Scan(&usr.Id)
 
+    log.Println(usr)
     // the user hasn't logged in before so load him into the data base
     if err != nil {
         log.Println("IT DID NOT RECOGNIZE THE USER")
@@ -103,12 +97,9 @@ func (usr *User) StoreUser() (err error) {
     }
 
     log.Println("IT RECOGNIZED THE USER FROM BEFORE")
-    // log.Println("THE NEW COOKIES ARE")
-    // log.Println("sess:\t", usr.SessionToken)
-    // log.Println("csrf:\t", usr.CSRFToken)
 
-    // the user has logged in before so just update the tokens
-    // TODO: should also update the name in case the user changed their name on google
+    // the user has logged in before so just update the data that may have changed and the tokens
+    // TODO: check if the provider is the same and if so ask the user whatever
     _, err = Db.Exec("update users set username = ?, session_token = ?, csrf_token = ?, provider = ? where id = ?",
                       usr.UserName, usr.SessionToken, usr.CSRFToken, usr.Provider, usr.Id)
     return

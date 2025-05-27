@@ -13,7 +13,7 @@ import (
 
 func main() {
 
-    hub := &game.Hub{Games: make([]*game.Game, 0), PlayerQueue: make(chan *game.Player, 2)}
+    hub := &game.Hub{Games: make([]*game.Game, 0), PlayerQueue: make(chan *game.Player, 20)}
     go hub.HandleGames()
 
 	r := gin.Default()
