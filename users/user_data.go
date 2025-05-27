@@ -40,6 +40,7 @@ func LoadUserData(c *gin.Context) (usr User, err error) {
 
     user, err := c.Cookie("user_id")
     if err != nil {
+        usr.UserName = "Guest"
         return
     }
 
@@ -99,7 +100,7 @@ func (usr *User) StoreUser() (err error) {
     log.Println("IT RECOGNIZED THE USER FROM BEFORE")
 
     // the user has logged in before so just update the data that may have changed and the tokens
-    // TODO: check if the provider is the same and if so ask the user whatever
+    // TODO: check if the provider is the same and if not ask the user whatever
     _, err = Db.Exec("update users set username = ?, session_token = ?, csrf_token = ?, provider = ? where id = ?",
                       usr.UserName, usr.SessionToken, usr.CSRFToken, usr.Provider, usr.Id)
     return

@@ -14,11 +14,13 @@ import (
 type Game struct {
     players [2]*Player
     player_timers [2]*PlayerTimer
+    // game_start_timer *PlayerTimer
     b *board.Board
     p1move bool
+    game_started bool
+    move_counter int
 }
 
-// TODO: read the duration parameter in the 
 func Play(c *gin.Context) {
     game_mode := c.Query("game_mode")
     log.Println("game_mode in Play:", game_mode)
@@ -28,16 +30,19 @@ func Play(c *gin.Context) {
     })
 }
 
-// TODO: add time as a parameter
 func NewGame(p1, p2 *Player, mode GameMode) *Game {
     g := &Game{}
     g.players[0] = p1
     g.players[1] = p2
     g.b = &board.Board{}
     g.p1move = true // player 1 makes the first move
+    g.game_started = false
+    g.move_counter = 0
     // update user stats
     g.players[0].u.GamesPlayed += 1
     g.players[1].u.GamesPlayed += 1
+
+    // g.game_start_timer = MakePlayerTimer(3 * time.Second)
 
     switch mode {
     case normal_5s:
@@ -59,22 +64,36 @@ func NewGame(p1, p2 *Player, mode GameMode) *Game {
 
 func (g *Game) Run() {
     go g.players[0].ListenToSocket()
-    go g.players[1].ListenToSocket()
-
     go g.players[0].ListenToServer()
-    go g.players[1].ListenToServer()
 
-    g.player_timers[0].Start()
+    go g.players[1].ListenToSocket()
+    go g.players[1].ListenToServer()
 
     defer g.players[0].UpdatePlayerStats()
     defer g.players[1].UpdatePlayerStats()
 
-    // TODO: make delay so game doesn't start immediately
-    // TODO: make it so no input is taken before the game actually starts
+    go func() {
+        log.Println("GAME STARTS IN")
+        log.Println("3")
+        time.Sleep(time.Second)
+        log.Println("2")
+        time.Sleep(time.Second)
+        log.Println("1")
+        time.Sleep(time.Second)
+        log.Println("GOOO")
+        g.game_started = true
+        g.player_timers[0].Start()
+    }()
+
     for {
+        if g.move_counter >= 9 {
+            log.Printf("IT'S A DRAW")
+            return
+        }
         select {
         case pos := <- g.players[0].move:
-            if g.p1move == true {
+            if g.p1move == true && g.game_started == true {
+                g.move_counter += 1
                 g.player_timers[0].Pause()
                 log.Printf("Paused p1 timer at %s", g.player_timers[0].TimeLeft.String())
                 b_state, err := g.b.MakeMove(pos, byte('x'))
@@ -95,7 +114,8 @@ func (g *Game) Run() {
                 log.Println("IT'S PLAYER 2'S MOVE")
             }
         case pos := <- g.players[1].move:
-            if g.p1move == false {
+            if g.p1move == false && g.game_started == true {
+                g.move_counter += 1
                 g.player_timers[1].Pause()
                 log.Printf("Paused p2 timer at %s", g.player_timers[1].TimeLeft.String())
                 b_state, err := g.b.MakeMove(pos, byte('o'))

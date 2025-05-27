@@ -52,7 +52,7 @@ func MakePlayer(hub *Hub, c *gin.Context) {
 
     if err != nil {
         log.Println(err)
-        // not fatal
+        // not fatal, probably just a guest user
     }
 
     connection, err := upgrader.Upgrade(c.Writer, c.Request, nil)
