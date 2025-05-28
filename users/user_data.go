@@ -31,6 +31,7 @@ func init() {
         panic(err)
     }
 
+    // NOTE: comment and uncomment when testing I guess
     go RunLeaderBoard()
 }
 

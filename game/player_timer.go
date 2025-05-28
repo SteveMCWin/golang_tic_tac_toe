@@ -25,6 +25,7 @@ func MakePlayerTimer(d time.Duration) (pt *PlayerTimer){
 
 func (pt *PlayerTimer) Start() {
     // I think I have to update last frame here
+    pt.lastFrame = time.Now()
     pt.isPaused = false
     go pt.run()
 }
