@@ -105,7 +105,7 @@ func CallbackHandler(c *gin.Context) {
 	c.Redirect(http.StatusTemporaryRedirect, "/profile")
 }
 
-func ProfilePageHandler(c *gin.Context) {
+func ServeProfile(c *gin.Context) {
     tmpl, err := template.ParseFiles("templates/profile.html")
     if err != nil {
         c.AbortWithStatus(http.StatusInternalServerError)

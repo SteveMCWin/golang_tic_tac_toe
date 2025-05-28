@@ -8,10 +8,12 @@ import (
 
 type GameMode int
 
+// TODO: consider splitting the modes into two categories: time and actual game mode (normal, 2d, etc.)
 const (
     normal_5s GameMode = iota
     normal_10s
     normal_15s
+
     game_mode_size  // make sure to keep this the last on the list
 )
 
@@ -20,7 +22,7 @@ type Hub struct {
     // Games []*Game
 }
 
-func EnterHub(c *gin.Context) {
+func ServeHub(c *gin.Context) {
     tmpl, err := template.ParseFiles("templates/hub.html")
 	if err != nil {
 		c.AbortWithStatus(http.StatusInternalServerError)

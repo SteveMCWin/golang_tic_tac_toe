@@ -80,7 +80,8 @@ func LoadUserData(c *gin.Context) (usr User, err error) {
 func (usr *User) StoreUser() (err error) {
     // should search by mail instead
     log.Println("Trying to get user named: ", usr.UserName)
-    err = Db.QueryRow("select id from users where email like ?", usr.Email).Scan(&usr.Id)
+    var prov string
+    err = Db.QueryRow("select id, provider from users where email like ?", usr.Email).Scan(&usr.Id, &prov)
 
     log.Println(usr)
     // the user hasn't logged in before so load him into the data base
@@ -99,8 +100,11 @@ func (usr *User) StoreUser() (err error) {
 
     log.Println("IT RECOGNIZED THE USER FROM BEFORE")
 
-    // the user has logged in before so just update the data that may have changed and the tokens
-    // TODO: check if the provider is the same and if not ask the user whatever
+    // if prov != usr.Provider {
+    //     log.Println("The user has already logged in with", prov, "before")
+    // } else {
+    //     log.Println("All ok")
+    // }
     _, err = Db.Exec("update users set username = ?, session_token = ?, csrf_token = ?, provider = ? where id = ?",
                       usr.UserName, usr.SessionToken, usr.CSRFToken, usr.Provider, usr.Id)
     return

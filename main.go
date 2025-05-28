@@ -18,19 +18,21 @@ func main() {
 
 	r.LoadHTMLGlob("templates/*")
 	
-	r.GET("/", home)
+	r.GET("/", ServeHome)
+    // r.GET("/about", ServeAbout)
+    // r.GET("/leaderboard", ServeLeaderboard)
+    r.GET("/hub", game.ServeHub)
+    r.GET("/play", game.ServePlay)
+	r.GET("/profile", auth.ServeProfile)
+    r.GET("/logout/:provider/", auth.LogoutHandler)
 	r.GET("/auth/:provider", auth.SignInWithProvider)
 	r.GET("/auth/:provider/callback/", auth.CallbackHandler)
-    r.GET("/logout/:provider/", auth.LogoutHandler)
-	r.GET("/profile", auth.ProfilePageHandler)
-    r.GET("/hub", game.EnterHub)
-    r.GET("/play", game.Play)
     r.GET("/ws", func (c *gin.Context) { game.MakePlayer(hub, c) })
 
 	r.RunTLS(":5000", "./testdata/server.pem", "./testdata/server.key")
 }
 
-func home(c *gin.Context) {
+func ServeHome(c *gin.Context) {
 
     tmpl, err := template.ParseFiles("templates/index.html")
 	if err != nil {

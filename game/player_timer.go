@@ -17,13 +17,14 @@ func MakePlayerTimer(d time.Duration) (pt *PlayerTimer){
     pt = &PlayerTimer{}
     pt.TimeLeft = d
     pt.isPaused = true
-    pt.Finished = make(chan bool)
+    pt.Finished = make(chan bool, 1)
     pt.lastFrame = time.Now()
 
     return
 }
 
 func (pt *PlayerTimer) Start() {
+    // I think I have to update last frame here
     pt.isPaused = false
     go pt.run()
 }
@@ -45,5 +46,7 @@ func (pt *PlayerTimer) run() {
             pt.isPaused = true
             return
         }
+
+        time.Sleep(10 * time.Millisecond)
     }
 }
