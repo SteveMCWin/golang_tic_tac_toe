@@ -1,9 +1,12 @@
 package users
 
 import (
+    "io"
+    "os"
     "log"
     "sync"
     "errors"
+    "net/http"
 
 	"github.com/gin-gonic/gin"
     "database/sql"
@@ -14,6 +17,7 @@ type User struct {
     Id              int
     UserName        string
     Email           string
+    AvatarURL       string
     SessionToken    string
     CSRFToken       string
     Provider        string
@@ -74,10 +78,11 @@ func LoadUserData(c *gin.Context) (usr *User, err error) {
         return
     }
 
-    err = Db.QueryRow("select id, username, email, session_token, csrf_token, provider, games_played, games_won from users where id = ?", user).Scan(
+    err = Db.QueryRow("select id, username, email, avatar_url, session_token, csrf_token, provider, games_played, games_won from users where id = ?", user).Scan(
         &usr.Id,
         &usr.UserName,
         &usr.Email,
+        &usr.AvatarURL,
         &usr.SessionToken,
         &usr.CSRFToken,
         &usr.Provider,
@@ -97,25 +102,25 @@ func LoadUserData(c *gin.Context) (usr *User, err error) {
     return
 }
 
-// change this to be (db *sql.Db) StoreUser(usr *User) (err error)
+// maybe change this to be (db *sql.Db) StoreUser(usr *User) (err error)
 func (usr *User) StoreUser() (err error) {
     // should search by mail instead
-    log.Println("Trying to get user named: ", usr.UserName)
+    // log.Println("Trying to get user with email: ", usr.Email)
     var prov string
     err = Db.QueryRow("select id, provider from users where email like ?", usr.Email).Scan(&usr.Id, &prov)
 
-    log.Println(usr)
+    // log.Println(usr)
     // the user hasn't logged in before so load him into the data base
     if err != nil {
         log.Println("IT DID NOT RECOGNIZE THE USER")
-        statement := "insert into users (username, email, session_token, csrf_token, provider, games_played, games_won) values (?, ?, ?, ?, ?, ?, ?) returning id"
+        statement := "insert into users (username, email, avatar_url, session_token, csrf_token, provider, games_played, games_won) values (?, ?, ?, ?, ?, ?, ?, ?) returning id"
         var stmt *sql.Stmt
         stmt, err = Db.Prepare(statement)
         if err != nil {
             return
         }
         defer stmt.Close()
-        err = stmt.QueryRow(usr.UserName, usr.Email, usr.SessionToken, usr.CSRFToken, usr.Provider, usr.GamesPlayed, usr.GamesWon).Scan(&usr.Id)
+        err = stmt.QueryRow(usr.UserName, usr.Email, usr.AvatarURL, usr.SessionToken, usr.CSRFToken, usr.Provider, usr.GamesPlayed, usr.GamesWon).Scan(&usr.Id)
         return
     }
 
@@ -126,9 +131,34 @@ func (usr *User) StoreUser() (err error) {
     // } else {
     //     log.Println("All ok")
     // }
-    _, err = Db.Exec("update users set username = ?, session_token = ?, csrf_token = ?, provider = ? where id = ?",
-                      usr.UserName, usr.SessionToken, usr.CSRFToken, usr.Provider, usr.Id)
+    _, err = Db.Exec("update users set username = ?, avatar_url = ?, session_token = ?, csrf_token = ?, provider = ? where id = ?",
+                      usr.UserName, usr.AvatarURL, usr.SessionToken, usr.CSRFToken, usr.Provider, usr.Id)
     return
+}
+
+// not used but still here in case I find it useful somehow
+func (usr *User) storeUserPfp() (err error) {
+    log.Println("AVATAR URL:", usr.AvatarURL)
+    img_response, err := http.Get(usr.AvatarURL)
+    if err != nil {
+        return err
+    }
+    defer img_response.Body.Close()
+
+    img_filepath := "users/pfps/pfp" + usr.UserName
+    file, err := os.Create(img_filepath)
+
+    if err != nil {
+        return err
+    }
+    defer file.Close()
+
+    _, err = io.Copy(file, img_response.Body)
+    if err != nil {
+        return err
+    }
+
+    return nil
 }
 
 func (usr *User) UpdateGameStats() (err error) {
