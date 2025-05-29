@@ -2,6 +2,7 @@ package users
 
 import (
     "log"
+    "sync"
     "errors"
 
 	"github.com/gin-gonic/gin"
@@ -23,21 +24,39 @@ type User struct {
 
 // TODO: split the users table into two tables, users and players. they will share the keys
 var Db *sql.DB
+var once sync.Once
 
-func init() {
-    var err error
-    Db, err = sql.Open("sqlite3", "users/users.db")
-    if err != nil {
-        panic(err)
-    }
+var MostWinsLb *LeaderBoard
+var MostGamesLb *LeaderBoard
 
-    // NOTE: comment and uncomment when testing I guess
-    go RunLeaderBoard()
+func InitDb() {
+    once.Do(func() {
+        var err error
+        Db, err = sql.Open("sqlite3", "users/users.db")
+        if err != nil {
+            panic(err)
+        }
+
+        MostWinsLb, err = InitLeaderBoard(MostWins)
+        if err != nil {
+            panic(err)
+        }
+
+        MostGamesLb, err = InitLeaderBoard(MostGames)
+        if err != nil {
+            panic(err)
+        }
+
+        go MostWinsLb.RunLeaderBoard()
+        go MostGamesLb.RunLeaderBoard()
+        // go RunLeaderBoard()
+    })
 }
 
-func LoadUserData(c *gin.Context) (usr User, err error) {
+// change this to be (db *sql.Db) LoadUserData(c *gin.Context) (usr *User, err error)
+func LoadUserData(c *gin.Context) (usr *User, err error) {
 
-    usr = User{}
+    usr = &User{}
 
     user, err := c.Cookie("user_id")
     if err != nil {
@@ -71,13 +90,14 @@ func LoadUserData(c *gin.Context) (usr User, err error) {
     }
 
     if usr.SessionToken != sess || usr.CSRFToken != csrf {
-        usr = User{}    // make sure to return an empty user if login fails
+        usr = &User{}    // make sure to return an empty user if login fails
         err = errors.New("Session token or csrf token missmatch")
     }
 
     return
 }
 
+// change this to be (db *sql.Db) StoreUser(usr *User) (err error)
 func (usr *User) StoreUser() (err error) {
     // should search by mail instead
     log.Println("Trying to get user named: ", usr.UserName)

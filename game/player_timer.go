@@ -5,7 +5,6 @@ import (
     "time"
 )
 
-// TODO: this needs to be tested in the game setting because it's acting really weird sometimes
 type PlayerTimer struct {
     TimeLeft time.Duration
     isPaused bool

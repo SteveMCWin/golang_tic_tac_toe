@@ -3,15 +3,52 @@ package users
 import (
     "log"
     "time"
+    "errors"
 )
 
-var LeaderBoard []*User
+type LbCriteria int
 
-func updateLeaderboard() {
-    rows, err := Db.Query("SELECT username, games_won FROM users ORDER BY games_won DESC LIMIT 10");
+// TODO: make the functions below methods of the leaderboard type. implement a MakeLeaderboard(cr Criteria) where Criteria is an enum type
+type LeaderBoard struct {
+    TopPlayers []*User
+    Criteria LbCriteria
+}
+
+const (
+    MostWins LbCriteria = iota
+    MostGames
+    LbCriteriaSize
+)
+
+// var MostWinsLb *LeaderBoard
+// var MostGamesLb *LeaderBoard
+// var BestWinrateLb *LeaderBoard
+
+func InitLeaderBoard(crit LbCriteria) (*LeaderBoard, error) {
+    if crit < LbCriteria(0) || crit >= LbCriteriaSize {
+        return nil, errors.New("Wrong leaderboard criteria")
+    }
+
+    lb := &LeaderBoard{ TopPlayers: make([]*User, 0), Criteria: crit}
+
+    return lb, nil
+}
+
+func (lb *LeaderBoard) updateLeaderboard() {
+    var stmt string
+    switch lb.Criteria {
+    case MostWins:
+        stmt = "SELECT username, games_won FROM users ORDER BY games_won DESC LIMIT 10"
+    case MostGames:
+        stmt = "SELECT username, games_played FROM users ORDER BY games_played DESC LIMIT 10"
+    default:
+        stmt = "SELECT username, games_won FROM users ORDER BY games_won DESC LIMIT 10"
+    }
+    rows, err := Db.Query(stmt);
     if err != nil {
         log.Println("update leaderboard error:")
         log.Println(err)
+        return
     }
     defer rows.Close()
 
@@ -19,9 +56,10 @@ func updateLeaderboard() {
     if err != nil {
         log.Println("update leaderboard error:")
         log.Println(err)
+        return
     }
 
-    LeaderBoard = make([]*User, 0)
+    lb.TopPlayers = make([]*User, 0)
 
     for rows.Next() {
         usr := User{}
@@ -31,15 +69,20 @@ func updateLeaderboard() {
             log.Println(err)
         }
 
-        LeaderBoard = append(LeaderBoard, &usr)
+        lb.TopPlayers = append(lb.TopPlayers, &usr)
     }
 }
 
-func RunLeaderBoard() {
+func (lb *LeaderBoard) RunLeaderBoard() {
     for {
-        updateLeaderboard()
-        // log.Println("LeaderBoard:")
-        // for _, usr := range LeaderBoard {
+        lb.updateLeaderboard()
+        // log.Print("LeaderBoard: ")
+        // if lb.Criteria == MostWins {
+        //     log.Print("MostWins")
+        // } else {
+        //     log.Print("GamesPlayed")
+        // }
+        // for _, usr := range lb.TopPlayers {
         //     log.Printf("%s:\t%d", usr.UserName, usr.GamesWon)
         // }
         time.Sleep(10 * time.Second)

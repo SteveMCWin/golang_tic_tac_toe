@@ -61,7 +61,7 @@ func MakePlayer(hub *Hub, c *gin.Context) {
         return
     }
 
-    new_player := &Player{u: &usr, conn: connection, move: make(chan byte), board_state: make(chan []byte), exited: make(chan bool)}
+    new_player := &Player{u: usr, conn: connection, move: make(chan byte), board_state: make(chan []byte), exited: make(chan bool)}
     game_mode, err := strconv.Atoi(c.Query("game_mode"))
 
     if err != nil {

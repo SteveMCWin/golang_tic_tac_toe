@@ -5,11 +5,14 @@ import (
 	"net/http"
     "tic_tac_toe.fun/auth"
     "tic_tac_toe.fun/game"
+    "tic_tac_toe.fun/users"
 
 	"github.com/gin-gonic/gin"
 )
 
 func main() {
+
+    users.InitDb()
 
     hub := game.MakeHub()
     go hub.HandleGames()

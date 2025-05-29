@@ -6,16 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type GameMode int
-
-// TODO: consider splitting the modes into two categories: time and actual game mode (normal, 2d, etc.)
-const (
-    normal_5s GameMode = iota
-    normal_10s
-    normal_15s
-
-    game_mode_size  // make sure to keep this the last on the list
-)
+type GameDuration int
 
 type Hub struct {
     PlayerQueues map[GameMode]chan *Player

@@ -11,6 +11,16 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+type GameMode int
+
+const (
+    normal_5s GameMode = iota
+    normal_10s
+    normal_15s
+
+    game_mode_size  // make sure to keep this the last on the list
+)
+
 type Game struct {
     players [2]*Player
     player_timers [2]*PlayerTimer
