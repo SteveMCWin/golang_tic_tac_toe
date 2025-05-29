@@ -8,7 +8,6 @@ import (
 
 type LbCriteria int
 
-// TODO: make the functions below methods of the leaderboard type. implement a MakeLeaderboard(cr Criteria) where Criteria is an enum type
 type LeaderBoard struct {
     TopPlayers []*User
     Criteria LbCriteria

@@ -10,29 +10,13 @@ import (
 // 3 4 5
 // 6 7 8
 
-type Board [9]byte
+type Board struc {
+    Cells [9]byte
+    Result byte
+}
 
 func (b *Board) MakeMove(pos byte, player byte) (b_state []byte, err error) {
-    if pos >= '0' && pos <= '9' {
-        pos = pos - '0'
-    }
-
-    if pos < 0 || pos > 8 {
-        err = fmt.Errorf("invalid call to make_move:\nExpected pos 0-8, got %d", pos)
-        return
-    }
-
-    if player != byte('x') && player != byte('o') {
-        err = fmt.Errorf("invalid call to make_move:\nExpected player x or o, got %c", player)
-        return
-    }
-
-    if b[pos] != 0 {
-        err = errors.New("invlaid call to make_move:\nCannov overwrite already played field")
-        return
-    }
-
-    b[pos] = player
+    b.Cells[pos] = player
 
     b_state = make([]byte, 9)
 
@@ -40,50 +24,44 @@ func (b *Board) MakeMove(pos byte, player byte) (b_state []byte, err error) {
         b_state[i] = b[i]
     }
 
-    // for i := 0; i < 9; i++ {
-    //     fmt.Printf("%d\t", b_state[i])
-    //     if (i+1)%3 == 0 {
-    //         fmt.Println()
-    //     }
-    // }
-
     return
 }
 
-func (b *Board) CheckForWin() (res bool) {
-    res = false
-
+func (b *Board) UpdateResult() bool {
     for i := 0; i < 3; i++ {
         // check columns
-        if b[i] == 0 {
+        if b.Cells[i] == 0 {
             continue
         }
-        if b[i] == b[i+3] && b[i] == b[i+6] {
-            res = true
-            return
+        if b.Cells[i] == b.Cells[i+3] && b.Cells[i] == b.Cells[i+6] {
+            b.Result = b.Cells[i]
+            return true
         }
-        if b[3*i] == 0 {
+        if b.Cells[3*i] == 0 {
             continue
         }
-        if b[3*i] == b[3*i+1] && b[3*i] == b[3*i+2] {
-            res = true
-            return
+        if b.Cells[3*i] == b.Cells[3*i+1] && b.Cells[3*i] == b.Cells[3*i+2] {
+            b.Result = b.Cells[i]
+            return true
         }
     }
 
-    if b[4] == 0 {
-        return
+    if b.Cells[4] == 0 {
+        return false
     }
 
-    if b[0] == b[4] && b[0] == b[8] {
-        res = true
-        return
+    if b.Cells[0] == b.Cells[4] && b.Cells[0] == b.Cells[8] {
+        b.Result = b.Cells[i]
+        return true
     }
 
-    if b[2] == b[4] && b[2] == b[6] {
-        res = true
-        return
+    if b.Cells[2] == b.Cells[4] && b.Cells[2] == b.Cells[6] {
+        b.Result = b.Cells[i]
+        return true
     }
 
-    return
+    // TODO: handle all cells full but no winner
+
+    return false
+
 }

@@ -86,12 +86,14 @@ func CallbackHandler(c *gin.Context) {
 		return
 	}
 
+    if g_user.Email == "" {
+        log.Printf("The user email couldn't be fetched from %s, please try another login method", provider)
+    }
+
     sessionToken := generateToken(32)
     csrfToken := generateToken(32)
 
-    // TODO: try and get the avatar image
-    // TODO: handle empty email
-    usr := users.User{-1, g_user.NickName, g_user.Email, sessionToken, csrfToken, provider, 0, 0}
+    usr := users.User{-1, g_user.NickName, g_user.Email, g_user.AvatarURL, sessionToken, csrfToken, provider, 0, 0}
     err = usr.StoreUser()
 
     if err != nil {

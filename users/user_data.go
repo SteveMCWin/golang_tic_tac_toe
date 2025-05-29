@@ -26,7 +26,7 @@ type User struct {
     GamesWon        int
 }
 
-// TODO: split the users table into two tables, users and players. they will share the keys
+// TODO: consider splitting the users table into two tables, users and players. they will share the keys
 var Db *sql.DB
 var once sync.Once
 
