@@ -1,17 +1,23 @@
 package board
 
 import (
-    "log"
+    // "log"
+    "fmt"
+    "errors"
 )
 
+const wildBoard = '?'
+const BoardTie = '_'
+
+// NOTE: make sure to initialize BigBoard's boardToPlayIn with value wildBoard
 type BigBoard struct {
     boardToPlayIn byte
     Boards [9]*Board
     Result byte
+    boardsComplete byte
 }
 
-// TODO: handle when the boardToPlayIn is complete
-
+// TODO: optimize the b_state, checking all squares is not needed at all
 func (bb *BigBoard) MakeMove(big_pos byte, pos byte, player byte) (b_state [][]byte, err error) {
     err = bb.checkIfMoveValid(big_pos, pos, player)
     if err != nil {
@@ -19,10 +25,16 @@ func (bb *BigBoard) MakeMove(big_pos byte, pos byte, player byte) (b_state [][]b
     }
 
     bb.Boards[big_pos].MakeMove(pos, player)
-    bb.boardToPlayIn = pos
 
-    res := bb.Boards[big_pos].UpdateResult()
-    if res == true {
+    if bb.Boards[pos].Result == 0 {
+        bb.boardToPlayIn = pos
+    } else {
+        bb.boardToPlayIn = wildBoard
+    }
+
+    bb.Boards[big_pos].UpdateResult()
+    if bb.Boards[big_pos].Result != byte(0) {
+        bb.boardsComplete += 1
         bb.UpdateResult()
     }
 
@@ -38,7 +50,6 @@ func (bb *BigBoard) MakeMove(big_pos byte, pos byte, player byte) (b_state [][]b
     return
 }
 
-// TODO: check for tie and stop the game accordingly
 func (bb *BigBoard) UpdateResult() {
     for i := 0; i < 3; i++ {
         // check columns
@@ -46,14 +57,14 @@ func (bb *BigBoard) UpdateResult() {
             continue
         }
         if bb.Boards[i].Result == bb.Boards[i+3].Result && bb.Boards[i].Result == bb.Boards[i+6].Result {
-            b.Result = bb.Boards[i].Result
+            bb.Result = bb.Boards[i].Result
             return
         }
         if bb.Boards[3*i].Result == 0 {
             continue
         }
         if bb.Boards[3*i].Result == bb.Boards[3*i+1].Result && bb.Boards[3*i].Result == bb.Boards[3*i+2].Result {
-            b.Result = bb.Boards[i].Result
+            bb.Result = bb.Boards[i].Result
             return
         }
     }
@@ -63,12 +74,17 @@ func (bb *BigBoard) UpdateResult() {
     }
 
     if bb.Boards[0].Result == bb.Boards[4].Result && bb.Boards[0].Result == bb.Boards[8].Result {
-        b.Result = bb.Boards[i].Result
+        bb.Result = bb.Boards[4].Result
         return
     }
 
     if bb.Boards[2].Result == bb.Boards[4].Result && bb.Boards[2].Result == bb.Boards[6].Result {
-        b.Result = bb.Boards[i].Result
+        bb.Result = bb.Boards[4].Result
+        return
+    }
+
+    if bb.boardsComplete >= 9 {
+        bb.Result = BoardTie
         return
     }
 
@@ -85,7 +101,7 @@ func (bb *BigBoard) checkIfMoveValid(big_pos byte, pos byte, player byte) (err e
         pos = pos - '0'
     }
 
-    if big_pos != bb.boardToPlayIn {
+    if big_pos != bb.boardToPlayIn && bb.boardToPlayIn != wildBoard {
         err = fmt.Errorf("invalid call to make_move:\nbig_pos and prev_pos missmatch: big_pos = %d, prev_pos = %d", big_pos, bb.boardToPlayIn)
         return
     }

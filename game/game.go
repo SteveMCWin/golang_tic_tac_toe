@@ -56,16 +56,16 @@ func NewGame(p1, p2 *Player, mode GameMode) *Game {
 
     switch mode {
     case normal_5s:
-        g.player_timers[0] = MakePlayerTimer(5 * time.Second)
-        g.player_timers[1] = MakePlayerTimer(5 * time.Second)
+        g.player_timers[0] = MakePlayerTimer(5 * time.Second, 0 * time.Second)
+        g.player_timers[1] = MakePlayerTimer(5 * time.Second, 0 * time.Second)
         log.Println("CREATED GAME DURATION 5s")
     case normal_10s:
-        g.player_timers[0] = MakePlayerTimer(10 * time.Second)
-        g.player_timers[1] = MakePlayerTimer(10 * time.Second)
+        g.player_timers[0] = MakePlayerTimer(10 * time.Second, 0 * time.Second)
+        g.player_timers[1] = MakePlayerTimer(10 * time.Second, 0 * time.Second)
         log.Println("CREATED GAME DURATION 10s")
     case normal_15s:
-        g.player_timers[0] = MakePlayerTimer(15 * time.Second)
-        g.player_timers[1] = MakePlayerTimer(15 * time.Second)
+        g.player_timers[0] = MakePlayerTimer(15 * time.Second, 0 * time.Second)
+        g.player_timers[1] = MakePlayerTimer(15 * time.Second, 0 * time.Second)
         log.Println("CREATED GAME DURATION 15s")
     }
 

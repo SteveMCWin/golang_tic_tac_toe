@@ -5,19 +5,22 @@ import (
     "time"
 )
 
+// TODO: remake test because of fischer time
 type PlayerTimer struct {
     TimeLeft time.Duration
     isPaused bool
     Finished chan bool
     lastFrame time.Time
+    FischerTime time.Duration
 }
 
-func MakePlayerTimer(d time.Duration) (pt *PlayerTimer){
+func MakePlayerTimer(d time.Duration, ft time.Duration) (pt *PlayerTimer){
     pt = &PlayerTimer{}
     pt.TimeLeft = d
     pt.isPaused = true
     pt.Finished = make(chan bool, 1)
     pt.lastFrame = time.Now()
+    pt.FischerTime = ft
 
     return
 }
@@ -30,6 +33,7 @@ func (pt *PlayerTimer) Start() {
 }
 
 func (pt *PlayerTimer) Pause() {
+    pt.TimeLeft += pt.FischerTime
     pt.isPaused = true
 }
 

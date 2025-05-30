@@ -13,6 +13,7 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
+// TODO: elo system
 type User struct {
     Id              int
     UserName        string

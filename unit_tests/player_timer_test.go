@@ -8,7 +8,7 @@ import (
 
 func TestTimerRunsOut(t *testing.T) {
     t.Parallel()
-	pt := game.MakePlayerTimer(1 * time.Second)
+	pt := game.MakePlayerTimer(1 * time.Second, 2 * time.Second)
 	pt.Start()
 
 	select {
@@ -20,7 +20,7 @@ func TestTimerRunsOut(t *testing.T) {
 
 func TestTimerPause(t *testing.T) {
     t.Parallel()
-	pt := game.MakePlayerTimer(1 * time.Second)
+	pt := game.MakePlayerTimer(1 * time.Second, 2 * time.Second)
 	pt.Start()
 
     time.Sleep(50 * time.Millisecond)
@@ -36,8 +36,8 @@ func TestTimerPause(t *testing.T) {
 
 func TestTimerRace(t *testing.T) {
     t.Parallel()
-    pt1 := game.MakePlayerTimer(3 * time.Second)
-    pt2 := game.MakePlayerTimer(3 * time.Second)
+    pt1 := game.MakePlayerTimer(3 * time.Second, 2 * time.Second)
+    pt2 := game.MakePlayerTimer(3 * time.Second, 2 * time.Second)
 
     pt1.Start()
 
@@ -55,8 +55,8 @@ func TestTimerRace(t *testing.T) {
 
 func TestTimerRace2(t *testing.T) {
     t.Parallel()
-    pt1 := game.MakePlayerTimer(3 * time.Second)
-    pt2 := game.MakePlayerTimer(3 * time.Second)
+    pt1 := game.MakePlayerTimer(3 * time.Second, 0 * time.Second)
+    pt2 := game.MakePlayerTimer(3 * time.Second, 0 * time.Second)
 
     pt1.Start()
 
@@ -77,7 +77,7 @@ func TestPauseAccuracy(t *testing.T) {
     t.Parallel()
     delta := 20 * time.Millisecond
 
-    pt1 := game.MakePlayerTimer(3 * time.Second)
+    pt1 := game.MakePlayerTimer(3 * time.Second, 0 * time.Second)
     pt1.Start()
     time.Sleep(1000 * time.Millisecond)
     pt1.Pause()
@@ -90,6 +90,26 @@ func TestPauseAccuracy(t *testing.T) {
     pt1.Pause()
     if (pt1.TimeLeft - 1000 * time.Millisecond).Abs() > delta {
         t.Error("Timer unprecise. Expected about 1000ms, got", pt1.TimeLeft)
+    }
+}
+
+func TestFischerPauseAccuracy(t *testing.T) {
+    t.Parallel()
+    delta := 20 * time.Millisecond
+
+    pt1 := game.MakePlayerTimer(3 * time.Second, 1 * time.Second)
+    pt1.Start()
+    time.Sleep(1000 * time.Millisecond)
+    pt1.Pause()
+    if (pt1.TimeLeft - 3000 * time.Millisecond).Abs() > delta {
+        t.Error("Timer unprecise. Expected about 3000ms, got", pt1.TimeLeft)
+    }
+    time.Sleep(200 * time.Millisecond)
+    pt1.Start()
+    time.Sleep(2000 * time.Millisecond)
+    pt1.Pause()
+    if (pt1.TimeLeft - 2000 * time.Millisecond).Abs() > delta {
+        t.Error("Timer unprecise. Expected about 2000ms, got", pt1.TimeLeft)
     }
 }
 
