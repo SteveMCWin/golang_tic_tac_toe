@@ -9,12 +9,19 @@ import (
 const wildBoard = '?'
 const BoardTie = '_'
 
-// NOTE: make sure to initialize BigBoard's boardToPlayIn with value wildBoard
 type BigBoard struct {
     boardToPlayIn byte
     Boards [9]*Board
     Result byte
     boardsComplete byte
+}
+
+func (bb *BigBoard) Initialize() {
+    for i := 0; i < 9; i++ {
+        bb.Boards[i] = &Board{}
+    }
+
+    bb.boardToPlayIn = wildBoard
 }
 
 // TODO: optimize the b_state, checking all squares is not needed at all
@@ -32,7 +39,6 @@ func (bb *BigBoard) MakeMove(big_pos byte, pos byte, player byte) (b_state [][]b
         bb.boardToPlayIn = wildBoard
     }
 
-    bb.Boards[big_pos].UpdateResult()
     if bb.Boards[big_pos].Result != byte(0) {
         bb.boardsComplete += 1
         bb.UpdateResult()

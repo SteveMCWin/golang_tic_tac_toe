@@ -104,12 +104,12 @@ func (g *Game) Run() {
         case pos := <- g.players[0].move:
             if g.p1move == true && g.game_started == true {
                 g.move_counter += 1
-                g.player_timers[0].Pause()
                 log.Printf("Paused p1 timer at %s", g.player_timers[0].TimeLeft.String())
                 b_state, err := g.b.MakeMove(pos, byte('x'))
                 if err != nil {
                     log.Println(err)
                 } else {
+                    g.player_timers[0].Pause()
                     g.players[0].board_state <- parseBoardToJSON(b_state)
                     g.players[1].board_state <- parseBoardToJSON(b_state)
                     if res := g.b.CheckForWin(); res == true {
@@ -126,12 +126,12 @@ func (g *Game) Run() {
         case pos := <- g.players[1].move:
             if g.p1move == false && g.game_started == true {
                 g.move_counter += 1
-                g.player_timers[1].Pause()
                 log.Printf("Paused p2 timer at %s", g.player_timers[1].TimeLeft.String())
                 b_state, err := g.b.MakeMove(pos, byte('o'))
                 if err != nil {
                     log.Println(err)
                 } else {
+                    g.player_timers[1].Pause()
                     g.players[0].board_state <- parseBoardToJSON(b_state)
                     g.players[1].board_state <- parseBoardToJSON(b_state)
                     if res := g.b.CheckForWin(); res == true {

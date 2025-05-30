@@ -16,6 +16,7 @@ type Board struct {
 func (b *Board) MakeMove(pos byte, player byte) {
     b.Cells[pos] = player
     b.movesPlayed += 1
+    b.UpdateResult()
 }
 
 func (b *Board) UpdateResult() {
