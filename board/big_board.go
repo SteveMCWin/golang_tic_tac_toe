@@ -12,6 +12,7 @@ const BoardTie = '_'
 type BigBoard struct {
     boardToPlayIn byte
     Boards [9]*Board
+    BoardState [][]byte
     Result byte
     boardsComplete byte
 }
@@ -21,11 +22,16 @@ func (bb *BigBoard) Initialize() {
         bb.Boards[i] = &Board{}
     }
 
+    bb.BoardState = make([][]byte, 9)
+
+    for i := 0; i < 9; i++ {
+        bb.BoardState[i] = make([]byte, 9)
+    }
+
     bb.boardToPlayIn = wildBoard
 }
 
-// TODO: optimize the b_state, checking all squares is not needed at all
-func (bb *BigBoard) MakeMove(big_pos byte, pos byte, player byte) (b_state [][]byte, err error) {
+func (bb *BigBoard) MakeMove(big_pos byte, pos byte, player byte) (err error) {
     err = bb.checkIfMoveValid(big_pos, pos, player)
     if err != nil {
         return
@@ -44,13 +50,8 @@ func (bb *BigBoard) MakeMove(big_pos byte, pos byte, player byte) (b_state [][]b
         bb.UpdateResult()
     }
 
-    b_state = make([][]byte, 9)
-
     for i := 0; i < 9; i++ {
-        b_state[i] = make([]byte, 9)
-        for j := 0; j < 9; j++ {
-            b_state[i][j] = bb.Boards[i].Cells[j]
-        }
+        bb.BoardState[big_pos][i] = bb.Boards[big_pos].Cells[i]
     }
 
     return
