@@ -4,9 +4,9 @@ import (
     "log"
     "time"
     "strconv"
+    // "strings"
 
     "tic_tac_toe.fun/users"
-    // "tic_tac_toe.fun/board"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
@@ -82,13 +82,16 @@ func (p *Player) ListenToSocket() {
 
     for {
         _, message, err := p.conn.ReadMessage()
+        // parts := strings.Split(string(message), " ")
         if err != nil {
             if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
                 log.Printf("error: %v", err)
             }
             break
         }
+        log.Println("MESSAGE FROM WEBSOCKET:", string(message[:2]))
         p.move <- message[:2]
+
     }
 }
 

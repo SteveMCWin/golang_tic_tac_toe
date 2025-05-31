@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Tic-Tac-Toe (WebSocket)</title>
+  <title>Ultimate Tic-Tac-Toe</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -15,41 +15,54 @@
       background: #f4f4f4;
     }
 
-    .board {
+    .ultimate-board {
       display: grid;
-      grid-template-columns: repeat(3, 100px);
-      grid-template-rows: repeat(3, 100px);
-      gap: 5px;
+      grid-template-columns: repeat(3, auto);
+      grid-template-rows: repeat(3, auto);
+      gap: 10px;
+    }
+
+    .mini-board {
+      display: grid;
+      grid-template-columns: repeat(3, 60px);
+      grid-template-rows: repeat(3, 60px);
+      gap: 3px;
+      border: 2px solid #333;
+      padding: 3px;
+      background: #ddd;
     }
 
     .cell {
       background-color: white;
-      border: 2px solid #444;
-      font-size: 2.5rem;
+      border: 1px solid #444;
+      font-size: 1.5rem;
       display: flex;
       justify-content: center;
       align-items: center;
       cursor: pointer;
       user-select: none;
+      width: 60px;
+      height: 60px;
     }
   </style>
 </head>
 <body>
-  <div class="board" id="board"></div>
+  <div class="ultimate-board" id="board"></div>
 
   <script>
     const board = document.getElementById('board');
-    const gameMode = {{ .game_mode | js }}
+    const gameMode = {{ .game_mode | js }};
     const socket = new WebSocket('wss://' + window.location.host + '/ws?game_mode=' + gameMode);
 
-    // Render board from array like: ["X", "O", "", ...]
+    // Render the 81 cells into 9 mini-boards
     function renderBoard(state) {
-      Array.from(board.children).forEach((cell, i) => {
-        cell.textContent = state[i] || '';
-      });
+      if (state.length !== 81) return;
+      for (let i = 0; i < 81; i++) {
+        board.querySelector(`#cell-${i}`).textContent = state[i] || '';
+      }
     }
 
-    // Handle incoming messages
+    // Handle incoming WebSocket messages
     socket.onmessage = event => {
       const msg = JSON.parse(event.data);
       if (msg.type === 'state' && Array.isArray(msg.board)) {
@@ -57,17 +70,26 @@
       }
     };
 
-    // Send a move to the server
-    function handleClick(index) {   // should be changed to accept 2 indexes and returns them as an array I think?
-      socket.send(index);
+    // Send move index (0-80) to the server
+    function handleClick(miniIndex, cellIndex) {
+        socket.send(`${miniIndex}${cellIndex}`);
     }
 
-    // Create 9 clickable cells
-    for (let i = 0; i < 9; i++) {
-      const cell = document.createElement('div');
-      cell.className = 'cell';
-      cell.addEventListener('click', () => handleClick(i));
-      board.appendChild(cell);
+    // Build the 9 mini-boards with 81 clickable cells
+    for (let mb = 0; mb < 9; mb++) {
+      const miniBoard = document.createElement('div');
+      miniBoard.className = 'mini-board';
+
+      for (let cell = 0; cell < 9; cell++) {
+        const globalIndex = mb * 9 + cell;
+        const div = document.createElement('div');
+        div.className = 'cell';
+        div.id = `cell-${globalIndex}`;
+        div.addEventListener('click', () => handleClick(mb, cell));
+        miniBoard.appendChild(div);
+      }
+
+      board.appendChild(miniBoard);
     }
   </script>
 </body>

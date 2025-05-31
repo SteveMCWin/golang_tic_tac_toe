@@ -1,7 +1,7 @@
 package board
 
 import (
-    // "log"
+    "log"
     "fmt"
     "errors"
 )
@@ -32,11 +32,22 @@ func (bb *BigBoard) Initialize() {
 }
 
 func (bb *BigBoard) MakeMove(big_pos byte, pos byte, player byte) (err error) {
+
+    if big_pos >= '0' && big_pos <= '9' {
+        big_pos = big_pos - '0'
+    }
+
+    if pos >= '0' && pos <= '9' {
+        pos = pos - '0'
+    }
+
     err = bb.checkIfMoveValid(big_pos, pos, player)
     if err != nil {
         return
     }
 
+    log.Println("big_pos:", big_pos)
+    log.Println("pos:", pos)
     bb.Boards[big_pos].MakeMove(pos, player)
 
     if bb.Boards[pos].Result == 0 {
@@ -99,14 +110,6 @@ func (bb *BigBoard) UpdateResult() {
 }
 
 func (bb *BigBoard) checkIfMoveValid(big_pos byte, pos byte, player byte) (err error) {
-
-    if big_pos >= '0' && big_pos <= '9' {
-        big_pos = big_pos - '0'
-    }
-
-    if pos >= '0' && pos <= '9' {
-        pos = pos - '0'
-    }
 
     if big_pos != bb.boardToPlayIn && bb.boardToPlayIn != wildBoard {
         err = fmt.Errorf("invalid call to make_move:\nbig_pos and prev_pos missmatch: big_pos = %d, prev_pos = %d", big_pos, bb.boardToPlayIn)
