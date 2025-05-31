@@ -13,7 +13,6 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-// TODO: elo system
 type User struct {
     Id              int
     UserName        string
@@ -132,13 +131,13 @@ func (usr *User) StoreUser() (err error) {
 
     log.Println("IT RECOGNIZED THE USER FROM BEFORE")
 
-    // if prov != usr.Provider {
-    //     log.Println("The user has already logged in with", prov, "before")
-    // } else {
-    //     log.Println("All ok")
-    // }
-    _, err = Db.Exec("update users set username = ?, avatar_url = ?, session_token = ?, csrf_token = ?, provider = ? where id = ?",
-                      usr.UserName, usr.AvatarURL, usr.SessionToken, usr.CSRFToken, usr.Provider, usr.Id)
+    if prov != usr.Provider {
+        _, err = Db.Exec("update users set session_token = ?, csrf_token = ? where id = ?",
+                          usr.SessionToken, usr.CSRFToken, usr.Id)
+    } else {
+        _, err = Db.Exec("update users set username = ?, avatar_url = ?, session_token = ?, csrf_token = ?, provider = ? where id = ?",
+                          usr.UserName, usr.AvatarURL, usr.SessionToken, usr.CSRFToken, usr.Provider, usr.Id)
+    }
     return
 }
 

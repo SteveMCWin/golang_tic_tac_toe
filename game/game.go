@@ -5,7 +5,7 @@ import (
     "time"
     "math"
     "net/http"
-    // "encoding/json"
+    "encoding/json"
 
     "tic_tac_toe.fun/board"
 
@@ -15,9 +15,14 @@ import (
 type GameMode int
 
 const (
-    normal_5s GameMode = iota
-    normal_10s
-    normal_15s
+    normal_180s GameMode = iota
+    normal_300s
+    normal_600s
+
+    fischer_60_3s
+    fischer_60_5s
+    fischer_180_3s
+    fischer_180_5s
 
     game_mode_size  // make sure to keep this the last on the list
 )
@@ -25,7 +30,6 @@ const (
 type Game struct {
     players [2]*Player
     player_timers [2]*PlayerTimer
-    // game_start_timer *PlayerTimer
     b *board.BigBoard
     p1move bool
     game_started bool
@@ -55,18 +59,34 @@ func NewGame(p1, p2 *Player, mode GameMode) *Game {
     // g.game_start_timer = MakePlayerTimer(3 * time.Second)
 
     switch mode {
-    case normal_5s:
-        g.player_timers[0] = MakePlayerTimer(5 * time.Second, 0 * time.Second)
-        g.player_timers[1] = MakePlayerTimer(5 * time.Second, 0 * time.Second)
-        log.Println("CREATED GAME DURATION 5s")
-    case normal_10s:
-        g.player_timers[0] = MakePlayerTimer(10 * time.Second, 0 * time.Second)
-        g.player_timers[1] = MakePlayerTimer(10 * time.Second, 0 * time.Second)
-        log.Println("CREATED GAME DURATION 10s")
-    case normal_15s:
-        g.player_timers[0] = MakePlayerTimer(15 * time.Second, 0 * time.Second)
-        g.player_timers[1] = MakePlayerTimer(15 * time.Second, 0 * time.Second)
-        log.Println("CREATED GAME DURATION 15s")
+    case normal_180s:
+        g.player_timers[0] = MakePlayerTimer(180 * time.Second, 0 * time.Second)
+        g.player_timers[1] = MakePlayerTimer(180 * time.Second, 0 * time.Second)
+        log.Println("CREATED GAME DURATION 180s")
+    case normal_300s:
+        g.player_timers[0] = MakePlayerTimer(300 * time.Second, 0 * time.Second)
+        g.player_timers[1] = MakePlayerTimer(300 * time.Second, 0 * time.Second)
+        log.Println("CREATED GAME DURATION 300s")
+    case normal_600s:
+        g.player_timers[0] = MakePlayerTimer(600 * time.Second, 0 * time.Second)
+        g.player_timers[1] = MakePlayerTimer(600 * time.Second, 0 * time.Second)
+        log.Println("CREATED GAME DURATION 600s")
+    case fischer_60_3s:
+        g.player_timers[0] = MakePlayerTimer(60 * time.Second, 3 * time.Second)
+        g.player_timers[1] = MakePlayerTimer(60 * time.Second, 3 * time.Second)
+        log.Println("CREATED GAME DURATION 60s+3s")
+    case fischer_60_5s:
+        g.player_timers[0] = MakePlayerTimer(60 * time.Second, 5 * time.Second)
+        g.player_timers[1] = MakePlayerTimer(60 * time.Second, 5 * time.Second)
+        log.Println("CREATED GAME DURATION 60s+3s")
+    case fischer_180_3s:
+        g.player_timers[0] = MakePlayerTimer(180 * time.Second, 3 * time.Second)
+        g.player_timers[1] = MakePlayerTimer(180 * time.Second, 3 * time.Second)
+        log.Println("CREATED GAME DURATION 180s+3s")
+    case fischer_180_5s:
+        g.player_timers[0] = MakePlayerTimer(180 * time.Second, 5 * time.Second)
+        g.player_timers[1] = MakePlayerTimer(180 * time.Second, 5 * time.Second)
+        log.Println("CREATED GAME DURATION 180s+5s")
     }
 
     return g
@@ -209,34 +229,33 @@ func (g *Game) updatePlayerElo() {
 
 func parseBoardToJSON(b_state [][]byte) []byte {
 
-    // TODO: Update this to handle a 2d array
+    var board []string
+    for _, b := range b_state {
+        for _, cell := range b{
+            if cell == 'x' {
+                board = append(board, "x")
+            } else if cell == 'o' {
+                board = append(board, "o")
+            } else {
+                board = append(board, "")
+            }
+        }
+    }
 
-    // var board []string
-    // for _, cell := range b_state {
-    //     if cell == 'x' {
-    //         board = append(board, "x")
-    //     } else if cell == 'o' {
-    //         board = append(board, "o")
-    //     } else {
-    //         board = append(board, "")
-    //     }
-    // }
-    //
-    // msg := struct {
-    //     Type string     `json:"type"`
-    //     Board []string  `json:"board"`
-    // }{
-    //     Type    : "state",
-    //     Board   : board,
-    // }
-    //
-    // res, err := json.Marshal(msg)
-    // if err != nil {
-    //     log.Println("ERROR PARSING BOARD STATE TO JSON:")
-    //     log.Println(err)
-    // }
-    //
-    // return res
-    return make([]byte, 0)
+    msg := struct {
+        Type string     `json:"type"`
+        Board []string  `json:"board"`
+    }{
+        Type    : "state",
+        Board   : board,
+    }
+
+    res, err := json.Marshal(msg)
+    if err != nil {
+        log.Println("ERROR PARSING BOARD STATE TO JSON:")
+        log.Println(err)
+    }
+
+    return res
 }
 

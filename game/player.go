@@ -45,7 +45,6 @@ type Player struct {
     board_state chan []byte // used to updated the state of the board
     exited chan bool
 }
-// TODO: Update to support fischer timing
 func MakePlayer(hub *Hub, c *gin.Context) {
     // log.Println("MADE DA PLAYAA")
     usr, err := users.LoadUserData(c)
