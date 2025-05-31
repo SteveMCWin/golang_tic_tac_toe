@@ -137,7 +137,7 @@ func (g *Game) Run() {
                     g.players[1].board_state <- new_b_state
 
                     if g.b.Result != 0 {
-                        g.playerWon(0)
+                        g.checkWinner()
                         return
                     }
                     // move this to a function of it's own
@@ -167,7 +167,7 @@ func (g *Game) Run() {
                     g.players[1].board_state <- new_b_state
 
                     if g.b.Result != 0 {
-                        g.playerWon(0)
+                        g.checkWinner()
                         return
                     }
 
@@ -179,24 +179,39 @@ func (g *Game) Run() {
                 log.Println("IT'S PLAYER 1'S MOVE")
             }
         case _ = <- g.players[0].exited:
-            g.playerWon(1)
+            g.b.Result = 'o'
+            g.checkWinner()
             return
         case _ = <- g.players[1].exited:
-            g.playerWon(0)
+            g.b.Result = 'x'
+            g.checkWinner()
             return
         case _ = <-g.player_timers[0].Finished:
-            g.playerWon(1)
+            g.b.Result = 'o'
+            g.checkWinner()
             return
         case _ = <-g.player_timers[1].Finished:
-            g.playerWon(0)
+            g.b.Result = 'x'
+            g.checkWinner()
             return
         }
     }
 }
 
-func (g *Game) playerWon(player_idx int) {
-    g.players[player_idx].u.GamesWon += 1
-    log.Printf("PLAYER %d WINS\n", player_idx+1)
+func (g *Game) checkWinner() {
+    switch g.b.Result {
+    case 'x':
+        g.players[0].u.GamesWon += 1
+        log.Printf("Player x wins!!!")
+    case 'o':
+        g.players[1].u.GamesWon += 1
+        log.Printf("Player o wins!!!")
+    default:
+        log.Printf("Tie!!!")
+    }
+
+    g.updatePlayerElo()
+
 }
 
 func (g *Game) updatePlayerElo() {

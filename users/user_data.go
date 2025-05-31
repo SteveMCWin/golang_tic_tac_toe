@@ -33,6 +33,7 @@ var once sync.Once
 
 var MostWinsLb *LeaderBoard
 var MostGamesLb *LeaderBoard
+var MostEloLb *LeaderBoard
 
 func InitDb() {
     once.Do(func() {
@@ -52,9 +53,11 @@ func InitDb() {
             panic(err)
         }
 
+        MostEloLb, err = InitLeaderBoard(MostElo)
+
         go MostWinsLb.RunLeaderBoard()
         go MostGamesLb.RunLeaderBoard()
-        // go RunLeaderBoard()
+        go MostEloLb.RunLeaderBoard()
     })
 }
 
@@ -66,6 +69,7 @@ func LoadUserData(c *gin.Context) (usr *User, err error) {
     user, err := c.Cookie("user_id")
     if err != nil {
         usr.UserName = "Guest"
+        usr.Elo = 800
         return
     }
 
