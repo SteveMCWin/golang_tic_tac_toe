@@ -41,11 +41,11 @@ var (
 type Player struct {
     u *users.User
     conn *websocket.Conn
-    move chan byte  // used to send messages to the game handler
+    move chan []byte  // used to send messages to the game handler
     board_state chan []byte // used to updated the state of the board
     exited chan bool
 }
-
+// TODO: Update to support fischer timing
 func MakePlayer(hub *Hub, c *gin.Context) {
     // log.Println("MADE DA PLAYAA")
     usr, err := users.LoadUserData(c)
@@ -61,7 +61,7 @@ func MakePlayer(hub *Hub, c *gin.Context) {
         return
     }
 
-    new_player := &Player{u: usr, conn: connection, move: make(chan byte), board_state: make(chan []byte), exited: make(chan bool)}
+    new_player := &Player{u: usr, conn: connection, move: make(chan []byte), board_state: make(chan []byte), exited: make(chan bool)}
     game_mode, err := strconv.Atoi(c.Query("game_mode"))
 
     if err != nil {
@@ -89,7 +89,7 @@ func (p *Player) ListenToSocket() {
             }
             break
         }
-        p.move <- message[0]
+        p.move <- message[:2]
     }
 }
 

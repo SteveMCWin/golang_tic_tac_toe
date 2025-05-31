@@ -9,5 +9,6 @@ CREATE TABLE users (
     csrf_token TEXT NOT NULL,
     provider TEXT NOT NULL,
     games_played INTEGER NOT NULL,
-    games_won INTEGER NOT NULL
+    games_won INTEGER NOT NULL,
+    elo INTEGER NOT NULL
 );

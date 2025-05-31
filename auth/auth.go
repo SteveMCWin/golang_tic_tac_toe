@@ -93,7 +93,7 @@ func CallbackHandler(c *gin.Context) {
     sessionToken := generateToken(32)
     csrfToken := generateToken(32)
 
-    usr := users.User{-1, g_user.NickName, g_user.Email, g_user.AvatarURL, sessionToken, csrfToken, provider, 0, 0}
+    usr := users.User{-1, g_user.NickName, g_user.Email, g_user.AvatarURL, sessionToken, csrfToken, provider, 0, 0, 800}
     err = usr.StoreUser()
 
     if err != nil {

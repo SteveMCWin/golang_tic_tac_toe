@@ -5,7 +5,6 @@ import (
     "time"
 )
 
-// TODO: remake test because of fischer time
 type PlayerTimer struct {
     TimeLeft time.Duration
     isPaused bool

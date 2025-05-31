@@ -2,9 +2,10 @@ package game
 
 import (
     "log"
-    "encoding/json"
     "time"
+    "math"
     "net/http"
+    // "encoding/json"
 
     "tic_tac_toe.fun/board"
 
@@ -25,10 +26,9 @@ type Game struct {
     players [2]*Player
     player_timers [2]*PlayerTimer
     // game_start_timer *PlayerTimer
-    b *board.Board
+    b *board.BigBoard
     p1move bool
     game_started bool
-    move_counter int
 }
 
 func ServePlay(c *gin.Context) {
@@ -44,10 +44,10 @@ func NewGame(p1, p2 *Player, mode GameMode) *Game {
     g := &Game{}
     g.players[0] = p1
     g.players[1] = p2
-    g.b = &board.Board{}
+    g.b = &board.BigBoard{}
+    g.b.Initialize()
     g.p1move = true // player 1 makes the first move
     g.game_started = false
-    g.move_counter = 0
     // update user stats
     g.players[0].u.GamesPlayed += 1
     g.players[1].u.GamesPlayed += 1
@@ -96,26 +96,32 @@ func (g *Game) Run() {
     }()
 
     for {
-        if g.move_counter >= 9 {
-            log.Printf("IT'S A DRAW")
-            return
-        }
+        // remember to check for a draw!
         select {
         case pos := <- g.players[0].move:
             if g.p1move == true && g.game_started == true {
-                g.move_counter += 1
-                log.Printf("Paused p1 timer at %s", g.player_timers[0].TimeLeft.String())
-                b_state, err := g.b.MakeMove(pos, byte('x'))
+                if len(pos) < 2 {
+                    log.Printf("Expected position to be of length >= 2, got legnth of %d", len(pos))
+                    continue
+                }
+                err := g.b.MakeMove(pos[0], pos[1], 'x')
                 if err != nil {
                     log.Println(err)
                 } else {
+                    log.Printf("Paused p1 timer at %s", g.player_timers[0].TimeLeft.String())
                     g.player_timers[0].Pause()
-                    g.players[0].board_state <- parseBoardToJSON(b_state)
-                    g.players[1].board_state <- parseBoardToJSON(b_state)
-                    if res := g.b.CheckForWin(); res == true {
+
+                    // move this to a function of it's own
+                    new_b_state := parseBoardToJSON(g.b.BoardState)
+                    g.players[0].board_state <- new_b_state
+                    g.players[1].board_state <- new_b_state
+
+                    if g.b.Result != 0 {
                         g.playerWon(0)
                         return
                     }
+                    // move this to a function of it's own
+
                     g.p1move = false
                     g.player_timers[1].Start()
                     log.Printf("Resumed p2 timer at %s", g.player_timers[1].TimeLeft.String())
@@ -125,19 +131,26 @@ func (g *Game) Run() {
             }
         case pos := <- g.players[1].move:
             if g.p1move == false && g.game_started == true {
-                g.move_counter += 1
-                log.Printf("Paused p2 timer at %s", g.player_timers[1].TimeLeft.String())
-                b_state, err := g.b.MakeMove(pos, byte('o'))
+                if len(pos) < 2 {
+                    log.Printf("Expected position to be of length >= 2, got legnth of %d", len(pos))
+                    continue
+                }
+                err := g.b.MakeMove(pos[0], pos[1], 'o')
                 if err != nil {
                     log.Println(err)
                 } else {
+                    log.Printf("Paused p2 timer at %s", g.player_timers[1].TimeLeft.String())
                     g.player_timers[1].Pause()
-                    g.players[0].board_state <- parseBoardToJSON(b_state)
-                    g.players[1].board_state <- parseBoardToJSON(b_state)
-                    if res := g.b.CheckForWin(); res == true {
-                        g.playerWon(1)
+
+                    new_b_state := parseBoardToJSON(g.b.BoardState)
+                    g.players[0].board_state <- new_b_state
+                    g.players[1].board_state <- new_b_state
+
+                    if g.b.Result != 0 {
+                        g.playerWon(0)
                         return
                     }
+
                     g.p1move = true
                     g.player_timers[0].Start()
                     log.Printf("Resumed p1 timer at %s", g.player_timers[0].TimeLeft.String())
@@ -166,33 +179,64 @@ func (g *Game) playerWon(player_idx int) {
     log.Printf("PLAYER %d WINS\n", player_idx+1)
 }
 
-func parseBoardToJSON(b_state []byte) []byte {
+func (g *Game) updatePlayerElo() {
+    Qa := math.Pow(10.0, float64(g.players[0].u.Elo) / 400.0)
+    Qb := math.Pow(10.0, float64(g.players[1].u.Elo) / 400.0)
 
-    var board []string
-    for _, cell := range b_state {
-        if cell == 'x' {
-            board = append(board, "x")
-        } else if cell == 'o' {
-            board = append(board, "o")
-        } else {
-            board = append(board, "")
-        }
+    Ea := Qa/(Qa+Qb)
+    Eb := 1.0 - Ea
+
+    const K = 32
+
+    var Sa float64
+    var Sb float64
+
+    switch g.b.Result {
+    case 'x':
+        Sa = 1.0
+        Sb = 0.0
+    case 'o':
+        Sa = 0.0
+        Sb = 1.0
+    default:
+        Sa = 0.5
+        Sb = 0.5
     }
 
-    msg := struct {
-        Type string     `json:"type"`
-        Board []string  `json:"board"`
-    }{
-        Type    : "state",
-        Board   : board,
-    }
+    g.players[0].u.Elo += int(math.Round(K * (Sa - Ea)))
+    g.players[1].u.Elo += int(math.Round(K * (Sb - Eb)))
+}
 
-    res, err := json.Marshal(msg)
-    if err != nil {
-        log.Println("ERROR PARSING BOARD STATE TO JSON:")
-        log.Println(err)
-    }
+func parseBoardToJSON(b_state [][]byte) []byte {
 
-    return res
+    // TODO: Update this to handle a 2d array
+
+    // var board []string
+    // for _, cell := range b_state {
+    //     if cell == 'x' {
+    //         board = append(board, "x")
+    //     } else if cell == 'o' {
+    //         board = append(board, "o")
+    //     } else {
+    //         board = append(board, "")
+    //     }
+    // }
+    //
+    // msg := struct {
+    //     Type string     `json:"type"`
+    //     Board []string  `json:"board"`
+    // }{
+    //     Type    : "state",
+    //     Board   : board,
+    // }
+    //
+    // res, err := json.Marshal(msg)
+    // if err != nil {
+    //     log.Println("ERROR PARSING BOARD STATE TO JSON:")
+    //     log.Println(err)
+    // }
+    //
+    // return res
+    return make([]byte, 0)
 }
 

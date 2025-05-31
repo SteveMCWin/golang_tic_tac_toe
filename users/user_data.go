@@ -25,6 +25,7 @@ type User struct {
     // Game related
     GamesPlayed     int
     GamesWon        int
+    Elo             int
 }
 
 // TODO: consider splitting the users table into two tables, users and players. they will share the keys
@@ -79,7 +80,7 @@ func LoadUserData(c *gin.Context) (usr *User, err error) {
         return
     }
 
-    err = Db.QueryRow("select id, username, email, avatar_url, session_token, csrf_token, provider, games_played, games_won from users where id = ?", user).Scan(
+    err = Db.QueryRow("select id, username, email, avatar_url, session_token, csrf_token, provider, games_played, games_won, elo from users where id = ?", user).Scan(
         &usr.Id,
         &usr.UserName,
         &usr.Email,
@@ -89,6 +90,7 @@ func LoadUserData(c *gin.Context) (usr *User, err error) {
         &usr.Provider,
         &usr.GamesPlayed,
         &usr.GamesWon,
+        &usr.Elo,
     )
 
     if err != nil {
@@ -103,10 +105,13 @@ func LoadUserData(c *gin.Context) (usr *User, err error) {
     return
 }
 
-// maybe change this to be (db *sql.Db) StoreUser(usr *User) (err error)
 func (usr *User) StoreUser() (err error) {
-    // should search by mail instead
     // log.Println("Trying to get user with email: ", usr.Email)
+    if usr.Email == "" {
+        err = errors.New("Could not store user data: email missing")
+        return
+    }
+
     var prov string
     err = Db.QueryRow("select id, provider from users where email like ?", usr.Email).Scan(&usr.Id, &prov)
 
@@ -114,14 +119,14 @@ func (usr *User) StoreUser() (err error) {
     // the user hasn't logged in before so load him into the data base
     if err != nil {
         log.Println("IT DID NOT RECOGNIZE THE USER")
-        statement := "insert into users (username, email, avatar_url, session_token, csrf_token, provider, games_played, games_won) values (?, ?, ?, ?, ?, ?, ?, ?) returning id"
+        statement := "insert into users (username, email, avatar_url, session_token, csrf_token, provider, games_played, games_won, elo) values (?, ?, ?, ?, ?, ?, ?, ?, ?) returning id"
         var stmt *sql.Stmt
         stmt, err = Db.Prepare(statement)
         if err != nil {
             return
         }
         defer stmt.Close()
-        err = stmt.QueryRow(usr.UserName, usr.Email, usr.AvatarURL, usr.SessionToken, usr.CSRFToken, usr.Provider, usr.GamesPlayed, usr.GamesWon).Scan(&usr.Id)
+        err = stmt.QueryRow(usr.UserName, usr.Email, usr.AvatarURL, usr.SessionToken, usr.CSRFToken, usr.Provider, usr.GamesPlayed, usr.GamesWon, usr.Elo).Scan(&usr.Id)
         return
     }
 
@@ -167,7 +172,7 @@ func (usr *User) UpdateGameStats() (err error) {
         return // cannot store data for a guest user
     }
 
-    _, err = Db.Exec("update users set games_played = ?, games_won = ? where id = ?", usr.GamesPlayed, usr.GamesWon, usr.Id)
+    _, err = Db.Exec("update users set games_played = ?, games_won = ?, elo = ? where id = ?", usr.GamesPlayed, usr.GamesWon, usr.Elo, usr.Id)
 
     return
 

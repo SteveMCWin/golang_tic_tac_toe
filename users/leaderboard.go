@@ -16,6 +16,7 @@ type LeaderBoard struct {
 const (
     MostWins LbCriteria = iota
     MostGames
+    MostElo
     LbCriteriaSize
 )
 
@@ -40,6 +41,8 @@ func (lb *LeaderBoard) updateLeaderboard() {
         stmt = "SELECT username, games_won FROM users ORDER BY games_won DESC LIMIT 10"
     case MostGames:
         stmt = "SELECT username, games_played FROM users ORDER BY games_played DESC LIMIT 10"
+    case MostElo:
+        stmt = "SELECT username, games_played FROM users ORDER BY elo DESC LIMIT 10"
     default:
         stmt = "SELECT username, games_won FROM users ORDER BY games_won DESC LIMIT 10"
     }
