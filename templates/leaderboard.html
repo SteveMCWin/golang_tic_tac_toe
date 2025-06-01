@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="refresh" content="10">
+    <title>Leaderboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 1em;
+        }
+        h2 {
+            text-align: center;
+        }
+        table {
+            width: 70%;
+            margin: 0 auto;
+            border-collapse: collapse;
+            box-shadow: 0 0 10px #ccc;
+        }
+        th, td {
+            padding: 0.75em;
+            text-align: center;
+            border: 1px solid #ddd;
+        }
+        th {
+            background-color: #f4f4f4;
+        }
+        tr:nth-child(even) {
+            background-color: #fafafa;
+        }
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+        }
+    </style>
+</head>
+<body>
+    <h2>Leaderboard - Top Elo Players</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Rank</th>
+                <th>Avatar</th>
+                <th>Username</th>
+                <th>Elo</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{range $index, $player := .TopPlayers}}
+            <tr>
+                <td>{{$index | add1}}</td>
+                <td><img class="avatar" src="{{$player.AvatarURL}}" alt="Avatar"></td>
+                <td>{{$player.UserName}}</td>
+                <td>{{$player.Elo}}</td>
+            </tr>
+            {{end}}
+        </tbody>
+    </table>
+    <a href="/">Back to home</a><br><br>
+</body>
+</html>
+

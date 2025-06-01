@@ -10,7 +10,6 @@ type GameDuration int
 
 type Hub struct {
     PlayerQueues map[GameMode]chan *Player
-    // Games []*Game
 }
 
 func ServeHub(c *gin.Context) {
@@ -28,7 +27,7 @@ func ServeHub(c *gin.Context) {
 }
 
 func MakeHub() *Hub {
-    h := Hub{/* Games: make([]*Game, 0), */ PlayerQueues: make(map[GameMode](chan *Player))}
+    h := Hub{ PlayerQueues: make(map[GameMode](chan *Player)) }
     for i := GameMode(0); i < game_mode_size; i++ {
         h.PlayerQueues[i] = make(chan *Player, 20)
     }
@@ -48,7 +47,6 @@ func (h *Hub) HandleGames() {
             for {
                 g := NewGame(<-h.PlayerQueues[i], <-h.PlayerQueues[i], i)
                 go g.Run()
-                // h.Games = append(h.Games, g)
             }
         }()
     }

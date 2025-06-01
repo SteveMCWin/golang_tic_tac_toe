@@ -1,45 +1,9 @@
 package unit_tests
 
 import (
-    // "fmt"
     "testing"
     "tic_tac_toe.fun/board"
 )
-
-// TODO: figure out how to force a tie, the current problem is that the boardsCompelte field needs to be 9 somehow
-// func TestTie(t *testing.T) {
-//     bb := &board.BigBoard{}
-//     bb.Initialize()
-//
-//     var err error
-//
-//     bb.Boards[0].Result = 'x'
-//     bb.Boards[1].Result = 'x'
-//     bb.Boards[2].Result = 'o'
-//     bb.Boards[3].Result = 'o'
-//     bb.Boards[4].Result = 'o'
-//     bb.Boards[5].Result = 'x'
-//     bb.Boards[6].Result = 'x'
-//     bb.Boards[7].Result = 'x'
-//     bb.Boards[8].Cells = [9]byte{'o', 'o', 0, 0, 0, 0, 0, 0, 0}
-//
-//     err = bb.MakeMove(byte(8), byte(2), 'o')
-//
-//     for i := 0; i < 9; i++ {
-//         if bb.Boards[i].Result != 0 {
-//             fmt.Printf("Boards[%d].Result = %c\n", i, bb.Boards[i].Result)
-//         }
-//     }
-//
-//     if err != nil {
-//         t.Error("error making move")
-//     }
-//
-//     if bb.Result != board.BoardTie {
-//         t.Errorf("should have been a tie but the winner is: %c", bb.Result)
-//     }
-//
-// }
 
 func TestGameXWins(t *testing.T) {
 

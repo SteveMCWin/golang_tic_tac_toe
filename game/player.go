@@ -4,7 +4,6 @@ import (
     "log"
     "time"
     "strconv"
-    // "strings"
 
     "tic_tac_toe.fun/users"
 
@@ -45,8 +44,8 @@ type Player struct {
     board_state chan []byte // used to updated the state of the board
     exited chan bool
 }
+
 func MakePlayer(hub *Hub, c *gin.Context) {
-    // log.Println("MADE DA PLAYAA")
     usr, err := users.LoadUserData(c)
 
     if err != nil {
@@ -70,6 +69,10 @@ func MakePlayer(hub *Hub, c *gin.Context) {
     hub.AddPlayer(new_player, game_mode)
 }
 
+func (p *Player) UpdatePlayerStats() {
+    p.u.UpdateGameStats()
+}
+
 func (p *Player) ListenToSocket() {
     defer func() {
         log.Printf("Player %s exited", p.u.UserName)
@@ -82,14 +85,12 @@ func (p *Player) ListenToSocket() {
 
     for {
         _, message, err := p.conn.ReadMessage()
-        // parts := strings.Split(string(message), " ")
         if err != nil {
             if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
                 log.Printf("error: %v", err)
             }
             break
         }
-        log.Println("MESSAGE FROM WEBSOCKET:", string(message[:2]))
         p.move <- message[:2]
 
     }
@@ -129,6 +130,3 @@ func (p *Player) ListenToServer() {
     }
 }
 
-func (p *Player) UpdatePlayerStats() {
-    p.u.UpdateGameStats()
-}

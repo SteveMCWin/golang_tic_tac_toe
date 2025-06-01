@@ -11,8 +11,6 @@ type Board struct {
     movesPlayed byte
 }
 
-// const boardTie = '_'
-
 func (b *Board) MakeMove(pos byte, player byte) {
     b.Cells[pos] = player
     b.movesPlayed += 1
@@ -29,6 +27,7 @@ func (b *Board) UpdateResult() {
             b.Result = b.Cells[i]
             return 
         }
+        // check rows
         if b.Cells[3*i] == 0 {
             continue
         }
@@ -41,6 +40,8 @@ func (b *Board) UpdateResult() {
     if b.Cells[4] == 0 {
         return 
     }
+
+    // check diagonals
 
     if b.Cells[0] == b.Cells[4] && b.Cells[0] == b.Cells[8] {
         b.Result = b.Cells[4]
@@ -71,7 +72,6 @@ func (b *Board) UpdateResult() {
 
         b.Result = winner
 
-        // b.Result = boardTie
     }
 
 }

@@ -19,11 +19,12 @@ func main() {
 
 	r := gin.Default()
 
+    r.SetFuncMap(templateFuncs())
 	r.LoadHTMLGlob("templates/*")
 	
 	r.GET("/", ServeHome)
     // r.GET("/about", ServeAbout)
-    // r.GET("/leaderboard", ServeLeaderboard)
+    r.GET("/leaderboard", users.ServeLeaderboard)
     r.GET("/hub", game.ServeHub)
     r.GET("/play", game.ServePlay)
 	r.GET("/profile", auth.ServeProfile)
@@ -33,6 +34,14 @@ func main() {
     r.GET("/ws", func (c *gin.Context) { game.MakePlayer(hub, c) })
 
 	r.RunTLS(":5000", "./testdata/server.pem", "./testdata/server.key")
+}
+
+func templateFuncs() template.FuncMap {
+    return template.FuncMap{
+        "add1": func(i int) int {
+            return i + 1
+        },
+    }
 }
 
 func ServeHome(c *gin.Context) {

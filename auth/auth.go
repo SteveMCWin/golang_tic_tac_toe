@@ -128,7 +128,6 @@ func ServeProfile(c *gin.Context) {
 }
 
 func LogoutHandler(c *gin.Context) {
-    // gotta erase the cookies here
     c.SetCookie("user_id", "", -1, "/", "localhost", true, true)
     c.SetCookie("session_token", "", -1, "/", "localhost", true, true)
     c.SetCookie("csrf_token", "", -1, "/", "localhost", true, true)

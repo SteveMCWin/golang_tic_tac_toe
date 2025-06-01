@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Ultimate Tic-Tac-Toe</title>
+  <title>2D Tic-Tac-Toe</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -70,7 +70,7 @@
       }
     };
 
-    // Send move index (0-80) to the server
+    // Send move indexes to the server
     function handleClick(miniIndex, cellIndex) {
         socket.send(`${miniIndex}${cellIndex}`);
     }

@@ -31,10 +31,6 @@ type User struct {
 var Db *sql.DB
 var once sync.Once
 
-var MostWinsLb *LeaderBoard
-var MostGamesLb *LeaderBoard
-var MostEloLb *LeaderBoard
-
 func InitDb() {
     once.Do(func() {
         var err error
@@ -43,25 +39,15 @@ func InitDb() {
             panic(err)
         }
 
-        MostWinsLb, err = InitLeaderBoard(MostWins)
+        MostEloLb, err = InitLeaderBoard()
         if err != nil {
             panic(err)
         }
 
-        MostGamesLb, err = InitLeaderBoard(MostGames)
-        if err != nil {
-            panic(err)
-        }
-
-        MostEloLb, err = InitLeaderBoard(MostElo)
-
-        go MostWinsLb.RunLeaderBoard()
-        go MostGamesLb.RunLeaderBoard()
         go MostEloLb.RunLeaderBoard()
     })
 }
 
-// change this to be (db *sql.Db) LoadUserData(c *gin.Context) (usr *User, err error)
 func LoadUserData(c *gin.Context) (usr *User, err error) {
 
     usr = &User{}
@@ -109,7 +95,6 @@ func LoadUserData(c *gin.Context) (usr *User, err error) {
 }
 
 func (usr *User) StoreUser() (err error) {
-    // log.Println("Trying to get user with email: ", usr.Email)
     if usr.Email == "" {
         err = errors.New("Could not store user data: email missing")
         return
@@ -136,8 +121,8 @@ func (usr *User) StoreUser() (err error) {
     log.Println("IT RECOGNIZED THE USER FROM BEFORE")
 
     if prov != usr.Provider {
-        _, err = Db.Exec("update users set session_token = ?, csrf_token = ? where id = ?",
-                          usr.SessionToken, usr.CSRFToken, usr.Id)
+        _, err = Db.Exec("update users set avatar_url = ?, session_token = ?, csrf_token = ? where id = ?",
+                          usr.AvatarURL, usr.SessionToken, usr.CSRFToken, usr.Id)
     } else {
         _, err = Db.Exec("update users set username = ?, avatar_url = ?, session_token = ?, csrf_token = ?, provider = ? where id = ?",
                           usr.UserName, usr.AvatarURL, usr.SessionToken, usr.CSRFToken, usr.Provider, usr.Id)

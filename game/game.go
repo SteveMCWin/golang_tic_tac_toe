@@ -38,7 +38,6 @@ type Game struct {
 func ServePlay(c *gin.Context) {
     game_mode := c.Query("game_mode")
     log.Println("game_mode in Play:", game_mode)
-    // c.File("templates/board.html")
     c.HTML(http.StatusOK, "board.html", gin.H{
         "game_mode": game_mode,
     })
@@ -55,8 +54,6 @@ func NewGame(p1, p2 *Player, mode GameMode) *Game {
     // update user stats
     g.players[0].u.GamesPlayed += 1
     g.players[1].u.GamesPlayed += 1
-
-    // g.game_start_timer = MakePlayerTimer(3 * time.Second)
 
     switch mode {
     case normal_180s:
@@ -116,7 +113,6 @@ func (g *Game) Run() {
     }()
 
     for {
-        // remember to check for a draw!
         select {
         case pos := <- g.players[0].move:
             if g.p1move == true && g.game_started == true {
@@ -131,24 +127,20 @@ func (g *Game) Run() {
                     log.Printf("Paused p1 timer at %s", g.player_timers[0].TimeLeft.String())
                     g.player_timers[0].Pause()
 
-                    // move this to a function of it's own
-                    new_b_state := parseBoardToJSON(g.b.BoardState)
-                    g.players[0].board_state <- new_b_state
-                    g.players[1].board_state <- new_b_state
+                    g.updateBoardVisuals()
 
                     if g.b.Result != 0 {
                         g.checkWinner()
                         return
                     }
-                    // move this to a function of it's own
 
                     g.p1move = false
                     g.player_timers[1].Start()
                     log.Printf("Resumed p2 timer at %s", g.player_timers[1].TimeLeft.String())
                 }
-            } else {
+            } /*else {
                 log.Println("IT'S PLAYER 2'S MOVE")
-            }
+            }*/
         case pos := <- g.players[1].move:
             if g.p1move == false && g.game_started == true {
                 if len(pos) < 2 {
@@ -162,9 +154,7 @@ func (g *Game) Run() {
                     log.Printf("Paused p2 timer at %s", g.player_timers[1].TimeLeft.String())
                     g.player_timers[1].Pause()
 
-                    new_b_state := parseBoardToJSON(g.b.BoardState)
-                    g.players[0].board_state <- new_b_state
-                    g.players[1].board_state <- new_b_state
+                    g.updateBoardVisuals()
 
                     if g.b.Result != 0 {
                         g.checkWinner()
@@ -175,9 +165,9 @@ func (g *Game) Run() {
                     g.player_timers[0].Start()
                     log.Printf("Resumed p1 timer at %s", g.player_timers[0].TimeLeft.String())
                 }
-            } else {
-                log.Println("IT'S PLAYER 1'S MOVE")
-            }
+            } /*else {
+                log.Println("IT'S PLAYER 2'S MOVE")
+            }*/
         case _ = <- g.players[0].exited:
             g.b.Result = 'o'
             g.checkWinner()
@@ -196,6 +186,12 @@ func (g *Game) Run() {
             return
         }
     }
+}
+
+func (g *Game) updateBoardVisuals() {
+    new_b_state := parseBoardToJSON(g.b.BoardState)
+    g.players[0].board_state <- new_b_state
+    g.players[1].board_state <- new_b_state
 }
 
 func (g *Game) checkWinner() {
