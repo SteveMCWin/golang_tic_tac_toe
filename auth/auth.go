@@ -6,7 +6,6 @@ import (
     "strconv"
     "net/http"
     "crypto/rand"
-	"html/template"
     "encoding/base64"
     "tic_tac_toe.fun/users"
 
@@ -108,11 +107,6 @@ func CallbackHandler(c *gin.Context) {
 }
 
 func ServeProfile(c *gin.Context) {
-    tmpl, err := template.ParseFiles("templates/profile.html")
-    if err != nil {
-        c.AbortWithStatus(http.StatusInternalServerError)
-        return
-    }
 
     this_user, err := users.LoadUserData(c)
     if err != nil {
@@ -120,11 +114,7 @@ func ServeProfile(c *gin.Context) {
         c.Redirect(http.StatusTemporaryRedirect, "/")
     }
 
-    err = tmpl.Execute(c.Writer, this_user)
-    if err != nil {
-        c.AbortWithStatus(http.StatusInternalServerError)
-        return
-    }
+    c.HTML(http.StatusOK, "profile.html", this_user)
 }
 
 func LogoutHandler(c *gin.Context) {

@@ -37,7 +37,9 @@ type Game struct {
 
 func ServePlay(c *gin.Context) {
     game_mode := c.Query("game_mode")
-    log.Println("game_mode in Play:", game_mode)
+    if game_mode == "" {
+        game_mode = "0"
+    }
     c.HTML(http.StatusOK, "board.html", gin.H{
         "game_mode": game_mode,
     })

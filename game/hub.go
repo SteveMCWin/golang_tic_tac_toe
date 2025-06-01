@@ -2,7 +2,6 @@ package game
 
 import (
     "net/http"
-    "html/template"
 	"github.com/gin-gonic/gin"
 )
 
@@ -13,17 +12,7 @@ type Hub struct {
 }
 
 func ServeHub(c *gin.Context) {
-    tmpl, err := template.ParseFiles("templates/hub.html")
-	if err != nil {
-		c.AbortWithStatus(http.StatusInternalServerError)
-		return
-	}
-
-	err = tmpl.Execute(c.Writer, gin.H{})
-	if err != nil {
-		c.AbortWithStatus(http.StatusInternalServerError)
-		return
-	}
+    c.HTML(http.StatusOK, "hub.html", gin.H{})
 }
 
 func MakeHub() *Hub {

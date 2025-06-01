@@ -10,6 +10,14 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+func templateFuncs() template.FuncMap {
+    return template.FuncMap{
+        "add1": func(i int) int {
+            return i + 1
+        },
+    }
+}
+
 func main() {
 
     users.InitDb()
@@ -22,7 +30,7 @@ func main() {
     r.SetFuncMap(templateFuncs())
 	r.LoadHTMLGlob("templates/*")
 	
-	r.GET("/", ServeHome)
+	r.GET("/", func (c *gin.Context) { c.HTML(http.StatusOK, "index.html", gin.H{}) })
     // r.GET("/about", ServeAbout)
     r.GET("/leaderboard", users.ServeLeaderboard)
     r.GET("/hub", game.ServeHub)
@@ -35,29 +43,4 @@ func main() {
 
 	r.RunTLS(":5000", "./testdata/server.pem", "./testdata/server.key")
 }
-
-func templateFuncs() template.FuncMap {
-    return template.FuncMap{
-        "add1": func(i int) int {
-            return i + 1
-        },
-    }
-}
-
-func ServeHome(c *gin.Context) {
-
-    tmpl, err := template.ParseFiles("templates/index.html")
-	if err != nil {
-		c.AbortWithStatus(http.StatusInternalServerError)
-		return
-	}
-
-	err = tmpl.Execute(c.Writer, gin.H{})
-	if err != nil {
-		c.AbortWithStatus(http.StatusInternalServerError)
-		return
-	}
-}
-
-
 
