@@ -31,7 +31,7 @@ type User struct {
 var Db *sql.DB
 var once sync.Once
 
-func InitDb() {
+func InitDb() { // opens db connection and sets up the leaderboard and runs it because the leaderboard needs to wait for the db to be open
     once.Do(func() {
         var err error
         Db, err = sql.Open("sqlite3", "users/users.db")
@@ -48,23 +48,23 @@ func InitDb() {
     })
 }
 
-func LoadUserData(c *gin.Context) (usr *User, err error) {
+func LoadUserData(c *gin.Context) (usr *User, err error) {  // gets a data from a user stored in the db based on the user_id stored in a cookie in the browser
 
     usr = &User{}
 
-    user, err := c.Cookie("user_id")
+    user, err := c.Cookie("user_id")    // get the user_id from a cookie stored in the browser
     if err != nil {
-        usr.UserName = "Guest"
-        usr.Elo = 800
+        usr.UserName = "Guest"  // if there is not user_id cookie, the player is logged out/never logged in and is considered a guest
+        usr.Elo = 800   // set the elo so that when a logged in user and a guest play, the logged in user loses/gains elo, which would not happen when the guest has 0 elo
         return
     }
 
-    csrf, err := c.Cookie("csrf_token")
+    csrf, err := c.Cookie("csrf_token") // if there is no csrf_token the user cannot obtain the data in the db and must log in again
     if err != nil {
         return
     }
 
-    sess, err := c.Cookie("session_token")
+    sess, err := c.Cookie("session_token")  // if there is no session_token the user cannot obtain the data in the db and must log in again
     if err != nil {
         return
     }
@@ -80,33 +80,34 @@ func LoadUserData(c *gin.Context) (usr *User, err error) {
         &usr.GamesPlayed,
         &usr.GamesWon,
         &usr.Elo,
-    )
+    )   // just get everything haha
 
     if err != nil {
         return
     }
 
-    if usr.SessionToken != sess || usr.CSRFToken != csrf {
+    // before returning the user check if the browser tokens are the same as the db tokens
+    // if not, someone is trying to steal data
+    if usr.SessionToken != sess || usr.CSRFToken != csrf {  
         usr = &User{}    // make sure to return an empty user if login fails
-        err = errors.New("Session token or csrf token missmatch")
+        err = errors.New("Session token or csrf token missmatch, please log in again")
     }
 
     return
 }
 
-func (usr *User) StoreUser() (err error) {
+func (usr *User) StoreUser() (err error) {  // writes the user to the db based on his email and gets the auto-generated id to set as a cookie in auth.go
     if usr.Email == "" {
         err = errors.New("Could not store user data: email missing")
         return
     }
 
     var prov string
+    // check if a user with this email has already logged in before and with which provider
     err = Db.QueryRow("select id, provider from users where email like ?", usr.Email).Scan(&usr.Id, &prov)
 
-    // log.Println(usr)
-    // the user hasn't logged in before so load him into the data base
-    if err != nil {
-        log.Println("IT DID NOT RECOGNIZE THE USER")
+    if err != nil { // the user hasn't logged in before so load him into the data base
+        // store the user in the database
         statement := "insert into users (username, email, avatar_url, session_token, csrf_token, provider, games_played, games_won, elo) values (?, ?, ?, ?, ?, ?, ?, ?, ?) returning id"
         var stmt *sql.Stmt
         stmt, err = Db.Prepare(statement)
@@ -118,20 +119,15 @@ func (usr *User) StoreUser() (err error) {
         return
     }
 
-    log.Println("IT RECOGNIZED THE USER FROM BEFORE")
+    // if the user has logged in before make sure the username and avatar get updated in case the user changed them
+    _, err = Db.Exec("update users set username = ?, avatar_url = ?, session_token = ?, csrf_token = ?, provider = ? where id = ?",
+                      usr.UserName, usr.AvatarURL, usr.SessionToken, usr.CSRFToken, usr.Provider, usr.Id)
 
-    if prov != usr.Provider {
-        _, err = Db.Exec("update users set avatar_url = ?, session_token = ?, csrf_token = ? where id = ?",
-                          usr.AvatarURL, usr.SessionToken, usr.CSRFToken, usr.Id)
-    } else {
-        _, err = Db.Exec("update users set username = ?, avatar_url = ?, session_token = ?, csrf_token = ?, provider = ? where id = ?",
-                          usr.UserName, usr.AvatarURL, usr.SessionToken, usr.CSRFToken, usr.Provider, usr.Id)
-    }
     return
 }
 
 // not used but still here in case I find it useful somehow
-func (usr *User) storeUserPfp() (err error) {
+func (usr *User) storeUserPfp() (err error) {   // used to locally store the user's avatar as an image file
     log.Println("AVATAR URL:", usr.AvatarURL)
     img_response, err := http.Get(usr.AvatarURL)
     if err != nil {
@@ -155,9 +151,9 @@ func (usr *User) storeUserPfp() (err error) {
     return nil
 }
 
-func (usr *User) UpdateGameStats() (err error) {
+func (usr *User) UpdateGameStats() (err error) {    // called at the end of the game to update only the gameplay related stats
     if usr.Id == 0 {
-        return // cannot store data for a guest user
+        return // cannot store data for a guest user (all guest users have the id = 0)
     }
 
     _, err = Db.Exec("update users set games_played = ?, games_won = ?, elo = ? where id = ?", usr.GamesPlayed, usr.GamesWon, usr.Elo, usr.Id)

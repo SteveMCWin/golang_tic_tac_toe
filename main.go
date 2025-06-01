@@ -10,6 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// used by gin to load template funcs
 func templateFuncs() template.FuncMap {
     return template.FuncMap{
         "add1": func(i int) int {
@@ -28,7 +29,7 @@ func main() {
 	r := gin.Default()
 
     r.SetFuncMap(templateFuncs())
-	r.LoadHTMLGlob("templates/*")
+	r.LoadHTMLGlob("templates/*")   // loads all templates from the templates directory
 	
 	r.GET("/", func (c *gin.Context) { c.HTML(http.StatusOK, "index.html", gin.H{}) })
     // r.GET("/about", ServeAbout)

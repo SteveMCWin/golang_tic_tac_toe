@@ -40,40 +40,41 @@ var (
 type Player struct {
     u *users.User
     conn *websocket.Conn
-    move chan []byte  // used to send messages to the game handler
-    board_state chan []byte // used to updated the state of the board
-    exited chan bool
+    move chan []byte    // used to send messages to the game handler regarding the move the player made
+    board_state chan []byte // used to updated the state of the board on the front end
+    exited chan bool    // used to signal the player exited the game
 }
 
 func MakePlayer(hub *Hub, c *gin.Context) {
     usr, err := users.LoadUserData(c)
 
     if err != nil {
-        log.Println(err)
-        // not fatal, probably just a guest user
+        log.Println(err)    // not fatal, probably just a guest user
     }
 
-    connection, err := upgrader.Upgrade(c.Writer, c.Request, nil)
+    connection, err := upgrader.Upgrade(c.Writer, c.Request, nil)   // set up websocket connection
     if err != nil {
         log.Println(err)
         return
     }
 
     new_player := &Player{u: usr, conn: connection, move: make(chan []byte), board_state: make(chan []byte), exited: make(chan bool)}
-    game_mode, err := strconv.Atoi(c.Query("game_mode"))
+    game_mode, err := strconv.Atoi(c.Query("game_mode"))    // the url is expected to contain a game_mode the player wants to play
 
-    if err != nil {
+    if err != nil { // if the value of game_mode is invalid, don't start the game
         log.Printf("Unexpected game mode: %s", c.Query("game_mode"))
+        new_player.conn.Close()
+        return
     }
 
     hub.AddPlayer(new_player, game_mode)
 }
 
-func (p *Player) UpdatePlayerStats() {
+func (p *Player) UpdatePlayerStats() {  // intended to be called at the end of the game
     p.u.UpdateGameStats()
 }
 
-func (p *Player) ListenToSocket() {
+func (p *Player) ListenToSocket() { // listens to the response from the websocket (the front end)
     defer func() {
         log.Printf("Player %s exited", p.u.UserName)
         p.exited <- true
@@ -91,12 +92,12 @@ func (p *Player) ListenToSocket() {
             }
             break
         }
-        p.move <- message[:2]
+        p.move <- message[:2]   // the expected message is supposed to be just 2 character corresponding to the position of the move the player made
 
     }
 }
 
-func (p *Player) ListenToServer() {
+func (p *Player) ListenToServer() { // listens to the response of the server, which is a new board state that is used to update the front end ui
     ticker := time.NewTicker(pingPeriod)
 	defer func() {
         p.exited <- true
@@ -116,7 +117,7 @@ func (p *Player) ListenToServer() {
             if err != nil {
                 return
             }
-            w.Write(new_state)
+            w.Write(new_state)  // sends the baord state to the websocket
 
             if err := w.Close(); err != nil {
                 return

@@ -8,15 +8,17 @@ package board
 type Board struct {
     Cells [9]byte
     Result byte
-    movesPlayed byte
+    movesPlayed byte    // used to determine the winner of the board when it's full
 }
 
-func (b *Board) MakeMove(pos byte, player byte) {
+func (b *Board) MakeMove(pos byte, player byte) {   // there are no safeguards in this method because the BigBoard does all the safeguards for it
     b.Cells[pos] = player
     b.movesPlayed += 1
-    b.UpdateResult()
+    b.UpdateResult()    // check for winner after each move
 }
 
+// checks for a winner the normal way first, if no winner but board full, make the one with most plays in the board win
+// in normal tic-tac-toe this would always result in x winning, but not in 2d tic-tac-toe
 func (b *Board) UpdateResult() {
     for i := 0; i < 3; i++ {
         // check columns
@@ -37,11 +39,10 @@ func (b *Board) UpdateResult() {
         }
     }
 
+    // check diagonals
     if b.Cells[4] == 0 {
         return 
     }
-
-    // check diagonals
 
     if b.Cells[0] == b.Cells[4] && b.Cells[0] == b.Cells[8] {
         b.Result = b.Cells[4]
@@ -53,7 +54,7 @@ func (b *Board) UpdateResult() {
         return
     }
 
-    if b.movesPlayed >= 9 {
+    if b.movesPlayed >= 9 { // if neither player won so far but the board is full, check who made most plays
         moves_made := make(map[byte]byte)
 
         for _, val := range b.Cells {

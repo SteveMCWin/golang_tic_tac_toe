@@ -8,11 +8,12 @@ type PlayerTimer struct {
     TimeLeft time.Duration
     isPaused bool
     Finished chan bool
-    lastFrame time.Time
-    FischerTime time.Duration
+    lastFrame time.Time // last recorded time, used to decrease the TimeLeft based on how long ago it was recorded
+    FischerTime time.Duration   // used to add time to the TimeLeft when a player ends their turn, look it up on wikipedia
 }
-
-func MakePlayerTimer(d time.Duration, ft time.Duration) (pt *PlayerTimer){
+// to make a player timer you need to pass the starting time and the fischer time
+// to make a normal timer just set the fischer time to 0
+func MakePlayerTimer(d time.Duration, ft time.Duration) (pt *PlayerTimer) {
     pt = &PlayerTimer{}
     pt.TimeLeft = d
     pt.isPaused = true
@@ -48,6 +49,6 @@ func (pt *PlayerTimer) run() {
             return
         }
 
-        time.Sleep(10 * time.Millisecond)
+        time.Sleep(10 * time.Millisecond)   // this is here so the app has time to do something else, sacrificing some precision for some performance
     }
 }

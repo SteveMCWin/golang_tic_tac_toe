@@ -31,16 +31,16 @@ type Game struct {
     players [2]*Player
     player_timers [2]*PlayerTimer
     b *board.BigBoard
-    p1move bool
+    p1move bool // used to prevent the other player playing when it's not their turn
     game_started bool
 }
 
 func ServePlay(c *gin.Context) {
     game_mode := c.Query("game_mode")
-    if game_mode == "" {
+    if game_mode == "" {    // safeguard
         game_mode = "0"
     }
-    c.HTML(http.StatusOK, "board.html", gin.H{
+    c.HTML(http.StatusOK, "board.html", gin.H{  // this sets up the websocket in html and then the html redirects to /ws which calls MakePlayer
         "game_mode": game_mode,
     })
 }
@@ -51,7 +51,7 @@ func NewGame(p1, p2 *Player, mode GameMode) *Game {
     g.players[1] = p2
     g.b = &board.BigBoard{}
     g.b.Initialize()
-    g.p1move = true // player 1 makes the first move
+    g.p1move = true // player 1 is always 'x' so they make the first move
     g.game_started = false
     // update user stats
     g.players[0].u.GamesPlayed += 1
@@ -91,14 +91,14 @@ func NewGame(p1, p2 *Player, mode GameMode) *Game {
     return g
 }
 
-func (g *Game) Run() {
+func (g *Game) Run() {  // listens for user and server actions and udpdates the game accordingly, also handles game logic such as switching player turns etc
     go g.players[0].ListenToSocket()
     go g.players[0].ListenToServer()
 
     go g.players[1].ListenToSocket()
     go g.players[1].ListenToServer()
 
-    defer g.players[0].UpdatePlayerStats()
+    defer g.players[0].UpdatePlayerStats()  // makes sure that the player stats stored only when the game finishes
     defer g.players[1].UpdatePlayerStats()
 
     go func() {
@@ -112,38 +112,40 @@ func (g *Game) Run() {
         log.Println("GOOO")
         g.game_started = true
         g.player_timers[0].Start()
-    }()
+    }() // this being in a goroutine prevents the players from sending input before the game starts which may lead to the 'o' player going first
 
     for {
         select {
         case pos := <- g.players[0].move:
             if g.p1move == true && g.game_started == true {
+                // the position sent is a byte slice which is supposed to be of length 2, pos[0] being the mini board idx, pos[1] being the cell idx
                 if len(pos) < 2 {
                     log.Printf("Expected position to be of length >= 2, got legnth of %d", len(pos))
                     continue
                 }
-                err := g.b.MakeMove(pos[0], pos[1], 'x')
+
+                err := g.b.MakeMove(pos[0], pos[1], 'x')    // this updates the board back-end logic/state
                 if err != nil {
                     log.Println(err)
                 } else {
                     log.Printf("Paused p1 timer at %s", g.player_timers[0].TimeLeft.String())
+                    // if the move was deemed valid and all, handle the timers, send the messages to update the front-end based on the back-end
                     g.player_timers[0].Pause()
 
                     g.updateBoardVisuals()
 
-                    if g.b.Result != 0 {
+                    if g.b.Result != 0 {    // handles the game being finished and exits the function
                         g.checkWinner()
                         return
                     }
 
                     g.p1move = false
                     g.player_timers[1].Start()
+
                     log.Printf("Resumed p2 timer at %s", g.player_timers[1].TimeLeft.String())
                 }
-            } /*else {
-                log.Println("IT'S PLAYER 2'S MOVE")
-            }*/
-        case pos := <- g.players[1].move:
+            }
+        case pos := <- g.players[1].move:   // same as the case above, just for the other player
             if g.p1move == false && g.game_started == true {
                 if len(pos) < 2 {
                     log.Printf("Expected position to be of length >= 2, got legnth of %d", len(pos))
@@ -167,10 +169,8 @@ func (g *Game) Run() {
                     g.player_timers[0].Start()
                     log.Printf("Resumed p1 timer at %s", g.player_timers[0].TimeLeft.String())
                 }
-            } /*else {
-                log.Println("IT'S PLAYER 2'S MOVE")
-            }*/
-        case _ = <- g.players[0].exited:
+            }
+        case _ = <- g.players[0].exited:    // in case someone exits before the game is finished, finish the game and make the other player the winner
             g.b.Result = 'o'
             g.checkWinner()
             return
@@ -178,7 +178,7 @@ func (g *Game) Run() {
             g.b.Result = 'x'
             g.checkWinner()
             return
-        case _ = <-g.player_timers[0].Finished:
+        case _ = <-g.player_timers[0].Finished: // in case someone's timer runs out, the other player wins
             g.b.Result = 'o'
             g.checkWinner()
             return
@@ -190,13 +190,13 @@ func (g *Game) Run() {
     }
 }
 
-func (g *Game) updateBoardVisuals() {
-    new_b_state := parseBoardToJSON(g.b.BoardState)
+func (g *Game) updateBoardVisuals() {   // sends the board's back-end data to the front-end to update the ui
+    new_b_state := parseBoardToJSON(g.b.BoardState) // the front-end expects the board state to be in json format
     g.players[0].board_state <- new_b_state
     g.players[1].board_state <- new_b_state
 }
 
-func (g *Game) checkWinner() {
+func (g *Game) checkWinner() {  // the winner is determined from the boards Result field
     switch g.b.Result {
     case 'x':
         g.players[0].u.GamesWon += 1
@@ -208,11 +208,11 @@ func (g *Game) checkWinner() {
         log.Printf("Tie!!!")
     }
 
-    g.updatePlayerElo()
+    g.calculateNewPlayerElo()   // needs to be called after a winner is determined
 
 }
 
-func (g *Game) updatePlayerElo() {
+func (g *Game) calculateNewPlayerElo() {    // calculates each players new elo based on the outcome of the game, doesn't store it in db itself, only in the structs
     Qa := math.Pow(10.0, float64(g.players[0].u.Elo) / 400.0)
     Qb := math.Pow(10.0, float64(g.players[1].u.Elo) / 400.0)
 
@@ -240,7 +240,7 @@ func (g *Game) updatePlayerElo() {
     g.players[1].u.Elo += int(math.Round(K * (Sb - Eb)))
 }
 
-func parseBoardToJSON(b_state [][]byte) []byte {
+func parseBoardToJSON(b_state [][]byte) []byte {    // note that the board state is turned into a normal byte array instead of a 2d byte array
 
     var board []string
     for _, b := range b_state {

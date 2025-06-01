@@ -3,7 +3,6 @@ package users
 import (
     "log"
     "time"
-    // "errors"
     "net/http"
 	"github.com/gin-gonic/gin"
 )
@@ -12,7 +11,7 @@ type LeaderBoard struct {
     TopPlayers []*User
 }
 
-var MostEloLb *LeaderBoard
+var MostEloLb *LeaderBoard  // THE leaderboard that is displayed
 
 func InitLeaderBoard() (*LeaderBoard, error) {   // is called in the user_data's InitDb function
     lb := &LeaderBoard{ TopPlayers: make([]*User, 0) }
@@ -20,7 +19,7 @@ func InitLeaderBoard() (*LeaderBoard, error) {   // is called in the user_data's
     return lb, nil
 }
 
-func (lb *LeaderBoard) updateLeaderboard() {
+func (lb *LeaderBoard) updateLeaderboard() {    // just pulls the top players (based on elo) from the user db
     stmt := "SELECT username, avatar_url, elo FROM users ORDER BY elo DESC LIMIT 10"
     rows, err := Db.Query(stmt);
     if err != nil {
@@ -51,7 +50,7 @@ func (lb *LeaderBoard) updateLeaderboard() {
     }
 }
 
-func (lb *LeaderBoard) RunLeaderBoard() {
+func (lb *LeaderBoard) RunLeaderBoard() {   // updates the leaderboard every 10 seconds, intended to be called in a goroutine
     for {
         lb.updateLeaderboard()
         time.Sleep(10 * time.Second)

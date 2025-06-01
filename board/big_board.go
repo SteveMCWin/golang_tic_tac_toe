@@ -1,20 +1,19 @@
 package board
 
 import (
-    "log"
     "fmt"
     "errors"
 )
 
-const wildBoard = '?'
-const BoardTie = '_'
+const wildBoard = '?'   // wildBoard means the player can play in any of the mini-boards
+const BoardTie = '_'    // used in the BigBoard's Result field if it comes to a tie
 
 type BigBoard struct {
-    boardToPlayIn byte
-    Boards [9]*Board
-    BoardState [][]byte
-    Result byte
-    boardsComplete byte
+    boardToPlayIn byte  // the next mini-board to make a move in
+    Boards [9]*Board    // mini-boards
+    BoardState [][]byte // this is used to update the front end ui
+    Result byte         // outcome-of the game, the value is either 0, 'x', 'o' or BoardTie ('_')
+    boardsComplete byte // keeps track of how many mini-boards are complete to handle an over-all tie
 }
 
 func (bb *BigBoard) Initialize() {
@@ -28,12 +27,13 @@ func (bb *BigBoard) Initialize() {
         bb.BoardState[i] = make([]byte, 9)
     }
 
-    bb.boardToPlayIn = wildBoard
+    bb.boardToPlayIn = wildBoard    // make sure the first play can be made in any of the mini-boards
 }
 
+// big pos represents the mini-board index, the pos represents the cell index
 func (bb *BigBoard) MakeMove(big_pos byte, pos byte, player byte) (err error) {
 
-    if big_pos >= '0' && big_pos <= '9' {
+    if big_pos >= '0' && big_pos <= '9' {   // the positions passed in are probably ascii characters representing digis
         big_pos = big_pos - '0'
     }
 
@@ -46,29 +46,27 @@ func (bb *BigBoard) MakeMove(big_pos byte, pos byte, player byte) (err error) {
         return
     }
 
-    log.Println("big_pos:", big_pos)
-    log.Println("pos:", pos)
-    bb.Boards[big_pos].MakeMove(pos, player)
+    bb.Boards[big_pos].MakeMove(pos, player)    // updates the board through its mini-boards
 
     if bb.Boards[pos].Result == 0 {
         bb.boardToPlayIn = pos
-    } else {
+    } else {    // if the mini-board that should be played in next is already completed, allow the next player to play in any mini-board
         bb.boardToPlayIn = wildBoard
     }
 
-    if bb.Boards[big_pos].Result != byte(0) {
+    if bb.Boards[big_pos].Result != byte(0) {   // if the board that was just played in gets completed, check for win and update counter
         bb.boardsComplete += 1
         bb.UpdateResult()
     }
 
-    for i := 0; i < 9; i++ {
+    for i := 0; i < 9; i++ {    // update then board state partially, since only one mini-board can change per move
         bb.BoardState[big_pos][i] = bb.Boards[big_pos].Cells[i]
     }
 
     return
 }
 
-func (bb *BigBoard) UpdateResult() {
+func (bb *BigBoard) UpdateResult() {    // checks if anyone won and if so, update the board's result
     for i := 0; i < 3; i++ {
         // check columns
         if bb.Boards[i].Result == 0 {
@@ -78,6 +76,7 @@ func (bb *BigBoard) UpdateResult() {
             bb.Result = bb.Boards[i].Result
             return
         }
+        // check rows
         if bb.Boards[3*i].Result == 0 {
             continue
         }
@@ -87,6 +86,7 @@ func (bb *BigBoard) UpdateResult() {
         }
     }
 
+    // check diagonals
     if bb.Boards[4].Result == 0 {
         return
     }
@@ -101,6 +101,7 @@ func (bb *BigBoard) UpdateResult() {
         return
     }
 
+    // if board full but neither player won, it's a tie
     if bb.boardsComplete >= 9 {
         bb.Result = BoardTie
         return
@@ -109,7 +110,7 @@ func (bb *BigBoard) UpdateResult() {
     return
 }
 
-func (bb *BigBoard) checkIfMoveValid(big_pos byte, pos byte, player byte) (err error) {
+func (bb *BigBoard) checkIfMoveValid(big_pos byte, pos byte, player byte) (err error) { // checks if received input for a move is valid
 
     if big_pos != bb.boardToPlayIn && bb.boardToPlayIn != wildBoard {
         err = fmt.Errorf("invalid call to make_move:\nbig_pos and prev_pos missmatch: big_pos = %d, prev_pos = %d", big_pos, bb.boardToPlayIn)
