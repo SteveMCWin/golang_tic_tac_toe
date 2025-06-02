@@ -32,7 +32,7 @@ func main() {
 	r.LoadHTMLGlob("templates/*")   // loads all templates from the templates directory
 	
 	r.GET("/", func (c *gin.Context) { c.HTML(http.StatusOK, "index.html", gin.H{}) })
-    // r.GET("/about", ServeAbout)
+    r.GET("/about", func (c *gin.Context) { c.Redirect(http.StatusPermanentRedirect, "https://github.com/SteveMCWin/golang_tic_tac_toe/blob/master/readme.md")})
     r.GET("/leaderboard", users.ServeLeaderboard)
     r.GET("/hub", game.ServeHub)
     r.GET("/play", game.ServePlay)
