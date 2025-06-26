@@ -89,7 +89,9 @@ func LoadUserData(c *gin.Context) (usr *User, err error) {  // gets a data from 
     // before returning the user check if the browser tokens are the same as the db tokens
     // if not, someone is trying to steal data
     if usr.SessionToken != sess || usr.CSRFToken != csrf {  
-        usr = &User{}    // make sure to return an empty user if login fails
+        usr = &User{}    // if login fails return guest data
+        usr.UserName = "Guest"
+        usr.Elo = 800
         err = errors.New("Session token or csrf token missmatch, please log in again")
     }
 

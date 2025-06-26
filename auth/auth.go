@@ -115,6 +115,7 @@ func ServeProfile(c *gin.Context) { // displays users profile page
     if err != nil {
         log.Println("Couldn't load user, error: ", err)
         c.Redirect(http.StatusTemporaryRedirect, "/")
+		return
     }
 
     c.HTML(http.StatusOK, "profile.html", this_user)

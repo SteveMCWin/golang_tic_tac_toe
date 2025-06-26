@@ -117,7 +117,7 @@ func (p *Player) ListenToServer() { // listens to the response of the server, wh
             if err != nil {
                 return
             }
-            w.Write(new_state)  // sends the baord state to the websocket
+            w.Write(new_state)  // sends the board state to the websocket
 
             if err := w.Close(); err != nil {
                 return

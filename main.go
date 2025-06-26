@@ -3,9 +3,10 @@ package main
 import (
 	"html/template"
 	"net/http"
-    "tic_tac_toe.fun/auth"
-    "tic_tac_toe.fun/game"
-    "tic_tac_toe.fun/users"
+
+	"tic_tac_toe.fun/auth"
+	"tic_tac_toe.fun/game"
+	"tic_tac_toe.fun/users"
 
 	"github.com/gin-gonic/gin"
 )
