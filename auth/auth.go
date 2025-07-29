@@ -20,10 +20,17 @@ import (
 
 const COOKIE_MAX_AGE = 86400 * 30
 
+var domain string 
+
 func init() {
     err := godotenv.Load()  // loads data like client ids and secrets from the .env file in the project root dir
 	if err != nil {
 		log.Fatal(".env file failed to load!")
+	}
+
+	domain = os.Getenv("DOMAIN")
+	if domain == "" {
+		log.Fatal("DOMAIN missing")
 	}
 
     sessionKey := os.Getenv("SESSION_KEY")
@@ -95,16 +102,25 @@ func CallbackHandler(c *gin.Context) {  // this gets called once the user logs i
     csrfToken := generateToken(32)
 
     // the magic numbers will all be replaced in the call to StoreUser so no worries
-    usr := users.User{-1, g_user.NickName, g_user.Email, g_user.AvatarURL, sessionToken, csrfToken, provider, 0, 0, 800}
+    // usr := users.User{-1, g_user.NickName, g_user.Email, g_user.AvatarURL, sessionToken, csrfToken, provider, 0, 0, 800}
+	usr := users.User {
+		Id: -1,
+		UserName: g_user.NickName,
+		Email: g_user.Email,
+		AvatarURL: g_user.AvatarURL,
+		SessionToken: sessionToken,
+		CSRFToken: csrfToken,
+		Provider: provider,
+	}
     err = usr.StoreUser()
 
     if err != nil {
         log.Println(err)
     }
 
-    c.SetCookie("user_id", strconv.Itoa(usr.Id), COOKIE_MAX_AGE, "/", "localhost", true, true)  // storing cookies in the browser
-    c.SetCookie("session_token", sessionToken, COOKIE_MAX_AGE, "/", "localhost", true, true)    // this is used to identify the user next time they wisid the web app
-    c.SetCookie("csrf_token", csrfToken, COOKIE_MAX_AGE, "/", "localhost", true, true)
+    c.SetCookie("user_id", strconv.Itoa(usr.Id), COOKIE_MAX_AGE, "/", domain, true, true)  // storing cookies in the browser
+    c.SetCookie("session_token", sessionToken, COOKIE_MAX_AGE, "/", domain, true, true)    // this is used to identify the user next time they wisid the web app
+    c.SetCookie("csrf_token", csrfToken, COOKIE_MAX_AGE, "/", domain, true, true)
 
 	c.Redirect(http.StatusTemporaryRedirect, "/profile")
 }
@@ -122,9 +138,9 @@ func ServeProfile(c *gin.Context) { // displays users profile page
 }
 
 func LogoutHandler(c *gin.Context) {    // logging out erases the cookies that are used for remembering the user and telling
-    c.SetCookie("user_id", "", -1, "/", "localhost", true, true)    // the cookies are erased by setting maxAge to a negative number, telling the browser they expired
-    c.SetCookie("session_token", "", -1, "/", "localhost", true, true)
-    c.SetCookie("csrf_token", "", -1, "/", "localhost", true, true)
+    c.SetCookie("user_id", "", -1, "/", domain, true, true)    // the cookies are erased by setting maxAge to a negative number, telling the browser they expired
+    c.SetCookie("session_token", "", -1, "/", domain, true, true)
+    c.SetCookie("csrf_token", "", -1, "/", domain, true, true)
     gothic.Logout(c.Writer, c.Request)  // also notify gothic we logged out ig
     c.Redirect(http.StatusTemporaryRedirect, "/")
 }

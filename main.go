@@ -43,6 +43,6 @@ func main() {
 	r.GET("/auth/:provider/callback/", auth.CallbackHandler)
     r.GET("/ws", func (c *gin.Context) { game.MakePlayer(hub, c) })
 
-	r.RunTLS(":5000", "./testdata/server.pem", "./testdata/server.key")
+	r.Run(":5000")
 }
 

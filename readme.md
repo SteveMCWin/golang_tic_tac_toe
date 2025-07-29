@@ -8,6 +8,7 @@ It would be nice if I could deploy this web app, but the front end is written mo
 ## Features
 - User authentication (with Google and Github) using the [goth package](https://github.com/markbates/goth)
 - Websocket implementation allowing multiplayer using the [gorilla websocket package.](https://github.com/gorilla/websocket)
+- Elo system
 
 ## Things left to implement
 - The front end
