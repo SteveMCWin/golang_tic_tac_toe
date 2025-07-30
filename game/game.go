@@ -1,13 +1,14 @@
 package game
 
 import (
-    "log"
-    "time"
-    "math"
-    "net/http"
-    "encoding/json"
+	"encoding/json"
+	"log"
+	"math"
+	"net/http"
+	"time"
 
-    "tic_tac_toe.fun/board"
+	"tic_tac_toe.fun/board"
+	"tic_tac_toe.fun/models"
 
 	"github.com/gin-gonic/gin"
 )
@@ -91,15 +92,17 @@ func NewGame(p1, p2 *Player, mode GameMode) *Game {
     return g
 }
 
-func (g *Game) Run() {  // listens for user and server actions and udpdates the game accordingly, also handles game logic such as switching player turns etc
+func (g *Game) Run(db *models.DataBase) {  // listens for user and server actions and udpdates the game accordingly, also handles game logic such as switching player turns etc
     go g.players[0].ListenToSocket()
     go g.players[0].ListenToServer()
 
     go g.players[1].ListenToSocket()
     go g.players[1].ListenToServer()
 
-    defer g.players[0].UpdatePlayerStats()  // makes sure that the player stats stored only when the game finishes
-    defer g.players[1].UpdatePlayerStats()
+    defer db.UpdateGameStats(g.players[0].u)
+    defer db.UpdateGameStats(g.players[1].u)
+    // defer g.players[0].UpdatePlayerStats()  // makes sure that the player stats stored only when the game finishes
+    // defer g.players[1].UpdatePlayerStats()
 
     go func() {
         log.Println("GAME STARTS IN")

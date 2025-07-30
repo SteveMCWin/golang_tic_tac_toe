@@ -5,8 +5,6 @@ import (
 	"strconv"
 	"time"
 
-	"tic_tac_toe.fun/defs"
-	"tic_tac_toe.fun/handlers"
 	"tic_tac_toe.fun/models"
 
 	"github.com/gin-gonic/gin"
@@ -47,37 +45,30 @@ type Player struct {
     exited chan bool    // used to signal the player exited the game
 }
 
-func MakePlayer(hub *Hub, db *models.DataBase) func(c *gin.Context) {
-	return func(c *gin.Context) {
-		user_id := handlers.GetUserId(c)
-		usr, err := db.ReadUser(user_id)
+func ConnectPlayerToSocket(hub *Hub, usr *models.User, c *gin.Context) error {
 
-		if err != nil {
-			usr = &models.User{ UserName: "Guest", Elo: defs.STARTING_ELO }
-		}
-
-		connection, err := upgrader.Upgrade(c.Writer, c.Request, nil)   // set up websocket connection
-		if err != nil {
-			log.Println(err)
-			return
-		}
-
-		new_player := &Player{u: usr, conn: connection, move: make(chan []byte), board_state: make(chan []byte), exited: make(chan bool)}
-		game_mode, err := strconv.Atoi(c.Query("game_mode"))    // the url is expected to contain a game_mode the player wants to play
-
-		if err != nil { // if the value of game_mode is invalid, don't start the game
-			log.Printf("Unexpected game mode: %s", c.Query("game_mode"))
-			new_player.conn.Close()
-			return
-		}
-
-		hub.AddPlayer(new_player, game_mode)
+	connection, err := upgrader.Upgrade(c.Writer, c.Request, nil)   // set up websocket connection
+	if err != nil {
+		return err
 	}
+
+	new_player := &Player{u: usr, conn: connection, move: make(chan []byte), board_state: make(chan []byte), exited: make(chan bool)}
+
+	game_mode, err := strconv.Atoi(c.Query("game_mode"))    // the url is expected to contain a game_mode the player wants to play
+	if err != nil { // if the value of game_mode is invalid, don't start the game
+		log.Printf("Unexpected game mode: %s", c.Query("game_mode"))
+		new_player.conn.Close()
+		return err
+	}
+
+	hub.AddPlayer(new_player, game_mode)
+
+	return nil
 }
 
-func (p *Player) UpdatePlayerStats() {  // intended to be called at the end of the game
-    p.u.UpdateGameStats()
-}
+// func (p *Player) UpdatePlayerStats() {  // intended to be called at the end of the game
+//     p.u.UpdateGameStats()
+// }
 
 func (p *Player) ListenToSocket() { // listens to the response from the websocket (the front end)
     defer func() {

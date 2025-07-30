@@ -4,6 +4,8 @@ import (
     "log"
     "net/http"
 	"github.com/gin-gonic/gin"
+	
+	"tic_tac_toe.fun/models"
 )
 
 type GameDuration int
@@ -32,12 +34,12 @@ func (h *Hub) AddPlayer(p *Player, game_mode int) {     // puts player in one of
     h.PlayerQueues[GameMode(game_mode)] <- p    // notifies the channel the player is waiting for a game
 }
 
-func (h *Hub) HandleGames() {   // starts a goroutine for every queue
+func (h *Hub) HandleGames(db *models.DataBase) {   // starts a goroutine for every queue
     for i := GameMode(0); i < game_mode_size; i++ {
         go func () {
             for {
                 g := NewGame(<-h.PlayerQueues[i], <-h.PlayerQueues[i], i)   // makes the game once there are 2 players in the same queue
-                go g.Run()  // starts the game
+                go g.Run(db)  // starts the game
             }
         }()
     }

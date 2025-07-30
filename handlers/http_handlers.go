@@ -10,7 +10,6 @@ import (
 	"tic_tac_toe.fun/defs"
 	"tic_tac_toe.fun/game"
 	"tic_tac_toe.fun/models"
-	// "tic_tac_toe.fun/auth"
 
 	"github.com/gorilla/sessions"
 	"github.com/joho/godotenv"
@@ -23,7 +22,13 @@ import (
 	"github.com/alexedwards/scs/v2"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/csrf"
+	"github.com/gorilla/websocket"
 )
+
+var upgrader = websocket.Upgrader{
+	ReadBufferSize:  1024,
+	WriteBufferSize: 1024,
+}
 
 var SessionManager *scs.SessionManager
 
@@ -123,7 +128,7 @@ func SetUpRouter(db *models.DataBase, lb *models.LeaderBoard, hub *game.Hub) htt
 	router.GET("/logout/:provider/", LogoutHandler())
 	router.GET("/auth/:provider", SignInWithProvider())
 	router.GET("/auth/:provider/callback/", CallbackHandler(db))
-	router.GET("/ws", func(c *gin.Context) { game.MakePlayer(hub, c) })
+	router.GET("/ws", HandleWebsocketConnection(hub, db))
 
 	router.SetFuncMap(templateFuncs())
 	router.LoadHTMLGlob("templates/*") // loads all templates from the templates directory
@@ -231,3 +236,23 @@ func LogoutHandler() func(c *gin.Context) { // logging out erases the cookies th
 		c.Redirect(http.StatusTemporaryRedirect, "/")
 	}
 }
+
+func HandleWebsocketConnection(hub *game.Hub, db *models.DataBase) func(c *gin.Context) {
+	return func(c *gin.Context) {
+		user_id := GetUserId(c)
+		usr, err := db.ReadUser(user_id)
+		if err != nil {
+			usr = &models.User{ UserName: "Guest", Elo: defs.STARTING_ELO }
+		}
+
+		err = game.ConnectPlayerToSocket(hub, usr, c)
+
+		if err != nil {
+			log.Println(err)
+			c.Redirect(http.StatusPermanentRedirect, "/error-page")
+			return
+		}
+	}
+}
+
+

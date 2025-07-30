@@ -18,7 +18,7 @@ func main() {
 	go MostEloLb.RunLeaderBoard(db)
 
     hub := game.MakeHub()
-    go hub.HandleGames()
+    go hub.HandleGames(db)
 
 	handler := handlers.SetUpRouter(db, MostEloLb, hub)
 
