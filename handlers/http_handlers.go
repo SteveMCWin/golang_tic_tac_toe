@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"time"
 
 	"tic_tac_toe.fun/defs"
@@ -116,14 +117,12 @@ func SetUpRouter(db *models.DataBase, lb *models.LeaderBoard, hub *game.Hub) htt
 
 	router := gin.Default()
 
-	router.GET("/", func(c *gin.Context) { c.HTML(http.StatusOK, "index.html", gin.H{}) })
-	router.GET("/error-page", func(c *gin.Context) { c.String(http.StatusOK, "Error Encountered :<") })
-	router.GET("/about", func(c *gin.Context) {
-		c.Redirect(http.StatusPermanentRedirect, "https://github.com/SteveMCWin/golang_tic_tac_toe/blob/master/readme.md")
-	})
-	router.GET("/leaderboard", ServeLeaderboard(lb))
-	router.GET("/hub", game.ServeHub)
-	router.GET("/play", game.ServePlay)
+	router.GET("/", HandleGetHome())
+	router.GET("/error-page", HandleGetErrorPage())
+	router.GET("/about", HandleGetAbout())
+	router.GET("/leaderboard", HandleGetLeaderboard(lb))
+	router.GET("/hub", ServeHub())
+	router.GET("/play", ServePlay())
 	router.GET("/profile/:user_id", HandleGetProfile(db))
 	router.GET("/logout/:provider/", LogoutHandler())
 	router.GET("/auth/:provider", SignInWithProvider())
@@ -152,7 +151,26 @@ func GetUserId(c *gin.Context) int {
 	return SessionManager.GetInt(c.Request.Context(), "user_id")
 }
 
-func ServeLeaderboard(lb *models.LeaderBoard) func(c *gin.Context) {
+func HandleGetHome() func(c *gin.Context) {
+	return func(c *gin.Context) {
+		user_id := GetUserId(c)
+		c.HTML(http.StatusOK, "index.html", gin.H{ "user_id": user_id }) 
+	}
+}
+
+func HandleGetAbout() func(c *gin.Context) {
+	return func(c *gin.Context) {
+		c.Redirect(http.StatusPermanentRedirect, "https://github.com/SteveMCWin/golang_tic_tac_toe/blob/master/readme.md")
+	}
+}
+
+func HandleGetErrorPage() func(c *gin.Context) {
+	return func(c *gin.Context) {
+		c.String(http.StatusOK, "Error Encountered :<") 
+	}
+}
+
+func HandleGetLeaderboard(lb *models.LeaderBoard) func(c *gin.Context) {
 	return func(c *gin.Context) {
 		c.HTML(http.StatusOK, "leaderboard.html", gin.H{
 			"TopPlayers": lb.TopPlayers,
@@ -180,6 +198,7 @@ func CallbackHandler(db *models.DataBase) func(c *gin.Context) { // this gets ca
 
 		g_user, err := gothic.CompleteUserAuth(c.Writer, c.Request) // returns the user data
 		if err != nil {
+			log.Println(err)
 			c.AbortWithError(http.StatusInternalServerError, err)
 			return
 		}
@@ -206,17 +225,29 @@ func CallbackHandler(db *models.DataBase) func(c *gin.Context) { // this gets ca
 
 		SessionManager.Put(c.Request.Context(), "user_id", usr.Id)
 
-		c.Redirect(http.StatusTemporaryRedirect, "/profile")
+		c.Redirect(http.StatusTemporaryRedirect, "/profile/"+strconv.Itoa(usr.Id))
 	}
 }
 
 func HandleGetProfile(db *models.DataBase) func(c *gin.Context) { // displays users profile page
 	return func(c *gin.Context) {
 
-		user_id := GetUserId(c)
-		if user_id == defs.NO_USER_ID {
-			c.Redirect(http.StatusPermanentRedirect, "/user/login")
+		requesting_user_id := GetUserId(c)
+		if requesting_user_id == defs.NO_USER_ID {
+			// c.Redirect(http.StatusPermanentRedirect, "/user/login")
+			c.Redirect(http.StatusPermanentRedirect, "/") // TODO: add a login page to redirect to
+			return
 		}
+
+		user_id_param := c.Param("user_id")
+		user_id, err := strconv.Atoi(user_id_param)
+		if err != nil {
+			log.Println("Couldn't read user id from url", err)
+			c.Redirect(http.StatusTemporaryRedirect, "/error-page")
+			return
+		}
+
+		// TODO: limit info seen by other users
 
 		this_user, err := db.ReadUser(user_id)
 		if err != nil {
@@ -231,8 +262,9 @@ func HandleGetProfile(db *models.DataBase) func(c *gin.Context) { // displays us
 
 func LogoutHandler() func(c *gin.Context) { // logging out erases the cookies that are used for remembering the user and telling
 	return func(c *gin.Context) {
+		// NOTE: not logging out with goth since it makes scs panic
 		SessionManager.Destroy(c)
-		gothic.Logout(c.Writer, c.Request) // also notify gothic we logged out ig
+		log.Println("Logged out")
 		c.Redirect(http.StatusTemporaryRedirect, "/")
 	}
 }
@@ -255,4 +287,21 @@ func HandleWebsocketConnection(hub *game.Hub, db *models.DataBase) func(c *gin.C
 	}
 }
 
+func ServePlay() func(c *gin.Context) {
+	return func(c *gin.Context) {
+		game_mode := c.Query("game_mode")
+		if game_mode == "" {    // safeguard
+			game_mode = "0"
+		}
+		c.HTML(http.StatusOK, "board.html", gin.H{  // this sets up the websocket in html and then the html redirects to /ws which calls MakePlayer
+			"game_mode": game_mode,
+		})
+	}
+}
+
+func ServeHub() func(c *gin.Context) {
+	return func(c *gin.Context) {
+		c.HTML(http.StatusOK, "hub.html", gin.H{})
+	}
+}
 

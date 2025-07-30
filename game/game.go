@@ -4,13 +4,10 @@ import (
 	"encoding/json"
 	"log"
 	"math"
-	"net/http"
 	"time"
 
 	"tic_tac_toe.fun/board"
 	"tic_tac_toe.fun/models"
-
-	"github.com/gin-gonic/gin"
 )
 
 type GameMode int
@@ -34,16 +31,6 @@ type Game struct {
     b *board.BigBoard
     p1move bool // used to prevent the other player playing when it's not their turn
     game_started bool
-}
-
-func ServePlay(c *gin.Context) {
-    game_mode := c.Query("game_mode")
-    if game_mode == "" {    // safeguard
-        game_mode = "0"
-    }
-    c.HTML(http.StatusOK, "board.html", gin.H{  // this sets up the websocket in html and then the html redirects to /ws which calls MakePlayer
-        "game_mode": game_mode,
-    })
 }
 
 func NewGame(p1, p2 *Player, mode GameMode) *Game {

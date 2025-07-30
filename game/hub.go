@@ -2,9 +2,7 @@ package game
 
 import (
     "log"
-    "net/http"
-	"github.com/gin-gonic/gin"
-	
+
 	"tic_tac_toe.fun/models"
 )
 
@@ -12,10 +10,6 @@ type GameDuration int
 
 type Hub struct {
     PlayerQueues map[GameMode]chan *Player  // one queue for each game mode so you can pair up users accordingly
-}
-
-func ServeHub(c *gin.Context) {
-    c.HTML(http.StatusOK, "hub.html", gin.H{})
 }
 
 func MakeHub() *Hub {

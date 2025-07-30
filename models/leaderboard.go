@@ -20,7 +20,7 @@ func (lb *LeaderBoard) RunLeaderBoard(Db *DataBase) {   // updates the leaderboa
     }
 }
 
-func (lb *LeaderBoard) updateLeaderboard(Db *DataBase) {    // just pulls the top players (based on elo) from the user db
+func (lb *LeaderBoard) updateLeaderboard(Db *DataBase) {    // just pulls the top players (based on elo) from the db
     stmt := "SELECT username, avatar_url, elo FROM users ORDER BY elo DESC LIMIT 10"
     rows, err := Db.Data.Query(stmt);
     if err != nil {

@@ -126,7 +126,7 @@ func (Db *DataBase) StoreUser(usr *User) (error) {  // writes the user to the db
 
     if err != nil { // the user hasn't logged in before so load him into the data base
         // store the user in the database
-        statement := "insert into users (username, email, avatar_url, provider, games_played, games_won, elo) values (?, ?, ?, ?, ?, ?, ?, ?, ?) returning id"
+        statement := "insert into users (username, email, avatar_url, provider, games_played, games_won, elo) values (?, ?, ?, ?, ?, ?, ?) returning id"
         var stmt *sql.Stmt
         stmt, err = Db.Data.Prepare(statement)
         if err != nil {
