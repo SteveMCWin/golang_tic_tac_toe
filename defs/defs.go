@@ -1,0 +1,9 @@
+package defs
+
+const (
+	NO_USER_ID = 0
+	COOKIE_MAX_AGE = 86400 * 30
+	STARTING_ELO = 800
+	DEFAULT_GAMES_PLAYED = 0
+	DEFAULT_GAMES_WON = 0
+)

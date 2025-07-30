@@ -1,0 +1,186 @@
+package models
+
+import (
+	"io"
+	"log"
+	"os"
+	"errors"
+	"net/http"
+	"database/sql"
+
+	_ "github.com/mattn/go-sqlite3"
+	"tic_tac_toe.fun/defs"
+)
+
+type User struct {
+    Id              int
+    UserName        string
+    Email           string
+    AvatarURL       string
+    // SessionToken    string
+    // CSRFToken       string
+    Provider        string
+    // Game related
+    GamesPlayed     int
+    GamesWon        int
+    Elo             int
+}
+
+// func (Db *DataBase) CreateUser(user *User) error {
+// 	statement := "insert into users (username, email, avatar_url, provider, games_played, games_won, elo) values (?, ?, ?, ?, ?, ?, ?) returning id"
+// 	stmt, err := Db.Data.Prepare(statement)
+// 	if err != nil {
+// 		return err
+// 	}
+//
+// 	err = stmt.QueryRow(
+// 		user.UserName,
+// 		user.Email,
+// 		user.AvatarURL,
+// 		user.Provider,
+// 		user.GamesPlayed,
+// 		user.GamesWon,
+// 		user.Elo,
+// 	).Scan(&user.Id)
+//
+// 	return err
+// }
+
+func (Db *DataBase) ReadUser(user_id int) (*User, error) {
+
+	usr := &User{ Id: user_id }
+	err := Db.Data.QueryRow("select username, email, avatar_url, provider, games_played, games_won, elo from users where id = ?", user_id).Scan(
+        &usr.UserName,
+        &usr.Email,
+        &usr.AvatarURL,
+        &usr.Provider,
+        &usr.GamesPlayed,
+        &usr.GamesWon,
+        &usr.Elo,
+    )   
+
+	if err != nil {
+		return nil, err
+	}
+	
+	return usr, nil
+}
+
+// func LoadUserData(c *gin.Context) (usr *User, err error) {  // gets a data from a user stored in the db based on the user_id stored in a cookie in the browser
+//
+//     usr = &User{}
+//
+//     user, err := c.Cookie("user_id")    // get the user_id from a cookie stored in the browser
+//     if err != nil {
+//         usr.UserName = "Guest"  // if there is not user_id cookie, the player is logged out/never logged in and is considered a guest
+//         usr.Elo = 800   // set the elo so that when a logged in user and a guest play, the logged in user loses/gains elo, which would not happen when the guest has 0 elo
+//         return
+//     }
+//
+//     csrf, err := c.Cookie("csrf_token") // if there is no csrf_token the user cannot obtain the data in the db and must log in again
+//     if err != nil {
+//         return
+//     }
+//
+//     sess, err := c.Cookie("session_token")  // if there is no session_token the user cannot obtain the data in the db and must log in again
+//     if err != nil {
+//         return
+//     }
+//
+//     err = Db.QueryRow("select id, username, email, avatar_url, session_token, csrf_token, provider, games_played, games_won, elo from users where id = ?", user).Scan(
+//         &usr.Id,
+//         &usr.UserName,
+//         &usr.Email,
+//         &usr.AvatarURL,
+//         &usr.Provider,
+//         &usr.GamesPlayed,
+//         &usr.GamesWon,
+//         &usr.Elo,
+//     )   // just get everything haha
+//
+//     if err != nil {
+//         return
+//     }
+//
+//     // before returning the user check if the browser tokens are the same as the db tokens
+//     // if not, someone is trying to steal data
+//     if usr.SessionToken != sess || usr.CSRFToken != csrf {  
+//         usr = &User{}    // if login fails return guest data
+//         usr.UserName = "Guest"
+//         usr.Elo = 800
+//         err = errors.New("Session token or csrf token missmatch, please log in again")
+//     }
+//
+//     return
+// }
+
+func (Db *DataBase) StoreUser(usr *User) (error) {  // writes the user to the db based on his email and gets the auto-generated id to set as a cookie in auth.go
+    if usr.Email == "" {
+		err := errors.New("Could not store user data: email missing")
+        return err
+    }
+
+    var prov string
+    // check if a user with this email has already logged in before and with which provider
+	err := Db.Data.QueryRow("select id, provider from users where email like ?", usr.Email).Scan(&usr.Id, &prov)
+
+    if err != nil { // the user hasn't logged in before so load him into the data base
+        // store the user in the database
+        statement := "insert into users (username, email, avatar_url, provider, games_played, games_won, elo) values (?, ?, ?, ?, ?, ?, ?, ?, ?) returning id"
+        var stmt *sql.Stmt
+        stmt, err = Db.Data.Prepare(statement)
+        if err != nil {
+            return err
+        }
+        defer stmt.Close()
+        err = stmt.QueryRow(usr.UserName, usr.Email, usr.AvatarURL, usr.Provider, defs.DEFAULT_GAMES_PLAYED, defs.DEFAULT_GAMES_WON, defs.STARTING_ELO).Scan(&usr.Id)
+        return err
+    }
+
+    // if the user has logged in before make sure the username and avatar get updated in case the user changed them
+    _, err = Db.Data.Exec("update users set username = ?, avatar_url = ?, provider = ? where id = ?",
+                      usr.UserName, usr.AvatarURL, usr.Provider, usr.Id)
+
+    return err
+}
+
+// not used but still here in case I find it useful somehow
+func (usr *User) storeUserPfp() (err error) {   // used to locally store the user's avatar as an image file
+    log.Println("AVATAR URL:", usr.AvatarURL)
+    img_response, err := http.Get(usr.AvatarURL)
+    if err != nil {
+        return err
+    }
+    defer img_response.Body.Close()
+
+    img_filepath := "users/pfps/pfp" + usr.UserName
+    file, err := os.Create(img_filepath)
+
+    if err != nil {
+        return err
+    }
+    defer file.Close()
+
+    _, err = io.Copy(file, img_response.Body)
+    if err != nil {
+        return err
+    }
+
+    return nil
+}
+
+func (Db *DataBase) UpdateGameStats(usr *User) (error) {    // called at the end of the game to update only the gameplay related stats
+    if usr.Id == defs.NO_USER_ID {
+        return errors.New("Cannot update player stats when the player isn't logged in")// cannot store data for a guest user (all guest users have the id = 0)
+    }
+
+	_, err := Db.Data.Exec("update users set games_played = ?, games_won = ?, elo = ? where id = ?", usr.GamesPlayed, usr.GamesWon, usr.Elo, usr.Id)
+
+    return err
+}
+
+
+
+
+
+

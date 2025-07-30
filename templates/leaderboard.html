@@ -49,7 +49,7 @@
         <tbody>
             {{range $index, $player := .TopPlayers}}
             <tr>
-                <td>{{$index | add1}}</td>
+                <td>{{ add $index 1}}</td>
                 <td><img class="avatar" src="{{$player.AvatarURL}}" alt="Avatar"></td>
                 <td>{{$player.UserName}}</td>
                 <td>{{$player.Elo}}</td>

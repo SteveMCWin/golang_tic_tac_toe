@@ -1,11 +1,13 @@
 package game
 
 import (
-    "log"
-    "time"
-    "strconv"
+	"log"
+	"strconv"
+	"time"
 
-    "tic_tac_toe.fun/users"
+	"tic_tac_toe.fun/defs"
+	"tic_tac_toe.fun/handlers"
+	"tic_tac_toe.fun/models"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
@@ -38,36 +40,39 @@ var (
 )
 
 type Player struct {
-    u *users.User
+    u *models.User
     conn *websocket.Conn
     move chan []byte    // used to send messages to the game handler regarding the move the player made
     board_state chan []byte // used to updated the state of the board on the front end
     exited chan bool    // used to signal the player exited the game
 }
 
-func MakePlayer(hub *Hub, c *gin.Context) {
-    usr, err := users.LoadUserData(c)
+func MakePlayer(hub *Hub, db *models.DataBase) func(c *gin.Context) {
+	return func(c *gin.Context) {
+		user_id := handlers.GetUserId(c)
+		usr, err := db.ReadUser(user_id)
 
-    if err != nil {
-        log.Println(err)    // not fatal, probably just a guest user
-    }
+		if err != nil {
+			usr = &models.User{ UserName: "Guest", Elo: defs.STARTING_ELO }
+		}
 
-    connection, err := upgrader.Upgrade(c.Writer, c.Request, nil)   // set up websocket connection
-    if err != nil {
-        log.Println(err)
-        return
-    }
+		connection, err := upgrader.Upgrade(c.Writer, c.Request, nil)   // set up websocket connection
+		if err != nil {
+			log.Println(err)
+			return
+		}
 
-    new_player := &Player{u: usr, conn: connection, move: make(chan []byte), board_state: make(chan []byte), exited: make(chan bool)}
-    game_mode, err := strconv.Atoi(c.Query("game_mode"))    // the url is expected to contain a game_mode the player wants to play
+		new_player := &Player{u: usr, conn: connection, move: make(chan []byte), board_state: make(chan []byte), exited: make(chan bool)}
+		game_mode, err := strconv.Atoi(c.Query("game_mode"))    // the url is expected to contain a game_mode the player wants to play
 
-    if err != nil { // if the value of game_mode is invalid, don't start the game
-        log.Printf("Unexpected game mode: %s", c.Query("game_mode"))
-        new_player.conn.Close()
-        return
-    }
+		if err != nil { // if the value of game_mode is invalid, don't start the game
+			log.Printf("Unexpected game mode: %s", c.Query("game_mode"))
+			new_player.conn.Close()
+			return
+		}
 
-    hub.AddPlayer(new_player, game_mode)
+		hub.AddPlayer(new_player, game_mode)
+	}
 }
 
 func (p *Player) UpdatePlayerStats() {  // intended to be called at the end of the game

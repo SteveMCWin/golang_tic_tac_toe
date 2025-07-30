@@ -13,6 +13,8 @@ require (
 
 require (
 	cloud.google.com/go/compute/metadata v0.3.0 // indirect
+	github.com/alexedwards/scs/sqlite3store v0.0.0-20250417082927-ab20b3feb5e9 // indirect
+	github.com/alexedwards/scs/v2 v2.9.0 // indirect
 	github.com/bytedance/sonic v1.11.6 // indirect
 	github.com/bytedance/sonic/loader v0.1.1 // indirect
 	github.com/cloudwego/base64x v0.1.4 // indirect
@@ -25,6 +27,7 @@ require (
 	github.com/go-playground/validator/v10 v10.20.0 // indirect
 	github.com/goccy/go-json v0.10.2 // indirect
 	github.com/google/go-cmp v0.5.9 // indirect
+	github.com/gorilla/csrf v1.7.3 // indirect
 	github.com/gorilla/mux v1.8.1 // indirect
 	github.com/gorilla/securecookie v1.1.2 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
