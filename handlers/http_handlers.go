@@ -263,8 +263,8 @@ func HandleGetProfile(db *models.DataBase) func(c *gin.Context) { // displays us
 func LogoutHandler() func(c *gin.Context) { // logging out erases the cookies that are used for remembering the user and telling
 	return func(c *gin.Context) {
 		// NOTE: not logging out with goth since it makes scs panic
-		SessionManager.Destroy(c)
-		log.Println("Logged out")
+		gothic.Logout(c.Writer, c.Request)
+		SessionManager.Destroy(c.Request.Context())
 		c.Redirect(http.StatusTemporaryRedirect, "/")
 	}
 }
