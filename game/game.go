@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"math"
+	"strconv"
 	"time"
 
 	"tic_tac_toe.fun/board"
@@ -31,6 +32,7 @@ type Game struct {
     b *board.BigBoard
     p1move bool // used to prevent the other player playing when it's not their turn
     game_started bool
+	GameRecord string
 }
 
 func NewGame(p1, p2 *Player, mode GameMode) *Game {
@@ -44,6 +46,7 @@ func NewGame(p1, p2 *Player, mode GameMode) *Game {
     // update user stats
     g.players[0].u.GamesPlayed += 1
     g.players[1].u.GamesPlayed += 1
+	g.GameRecord = ""
 
     switch mode {
     case normal_180s:
@@ -86,10 +89,16 @@ func (g *Game) Run(db *models.DataBase) {  // listens for user and server action
     go g.players[1].ListenToSocket()
     go g.players[1].ListenToServer()
 
-    defer db.UpdateGameStats(g.players[0].u)
+    defer db.UpdateGameStats(g.players[0].u) // makes sure that the player stats stored only when the game finishes
     defer db.UpdateGameStats(g.players[1].u)
-    // defer g.players[0].UpdatePlayerStats()  // makes sure that the player stats stored only when the game finishes
-    // defer g.players[1].UpdatePlayerStats()
+
+	defer func() {
+		err := db.StoreGameRecord(g.GameRecord, g.players[0].u.Id, g.players[1].u.Id)
+		if err != nil {
+			log.Println("Error storing game record!")
+			log.Println(err)
+		}
+	}()
 
     go func() {
         log.Println("GAME STARTS IN")
@@ -102,7 +111,7 @@ func (g *Game) Run(db *models.DataBase) {  // listens for user and server action
         log.Println("GOOO")
         g.game_started = true
         g.player_timers[0].Start()
-    }() // this being in a goroutine prevents the players from sending input before the game starts which may lead to the 'o' player going first
+    }() // this being in a goroutine prevents the players from filling up the input channel before the game starts which may lead to the 'o' player going first
 
     for {
         select {
@@ -122,8 +131,9 @@ func (g *Game) Run(db *models.DataBase) {  // listens for user and server action
                     // if the move was deemed valid and all, handle the timers, send the messages to update the front-end based on the back-end
                     g.player_timers[0].Pause()
 
-                    g.updateBoardVisuals()
+					g.RecordMove("x", pos[0], pos[1])
 
+                    g.updateBoardVisuals()
                     if g.b.Result != 0 {    // handles the game being finished and exits the function
                         g.checkWinner()
                         return
@@ -147,6 +157,8 @@ func (g *Game) Run(db *models.DataBase) {  // listens for user and server action
                 } else {
                     log.Printf("Paused p2 timer at %s", g.player_timers[1].TimeLeft.String())
                     g.player_timers[1].Pause()
+
+					g.RecordMove("o", pos[0], pos[1])
 
                     g.updateBoardVisuals()
 
@@ -180,6 +192,18 @@ func (g *Game) Run(db *models.DataBase) {  // listens for user and server action
     }
 }
 
+func (g *Game) RecordMove(player string, big_pos, small_pos byte) {
+    if big_pos >= '0' && big_pos <= '9' {   // the positions passed in are probably ascii characters representing digis
+        big_pos = big_pos - '0'
+    }
+
+    if small_pos >= '0' && small_pos <= '9' {
+        small_pos = small_pos - '0'
+    }
+
+	g.GameRecord += player + strconv.Itoa(int(big_pos)) + strconv.Itoa(int(small_pos)) + ";"
+}
+
 func (g *Game) updateBoardVisuals() {   // sends the board's back-end data to the front-end to update the ui
     new_b_state := parseBoardToJSON(g.b.BoardState) // the front-end expects the board state to be in json format
     g.players[0].board_state <- new_b_state
@@ -191,9 +215,11 @@ func (g *Game) checkWinner() {  // the winner is determined from the boards Resu
     case 'x':
         g.players[0].u.GamesWon += 1
         log.Printf("Player x wins!!!")
+		g.GameRecord += "X;"
     case 'o':
         g.players[1].u.GamesWon += 1
         log.Printf("Player o wins!!!")
+		g.GameRecord += "O;"
     default:
         log.Printf("Tie!!!")
     }

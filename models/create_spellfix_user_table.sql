@@ -1,6 +1,6 @@
 .load ./spellfix
 
-drop table if exists spellfix_users;
-create virtual table spellfix_users using spellfix1;
+DROP TABLE IF EXISTS spellfix_users;
+CREATE virtual TABLE spellfix_users USING spellfix1;
 
-insert into spellfix_users(word) select username from users;
+INSERT INTO spellfix_users(word) SELECT username FROM users;
