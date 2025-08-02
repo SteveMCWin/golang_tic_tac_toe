@@ -41,8 +41,9 @@ type Player struct {
     u *models.User
     conn *websocket.Conn
     move chan []byte    // used to send messages to the game handler regarding the move the player made
-    board_state chan []byte // used to updated the state of the board on the front end
+    game_state chan []byte // used to updated the state of the board on the front end
     exited chan bool    // used to signal the player exited the game
+	timer *PlayerTimer
 }
 
 func ConnectPlayerToSocket(hub *Hub, usr *models.User, c *gin.Context) error {
@@ -52,7 +53,7 @@ func ConnectPlayerToSocket(hub *Hub, usr *models.User, c *gin.Context) error {
 		return err
 	}
 
-	new_player := &Player{u: usr, conn: connection, move: make(chan []byte), board_state: make(chan []byte), exited: make(chan bool)}
+	new_player := &Player{u: usr, conn: connection, move: make(chan []byte), game_state: make(chan []byte), exited: make(chan bool)} // NOTE: timer is set up in at game start
 
 	game_mode, err := strconv.Atoi(c.Query("game_mode"))    // the url is expected to contain a game_mode the player wants to play
 	if err != nil { // if the value of game_mode is invalid, don't start the game
@@ -66,11 +67,7 @@ func ConnectPlayerToSocket(hub *Hub, usr *models.User, c *gin.Context) error {
 	return nil
 }
 
-// func (p *Player) UpdatePlayerStats() {  // intended to be called at the end of the game
-//     p.u.UpdateGameStats()
-// }
-
-func (p *Player) ListenToSocket() { // listens to the response from the websocket (the front end)
+func (p *Player) ListenToSocket() { // listens to the response from the websocket (player)
     defer func() {
         log.Printf("Player %s exited", p.u.UserName)
         p.exited <- true
@@ -88,12 +85,12 @@ func (p *Player) ListenToSocket() { // listens to the response from the websocke
             }
             break
         }
-        p.move <- message[:2]   // the expected message is supposed to be just 2 character corresponding to the position of the move the player made
+        p.move <- message[:2]   // the expected message is supposed to be just 2 characters corresponding to the position of the move the player made
 
     }
 }
 
-func (p *Player) ListenToServer() { // listens to the response of the server, which is a new board state that is used to update the front end ui
+func (p *Player) ListenToServer() { // listens to the response of the server, which is a new board state that is used to update the front-end ui
     ticker := time.NewTicker(pingPeriod)
 	defer func() {
         p.exited <- true
@@ -102,7 +99,7 @@ func (p *Player) ListenToServer() { // listens to the response of the server, wh
     }()
     for {
         select {
-        case new_state, ok := <- p.board_state:
+        case new_state, ok := <- p.game_state:
             p.conn.SetWriteDeadline(time.Now().Add(writeWait))
             if !ok {
                 p.conn.WriteMessage(websocket.CloseMessage, []byte{})

@@ -8,20 +8,77 @@
     body {
       font-family: Arial, sans-serif;
       display: flex;
+      flex-direction: column;
       justify-content: center;
       align-items: center;
-      height: 100vh;
+      min-height: 100vh;
       margin: 0;
       background: #f4f4f4;
+      padding: 20px;
     }
-
+    
+    .game-info {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+      max-width: 600px;
+      margin-bottom: 20px;
+      padding: 15px;
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    
+    .player-info {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 10px;
+      border-radius: 8px;
+      min-width: 120px;
+    }
+    
+    .player-info.active {
+      background: #e3f2fd;
+      border: 2px solid #2196f3;
+    }
+    
+    .player-info.inactive {
+      background: #f5f5f5;
+      border: 2px solid #ccc;
+    }
+    
+    .player-name {
+      font-size: 1.2rem;
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+    
+    .player-timer {
+      font-size: 1.4rem;
+      font-weight: bold;
+      color: #333;
+      font-family: 'Courier New', monospace;
+    }
+    
+    .current-turn {
+      text-align: center;
+      font-size: 1.5rem;
+      font-weight: bold;
+      padding: 10px;
+      border-radius: 8px;
+      background: #4caf50;
+      color: white;
+    }
+    
     .ultimate-board {
       display: grid;
       grid-template-columns: repeat(3, auto);
       grid-template-rows: repeat(3, auto);
       gap: 10px;
     }
-
+    
     .mini-board {
       display: grid;
       grid-template-columns: repeat(3, 60px);
@@ -31,7 +88,7 @@
       padding: 3px;
       background: #ddd;
     }
-
+    
     .cell {
       background-color: white;
       border: 1px solid #444;
@@ -47,13 +104,61 @@
   </style>
 </head>
 <body>
-  <div class="ultimate-board" id="board"></div>
+  <div class="game-info">
+    <div class="player-info" id="player1-info">
+      <div class="player-name">Player 1 (X)</div>
+      <div class="player-timer" id="p1-timer">--:--</div>
+    </div>
+    
+    <div class="current-turn" id="current-turn">
+      Player 1's Turn
+    </div>
+    
+    <div class="player-info" id="player2-info">
+      <div class="player-name">Player 2 (O)</div>
+      <div class="player-timer" id="p2-timer">--:--</div>
+    </div>
+  </div>
 
+  <div class="ultimate-board" id="board"></div>
+  
   <script>
     const board = document.getElementById('board');
+    const currentTurnEl = document.getElementById('current-turn');
+    const p1TimerEl = document.getElementById('p1-timer');
+    const p2TimerEl = document.getElementById('p2-timer');
+    const player1InfoEl = document.getElementById('player1-info');
+    const player2InfoEl = document.getElementById('player2-info');
+    
     const gameMode = {{ .game_mode | js }};
     const socket = new WebSocket('wss://' + window.location.host + '/ws?game_mode=' + gameMode);
-
+    
+    // Format milliseconds to MM:SS format
+    function formatTime(milliseconds) {
+      const totalSeconds = Math.ceil(milliseconds / 1000);
+      const minutes = Math.floor(totalSeconds / 60);
+      const seconds = totalSeconds % 60;
+      return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    }
+    
+    // Update game UI with current state
+    function updateGameUI(p1Time, p2Time, p1Move) {
+      // Update timers
+      p1TimerEl.textContent = formatTime(p1Time);
+      p2TimerEl.textContent = formatTime(p2Time);
+      
+      // Update current turn indicator
+      if (p1Move) {
+        currentTurnEl.textContent = "Player 1's Turn (X)";
+        player1InfoEl.className = "player-info active";
+        player2InfoEl.className = "player-info inactive";
+      } else {
+        currentTurnEl.textContent = "Player 2's Turn (O)";
+        player1InfoEl.className = "player-info inactive";
+        player2InfoEl.className = "player-info active";
+      }
+    }
+    
     // Render the 81 cells into 9 mini-boards
     function renderBoard(state) {
       if (state.length !== 81) return;
@@ -61,25 +166,25 @@
         board.querySelector(`#cell-${i}`).textContent = state[i] || '';
       }
     }
-
+    
     // Handle incoming WebSocket messages
     socket.onmessage = event => {
       const msg = JSON.parse(event.data);
       if (msg.type === 'state' && Array.isArray(msg.board)) {
         renderBoard(msg.board);
+        updateGameUI(msg.p1_time, msg.p2_time, msg.p1_move);
       }
     };
-
+    
     // Send move indexes to the server
     function handleClick(miniIndex, cellIndex) {
         socket.send(`${miniIndex}${cellIndex}`);
     }
-
+    
     // Build the 9 mini-boards with 81 clickable cells
     for (let mb = 0; mb < 9; mb++) {
       const miniBoard = document.createElement('div');
       miniBoard.className = 'mini-board';
-
       for (let cell = 0; cell < 9; cell++) {
         const globalIndex = mb * 9 + cell;
         const div = document.createElement('div');
@@ -88,10 +193,8 @@
         div.addEventListener('click', () => handleClick(mb, cell));
         miniBoard.appendChild(div);
       }
-
       board.appendChild(miniBoard);
     }
   </script>
 </body>
 </html>
-

@@ -17,34 +17,12 @@ type User struct {
     UserName        string
     Email           string
     AvatarURL       string
-    // SessionToken    string
-    // CSRFToken       string
     Provider        string
     // Game related
     GamesPlayed     int
     GamesWon        int
     Elo             int
 }
-
-// func (Db *DataBase) CreateUser(user *User) error {
-// 	statement := "insert into users (username, email, avatar_url, provider, games_played, games_won, elo) values (?, ?, ?, ?, ?, ?, ?) returning id"
-// 	stmt, err := Db.Data.Prepare(statement)
-// 	if err != nil {
-// 		return err
-// 	}
-//
-// 	err = stmt.QueryRow(
-// 		user.UserName,
-// 		user.Email,
-// 		user.AvatarURL,
-// 		user.Provider,
-// 		user.GamesPlayed,
-// 		user.GamesWon,
-// 		user.Elo,
-// 	).Scan(&user.Id)
-//
-// 	return err
-// }
 
 func (Db *DataBase) ReadUser(user_id int) (*User, error) {
 
@@ -65,54 +43,6 @@ func (Db *DataBase) ReadUser(user_id int) (*User, error) {
 	
 	return usr, nil
 }
-
-// func LoadUserData(c *gin.Context) (usr *User, err error) {  // gets a data from a user stored in the db based on the user_id stored in a cookie in the browser
-//
-//     usr = &User{}
-//
-//     user, err := c.Cookie("user_id")    // get the user_id from a cookie stored in the browser
-//     if err != nil {
-//         usr.UserName = "Guest"  // if there is not user_id cookie, the player is logged out/never logged in and is considered a guest
-//         usr.Elo = 800   // set the elo so that when a logged in user and a guest play, the logged in user loses/gains elo, which would not happen when the guest has 0 elo
-//         return
-//     }
-//
-//     csrf, err := c.Cookie("csrf_token") // if there is no csrf_token the user cannot obtain the data in the db and must log in again
-//     if err != nil {
-//         return
-//     }
-//
-//     sess, err := c.Cookie("session_token")  // if there is no session_token the user cannot obtain the data in the db and must log in again
-//     if err != nil {
-//         return
-//     }
-//
-//     err = Db.QueryRow("select id, username, email, avatar_url, session_token, csrf_token, provider, games_played, games_won, elo from users where id = ?", user).Scan(
-//         &usr.Id,
-//         &usr.UserName,
-//         &usr.Email,
-//         &usr.AvatarURL,
-//         &usr.Provider,
-//         &usr.GamesPlayed,
-//         &usr.GamesWon,
-//         &usr.Elo,
-//     )   // just get everything haha
-//
-//     if err != nil {
-//         return
-//     }
-//
-//     // before returning the user check if the browser tokens are the same as the db tokens
-//     // if not, someone is trying to steal data
-//     if usr.SessionToken != sess || usr.CSRFToken != csrf {  
-//         usr = &User{}    // if login fails return guest data
-//         usr.UserName = "Guest"
-//         usr.Elo = 800
-//         err = errors.New("Session token or csrf token missmatch, please log in again")
-//     }
-//
-//     return
-// }
 
 func (Db *DataBase) StoreUser(usr *User) (error) {  // writes the user to the db based on his email and gets the auto-generated id to set as a cookie in auth.go
     if usr.Email == "" {
