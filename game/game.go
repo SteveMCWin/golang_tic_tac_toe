@@ -28,11 +28,10 @@ const (
 
 type Game struct {
 	players [2]*Player
-	// player_timers [2]*PlayerTimer
 	b            *board.BigBoard
 	p1_move      bool // used to prevent the other player playing when it's not their turn
 	game_started bool
-	GameRecord   string
+	GameRecord   models.GameRecord
 }
 
 func NewGame(p1, p2 *Player, mode GameMode) *Game {
@@ -44,9 +43,14 @@ func NewGame(p1, p2 *Player, mode GameMode) *Game {
 	g.p1_move = true // player 1 is always 'x' so they make the first move
 	g.game_started = false
 	// update user stats
-	g.players[0].u.GamesPlayed += 1
-	g.players[1].u.GamesPlayed += 1
-	g.GameRecord = ""
+	g.players[0].u.NumOfGamesPlayed += 1
+	g.players[1].u.NumOfGamesPlayed += 1
+	g.GameRecord = models.GameRecord{
+		U1: g.players[0].u,
+		U2: g.players[1].u,
+		DateRecorded: time.Now(),
+		Record: "", // start with empty recording because the game just started (duuh)
+	}
 
 	// NOTE: Could be moved to the player
 	switch mode {
@@ -94,7 +98,7 @@ func (g *Game) Run(db *models.DataBase) { // listens for user and server actions
 	defer db.UpdateGameStats(g.players[1].u)
 
 	defer func() {
-		err := db.StoreGameRecord(g.GameRecord, g.players[0].u.Id, g.players[1].u.Id)
+		err := db.StoreGameRecord(g.GameRecord)
 		if err != nil {
 			log.Println("Error storing game record!")
 			log.Println(err)
@@ -202,7 +206,7 @@ func (g *Game) RecordMove(player string, big_pos, small_pos byte) {
 		small_pos = small_pos - '0'
 	}
 
-	g.GameRecord += player + strconv.Itoa(int(big_pos)) + strconv.Itoa(int(small_pos)) + ";"
+	g.GameRecord.Record += player + strconv.Itoa(int(big_pos)) + strconv.Itoa(int(small_pos)) + ";"
 }
 
 func (g *Game) updateBoardVisuals() { // sends the board's back-end data to the front-end to update the ui
@@ -216,11 +220,11 @@ func (g *Game) checkWinner() { // the winner is determined from the boards Resul
 	case 'x':
 		g.players[0].u.GamesWon += 1
 		log.Printf("Player x wins!!!")
-		g.GameRecord += "X;"
+		g.GameRecord.Record += "X;"
 	case 'o':
 		g.players[1].u.GamesWon += 1
 		log.Printf("Player o wins!!!")
-		g.GameRecord += "O;"
+		g.GameRecord.Record += "O;"
 	default:
 		log.Printf("Tie!!!")
 	}

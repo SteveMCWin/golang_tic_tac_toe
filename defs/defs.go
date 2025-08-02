@@ -1,6 +1,7 @@
 package defs
 
 const (
+	NO_WINNER = -1
 	NO_USER_ID = 0
 	COOKIE_MAX_AGE = 86400 * 30
 	STARTING_ELO = 800
