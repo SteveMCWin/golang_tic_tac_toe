@@ -1,12 +1,6 @@
 package models
 
 import (
-	// "database/sql"
-	// "errors"
-	// "io"
-	// "log"
-	// "net/http"
-	// "os"
 	"time"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -40,7 +34,11 @@ func (Db *DataBase) StoreGameRecord(record GameRecord) error {
 }
 
 func (Db *DataBase) ReadGameRecord(rec_id int) (*GameRecord, error) {
-	rec := &GameRecord{ Id: rec_id }
+	rec := &GameRecord{
+		Id: rec_id,
+		U1: new(User),
+		U2: new(User),
+	}
 
 	statemet := "select p1, p2, date_recorded, moves from game_records where id = ?"
 	row := Db.Data.QueryRow(statemet, rec_id)
@@ -68,6 +66,11 @@ func (Db *DataBase) ReadGameRecord(rec_id int) (*GameRecord, error) {
 }
 
 func (Db *DataBase) ReadGameRecordsForUser(user_id int) ([]*GameRecord, error) {
+
+	if user_id == defs.NO_USER_ID {
+		return nil, nil
+	}
+
 	res := make([]*GameRecord, 0)
 
 	statement := "select id, p1, p2, date_recorded, moves from game_records where ? in (p1, p2)"
@@ -77,7 +80,10 @@ func (Db *DataBase) ReadGameRecordsForUser(user_id int) ([]*GameRecord, error) {
 	}
 
 	for rows.Next() {
-		rec := &GameRecord{}
+		rec := &GameRecord{
+			U1: new(User),
+			U2: new(User),
+		}
 		err := rows.Scan(
 			&rec.Id,
 			&rec.U1.Id,
@@ -104,4 +110,17 @@ func (Db *DataBase) ReadGameRecordsForUser(user_id int) ([]*GameRecord, error) {
 
 	return res, nil
 
+}
+
+func GetGameRecordWinner(record *GameRecord) int {
+	record_len := len(record.Record)
+	if record_len < 2 {
+		return defs.NO_WINNER
+	}
+
+	if record.Record[record_len - 2] == 'X' {
+		return record.U1.Id
+	}
+
+	return record.U2.Id
 }

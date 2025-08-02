@@ -43,12 +43,12 @@ func NewGame(p1, p2 *Player, mode GameMode) *Game {
 	g.p1_move = true // player 1 is always 'x' so they make the first move
 	g.game_started = false
 	// update user stats
-	g.players[0].u.GamesPlayed += 1
-	g.players[1].u.GamesPlayed += 1
+	g.players[0].u.NumOfGamesPlayed += 1
+	g.players[1].u.NumOfGamesPlayed += 1
 	g.GameRecord = models.GameRecord{
-		U1: *g.players[0].u,
-		U2: *g.players[1].u,
-		TimeRecorded: time.Now(),
+		U1: g.players[0].u,
+		U2: g.players[1].u,
+		DateRecorded: time.Now(),
 		Record: "", // start with empty recording because the game just started (duuh)
 	}
 

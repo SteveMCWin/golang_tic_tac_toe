@@ -48,6 +48,15 @@ func templateFuncs() template.FuncMap {
 			}
 			return out
 		},
+		"mul": func(a, b float64) float64 {
+			return a * b
+		},
+		"div": func(a, b float64) float64 {
+			return a / b
+		},
+		"float64": func(a int) float64 {
+			return float64(a)
+		},
 	}
 }
 
@@ -123,7 +132,8 @@ func SetUpRouter(db *models.DataBase, lb *models.LeaderBoard, hub *game.Hub) htt
 	router.GET("/leaderboard", HandleGetLeaderboard(lb))
 	router.GET("/hub", ServeHub())
 	router.GET("/play", ServePlay())
-	router.GET("/profile/:user_id", HandleGetProfile(db))
+	router.GET("/profile/:user_id", MiddlewareNoCache(), HandleGetProfile(db))
+	router.GET("/profile/:user_id/games_played", HandleGetUserGames(db))
 	router.GET("/logout/:provider/", LogoutHandler())
 	router.GET("/auth/:provider", SignInWithProvider())
 	router.GET("/auth/:provider/callback/", CallbackHandler(db))
@@ -184,6 +194,12 @@ func SignInWithProvider() func(c *gin.Context) {
 		q := c.Request.URL.Query()
 		q.Add("provider", provider)
 		c.Request.URL.RawQuery = q.Encode()
+
+		user_id := GetUserId(c)
+		if user_id != defs.NO_USER_ID {
+			c.Redirect(http.StatusPermanentRedirect, "/profile/" + strconv.Itoa(user_id))
+			return
+		}
 
 		gothic.BeginAuthHandler(c.Writer, c.Request) // this redirects to the providers log in page
 	}
@@ -260,6 +276,33 @@ func HandleGetProfile(db *models.DataBase) func(c *gin.Context) { // displays us
 	}
 }
 
+func HandleGetUserGames(db *models.DataBase) func(c *gin.Context) {
+	return func(c *gin.Context) {
+		user_id_param := c.Param("user_id")
+		user_id, err := strconv.Atoi(user_id_param)
+		if err != nil {
+			log.Println("Error calling atoi:", err)
+			c.Redirect(http.StatusTemporaryRedirect, "/error-page")
+			return
+		}
+
+		records, err := db.ReadGameRecordsForUser(user_id)
+		if err != nil {
+			log.Println("Error reading game records for user:", err)
+			c.Redirect(http.StatusTemporaryRedirect, "/error-page")
+			return
+		}
+
+		winner_ids := make([]int, len(records))
+
+		for i, rec := range records {
+			winner_ids[i] = models.GetGameRecordWinner(rec)
+		}
+
+		c.HTML(http.StatusOK, "view_games_history.html", gin.H{ "records": records, "winner_ids": winner_ids, "user_id": user_id })
+	}
+}
+
 func LogoutHandler() func(c *gin.Context) { // logging out erases the cookies that are used for remembering the user and telling
 	return func(c *gin.Context) {
 		// NOTE: not logging out with goth since it makes scs panic
@@ -308,3 +351,15 @@ func ServeHub() func(c *gin.Context) {
 	}
 }
 
+
+// MIDDLEWARE
+
+
+func MiddlewareNoCache() func(c *gin.Context) {
+	return func(c *gin.Context) {
+		c.Writer.Header().Set("Cache-Control", "no-store")
+		c.Writer.Header().Set("Pragma", "no-cache")
+		c.Writer.Header().Set("Expires", "0")
+		c.Next()
+	}
+}

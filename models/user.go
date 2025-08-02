@@ -19,7 +19,7 @@ type User struct {
     AvatarURL       string
     Provider        string
     // Game related
-    GamesPlayed     int
+    NumOfGamesPlayed     int
     GamesWon        int
     Elo             int
 }
@@ -38,7 +38,7 @@ func (Db *DataBase) ReadUser(user_id int) (*User, error) {
         &usr.Email,
         &usr.AvatarURL,
         &usr.Provider,
-        &usr.GamesPlayed,
+        &usr.NumOfGamesPlayed,
         &usr.GamesWon,
         &usr.Elo,
     )   
@@ -110,7 +110,7 @@ func (Db *DataBase) UpdateGameStats(usr *User) (error) {    // called at the end
         return errors.New("Cannot update player stats when the player isn't logged in")// cannot store data for a guest user (all guest users have the id = 0)
     }
 
-	_, err := Db.Data.Exec("update users set games_played = ?, games_won = ?, elo = ? where id = ?", usr.GamesPlayed, usr.GamesWon, usr.Elo, usr.Id)
+	_, err := Db.Data.Exec("update users set games_played = ?, games_won = ?, elo = ? where id = ?", usr.NumOfGamesPlayed, usr.GamesWon, usr.Elo, usr.Id)
 
     return err
 }
