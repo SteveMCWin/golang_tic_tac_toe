@@ -293,6 +293,7 @@ func ServePlay() func(c *gin.Context) {
 		if game_mode == "" {    // safeguard
 			game_mode = "0"
 		}
+
 		c.HTML(http.StatusOK, "board.html", gin.H{  // this sets up the websocket in html and then the html redirects to /ws which calls MakePlayer
 			"game_mode": game_mode,
 		})
