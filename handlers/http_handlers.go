@@ -274,7 +274,9 @@ func HandleWebsocketConnection(hub *game.Hub, db *models.DataBase) func(c *gin.C
 		user_id := GetUserId(c)
 		usr, err := db.ReadUser(user_id)
 		if err != nil {
-			usr = &models.User{ UserName: "Guest", Elo: defs.STARTING_ELO }
+			log.Println(err)
+			c.Redirect(http.StatusPermanentRedirect, "/error-page")
+			return
 		}
 
 		err = game.ConnectPlayerToSocket(hub, usr, c)

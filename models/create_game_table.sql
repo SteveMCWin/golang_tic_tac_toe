@@ -2,6 +2,7 @@
 DROP TABLE IF EXISTS game_records;
 
 CREATE TABLE game_records (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
     p1 INTEGER,
     p2 INTEGER,
     date_recorded DATE,
