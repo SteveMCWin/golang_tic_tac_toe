@@ -27,7 +27,7 @@ const (
 )
 
 type Game struct {
-	players [2]*Player
+	players      [2]*Player
 	b            *board.BigBoard
 	p1_move      bool // used to prevent the other player playing when it's not their turn
 	game_started bool
@@ -46,10 +46,10 @@ func NewGame(p1, p2 *Player, mode GameMode) *Game {
 	g.players[0].u.NumOfGamesPlayed += 1
 	g.players[1].u.NumOfGamesPlayed += 1
 	g.GameRecord = models.GameRecord{
-		U1: g.players[0].u,
-		U2: g.players[1].u,
+		U1:           g.players[0].u,
+		U2:           g.players[1].u,
 		DateRecorded: time.Now(),
-		Record: "", // start with empty recording because the game just started (duuh)
+		Record:       "", // start with empty recording because the game just started (duuh)
 	}
 
 	// NOTE: Could be moved to the player
@@ -277,17 +277,23 @@ func (g *Game) parseGameStateToJSON() []byte { // note that the board state is t
 	}
 
 	msg := struct {
-		Type    string   `json:"type"`
-		Board   []string `json:"board"`
-		P1_time int64 `json:"p1_time"`
-		P2_time int64 `json:"p2_time"`
-		P1_move bool `json:"p1_move"`
+		Type           string   `json:"type"`
+		Board          []string `json:"board"`
+		CompleteBoards []byte   `json:"complete_boards"`
+		P1_time        int64    `json:"p1_time"`
+		P2_time        int64    `json:"p2_time"`
+		P1_move        bool     `json:"p1_move"`
 	}{
-		Type:  "state",
-		Board: board,
+		Type:    "state",
+		Board:   board,
+		CompleteBoards: make([]byte, 0),
 		P1_time: g.players[0].timer.TimeLeft.Milliseconds(),
 		P2_time: g.players[1].timer.TimeLeft.Milliseconds(),
 		P1_move: g.p1_move,
+	}
+
+	for _, b := range g.b.Boards {
+		msg.CompleteBoards = append(msg.CompleteBoards, b.Result)
 	}
 
 	res, err := json.Marshal(msg)
