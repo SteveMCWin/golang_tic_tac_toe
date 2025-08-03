@@ -136,7 +136,7 @@ func (g *Game) Run(db *models.DataBase) { // listens for user and server actions
 					// if the move was deemed valid and all, handle the timers, send the messages to update the front-end based on the back-end
 					g.players[0].timer.Pause()
 
-					g.RecordMove("x", pos[0], pos[1])
+					// g.RecordMove("x", pos[0], pos[1])
 
 					g.updateBoardVisuals()
 					if g.b.Result != 0 { // handles the game being finished and exits the function
@@ -163,7 +163,7 @@ func (g *Game) Run(db *models.DataBase) { // listens for user and server actions
 					log.Printf("Paused p2 timer at %s", g.players[1].timer.TimeLeft.String())
 					g.players[1].timer.Pause()
 
-					g.RecordMove("o", pos[0], pos[1])
+					// g.RecordMove("o", pos[0], pos[1])
 
 					g.updateBoardVisuals()
 
@@ -197,17 +197,17 @@ func (g *Game) Run(db *models.DataBase) { // listens for user and server actions
 	}
 }
 
-func (g *Game) RecordMove(player string, big_pos, small_pos byte) {
-	if big_pos >= '0' && big_pos <= '9' { // the positions passed in are probably ascii characters representing digis
-		big_pos = big_pos - '0'
-	}
-
-	if small_pos >= '0' && small_pos <= '9' {
-		small_pos = small_pos - '0'
-	}
-
-	g.GameRecord.Record += player + strconv.Itoa(int(big_pos)) + strconv.Itoa(int(small_pos)) + ";"
-}
+// func (g *Game) RecordMove(player string, big_pos, small_pos byte) {
+// 	if big_pos >= '0' && big_pos <= '9' { // the positions passed in are probably ascii characters representing digis
+// 		big_pos = big_pos - '0'
+// 	}
+//
+// 	if small_pos >= '0' && small_pos <= '9' {
+// 		small_pos = small_pos - '0'
+// 	}
+//
+// 	g.GameRecord.Record += player + strconv.Itoa(int(big_pos)) + strconv.Itoa(int(small_pos)) + ";"
+// }
 
 func (g *Game) updateBoardVisuals() { // sends the board's back-end data to the front-end to update the ui
 	new_game_state := g.parseGameStateToJSON() // the front-end expects the board state to be in json format
@@ -220,11 +220,11 @@ func (g *Game) checkWinner() { // the winner is determined from the boards Resul
 	case 'x':
 		g.players[0].u.GamesWon += 1
 		log.Printf("Player x wins!!!")
-		g.GameRecord.Record += "X;"
+		// g.GameRecord.Record += "X"
 	case 'o':
 		g.players[1].u.GamesWon += 1
 		log.Printf("Player o wins!!!")
-		g.GameRecord.Record += "O;"
+		// g.GameRecord.Record += "O"
 	default:
 		log.Printf("Tie!!!")
 	}
