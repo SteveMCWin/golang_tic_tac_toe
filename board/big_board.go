@@ -15,7 +15,7 @@ type BigBoard struct {
 	Result         byte      // outcome-of the game, the value is either 0, 'x', 'o' or defs.BoardTie ('_')
 	boardsComplete byte      // keeps track of how many mini-boards are complete to handle an over-all tie
 	// History        string
-	History stack.Stack[Move]
+	History *stack.Stack[Move]
 }
 
 type Move struct {

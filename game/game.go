@@ -10,6 +10,7 @@ import (
 	"tic_tac_toe.fun/board"
 	"tic_tac_toe.fun/defs"
 	"tic_tac_toe.fun/models"
+	"tic_tac_toe.fun/stack"
 )
 
 type GameMode int
@@ -52,6 +53,8 @@ func NewGame(p1, p2 *Player, mode GameMode) *Game {
 		DateRecorded: time.Now(),
 		History:       "", // start with empty recording because the game just started (duuh)
 	}
+
+	g.b.History = stack.CreateStack[board.Move]()
 
 	// NOTE: Could be moved to the player
 	switch mode {
@@ -99,6 +102,7 @@ func (g *Game) Run(db *models.DataBase) { // listens for user and server actions
 	defer db.UpdateGameStats(g.players[1].u)
 
 	defer func() {
+		log.Println("Storing board history")
 		g.BoardHistoryToString()
 		err := db.StoreGameRecord(g.GameRecord)
 		if err != nil {
@@ -322,10 +326,12 @@ func (g *Game) parseGameStateToJSON() []byte { // note that the board state is t
 }
 
 func (g *Game) BoardHistoryToString() {
-	for m, ok := g.b.History.Top(); ok; {
+	log.Println("BoardHistoryToString called")
+	for g.b.History.Len() > 0 {
+		m, _ := g.b.History.Top()
 		log.Println("Converting move:", m)
 		g.b.History.Pop()
-		m_str := string([]byte{ m.Player, m.BigPos, m.SmallPos, defs.BOARD_HISTORY_DELIMITER })
+		m_str := string([]byte{ m.Player, m.BigPos + '0', m.SmallPos + '0', defs.BOARD_HISTORY_DELIMITER })
 		g.GameRecord.History = m_str + g.GameRecord.History // note that we must prepend the last-read move since we are working with a stack
 	}
 }
