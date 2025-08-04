@@ -12,127 +12,127 @@ func TestGameXWins(t *testing.T) {
 
     var err error
 
-    err = bb.MakeMove(byte(5), byte(0), 'x')
+    err = bb.MakeMove(board.Move{ byte(5), byte(0), 'x' })
+    if err != nil {
+        t.Error(err)
+    }
+    err = bb.MakeMove(board.Move{ byte(0), byte(5), 'o' })
+    if err != nil {
+        t.Error(err)
+    }
+    err = bb.MakeMove(board.Move{ byte(5), byte(2), 'x' })
+    if err != nil {
+        t.Error(err)
+    }
+    err = bb.MakeMove(board.Move{ byte(2), byte(7), 'o' })
+    if err != nil {
+        t.Error(err)
+    }
+    err = bb.MakeMove(board.Move{ byte(7), byte(5), 'x' })
+    if err != nil {
+        t.Error(err)
+    }
+    err = bb.MakeMove(board.Move{ byte(5), byte(8), 'o' })
     if err != nil {
         t.Error("error making move")
     }
-    err = bb.MakeMove(byte(0), byte(5), 'o')
+    err = bb.MakeMove(board.Move{ byte(8), byte(2), 'x' })
     if err != nil {
         t.Error("error making move")
     }
-    err = bb.MakeMove(byte(5), byte(2), 'x')
+    err = bb.MakeMove(board.Move{ byte(2), byte(8), 'o' })
     if err != nil {
         t.Error("error making move")
     }
-    err = bb.MakeMove(byte(2), byte(7), 'o')
+    err = bb.MakeMove(board.Move{ byte(8), byte(5), 'x' })
     if err != nil {
         t.Error("error making move")
     }
-    err = bb.MakeMove(byte(7), byte(5), 'x')
+    err = bb.MakeMove(board.Move{ byte(5), byte(5), 'o' })
     if err != nil {
         t.Error("error making move")
     }
-    err = bb.MakeMove(byte(5), byte(8), 'o')
-    if err != nil {
-        t.Error("error making move")
-    }
-    err = bb.MakeMove(byte(8), byte(2), 'x')
-    if err != nil {
-        t.Error("error making move")
-    }
-    err = bb.MakeMove(byte(2), byte(8), 'o')
-    if err != nil {
-        t.Error("error making move")
-    }
-    err = bb.MakeMove(byte(8), byte(5), 'x')
-    if err != nil {
-        t.Error("error making move")
-    }
-    err = bb.MakeMove(byte(5), byte(5), 'o')
-    if err != nil {
-        t.Error("error making move")
-    }
-    err = bb.MakeMove(byte(5), byte(1), 'x')
+    err = bb.MakeMove(board.Move{ byte(5), byte(1), 'x' })
     if err != nil {
         t.Error("error making move")
     }//check board 5
-    err = bb.MakeMove(byte(1), byte(2), 'o')
+    err = bb.MakeMove(board.Move{ byte(1), byte(2), 'o' })
     if err != nil {
         t.Error("error making move")
     }
-    err = bb.MakeMove(byte(2), byte(6), 'x')
+    err = bb.MakeMove(board.Move{ byte(2), byte(6), 'x' })
     if err != nil {
         t.Error("error making move")
     }
-    err = bb.MakeMove(byte(6), byte(1), 'o')
+    err = bb.MakeMove(board.Move{ byte(6), byte(1), 'o' })
     if err != nil {
         t.Error("error making move")
     }
-    err = bb.MakeMove(byte(1), byte(1), 'x')
+    err = bb.MakeMove(board.Move{ byte(1), byte(1), 'x' })
     if err != nil {
         t.Error("error making move")
     }
-    err = bb.MakeMove(byte(1), byte(8), 'o')
+    err = bb.MakeMove(board.Move{ byte(1), byte(8), 'o' })
     if err != nil {
         t.Error("error making move")
     }
-    err = bb.MakeMove(byte(8), byte(8), 'x')
+    err = bb.MakeMove(board.Move{ byte(8), byte(8), 'x' })
     if err != nil {
         t.Error("error making move")
     }//check board 8
-    err = bb.MakeMove(byte(1), byte(5), 'o')
+    err = bb.MakeMove(board.Move{ byte(1), byte(5), 'o' })
     if err != nil {
         t.Error("error making move")
     }//check board 1
-    err = bb.MakeMove(byte(2), byte(4), 'x')
+    err = bb.MakeMove(board.Move{ byte(2), byte(4), 'x' })
     if err != nil {
         t.Error("error making move")
     }
-    err = bb.MakeMove(byte(4), byte(7), 'o')
+    err = bb.MakeMove(board.Move{ byte(4), byte(7), 'o' })
     if err != nil {
         t.Error("error making move")
     }
-    err = bb.MakeMove(byte(7), byte(2), 'x')
+    err = bb.MakeMove(board.Move{ byte(7), byte(2), 'x' })
     if err != nil {
         t.Error("error making move")
     }
-    err = bb.MakeMove(byte(2), byte(2), 'o')
+    err = bb.MakeMove(board.Move{ byte(2), byte(2), 'o' })
     if err != nil {
         t.Error("error making move")
     }
-    err = bb.MakeMove(byte(2), byte(5), 'x')
+    err = bb.MakeMove(board.Move{ byte(2), byte(5), 'x' })
     if err != nil {
         t.Error("error making move")
     }
-    err = bb.MakeMove(byte(2), byte(3), 'o')
+    err = bb.MakeMove(board.Move{ byte(2), byte(3), 'o' })
     if err != nil {
         t.Error("error making move")
     }
-    err = bb.MakeMove(byte(3), byte(7), 'x')
+    err = bb.MakeMove(board.Move{ byte(3), byte(7), 'x' })
     if err != nil {
         t.Error("error making move")
     }
-    err = bb.MakeMove(byte(7), byte(7), 'o')
+    err = bb.MakeMove(board.Move{ byte(7), byte(7), 'o' })
     if err != nil {
         t.Error("error making move")
     }
-    err = bb.MakeMove(byte(7), byte(8), 'x')
+    err = bb.MakeMove(board.Move{ byte(7), byte(8), 'x' })
     if err != nil {
         t.Error("error making move")
     }//check board 7
-    err = bb.MakeMove(byte(4), byte(2), 'o')
+    err = bb.MakeMove(board.Move{ byte(4), byte(2), 'o' })
     if err != nil {
         t.Error("error making move")
     }
-    err = bb.MakeMove(byte(2), byte(0), 'x')
+    err = bb.MakeMove(board.Move{ byte(2), byte(0), 'x' })
     if err != nil {
         t.Error("error making move")
     }
-    err = bb.MakeMove(byte(0), byte(2), 'o')
+    err = bb.MakeMove(board.Move{ byte(0), byte(2), 'o' })
     if err != nil {
         t.Error("error making move")
     }
-    err = bb.MakeMove(byte(2), byte(1), 'x')
+    err = bb.MakeMove(board.Move{ byte(2), byte(1), 'x' })
     if err != nil {
         t.Error("error making move")
     }
@@ -166,127 +166,127 @@ func TestGameOWins(t *testing.T) {
 
     var err error
 
-    err = bb.MakeMove(byte(5), byte(0), 'o')
+    err = bb.MakeMove(board.Move{ byte(5), byte(0), 'o' })
     if err != nil {
         t.Error("error making move")
     }
-    err = bb.MakeMove(byte(0), byte(5), 'x')
+    err = bb.MakeMove(board.Move{ byte(0), byte(5), 'x' })
     if err != nil {
         t.Error("error making move")
     }
-    err = bb.MakeMove(byte(5), byte(2), 'o')
+    err = bb.MakeMove(board.Move{ byte(5), byte(2), 'o' })
     if err != nil {
         t.Error("error making move")
     }
-    err = bb.MakeMove(byte(2), byte(7), 'x')
+    err = bb.MakeMove(board.Move{ byte(2), byte(7), 'x' })
     if err != nil {
         t.Error("error making move")
     }
-    err = bb.MakeMove(byte(7), byte(5), 'o')
+    err = bb.MakeMove(board.Move{ byte(7), byte(5), 'o' })
     if err != nil {
         t.Error("error making move")
     }
-    err = bb.MakeMove(byte(5), byte(8), 'x')
+    err = bb.MakeMove(board.Move{ byte(5), byte(8), 'x' })
     if err != nil {
         t.Error("error making move")
     }
-    err = bb.MakeMove(byte(8), byte(2), 'o')
+    err = bb.MakeMove(board.Move{ byte(8), byte(2), 'o' })
     if err != nil {
         t.Error("error making move")
     }
-    err = bb.MakeMove(byte(2), byte(8), 'x')
+    err = bb.MakeMove(board.Move{ byte(2), byte(8), 'x' })
     if err != nil {
         t.Error("error making move")
     }
-    err = bb.MakeMove(byte(8), byte(5), 'o')
+    err = bb.MakeMove(board.Move{ byte(8), byte(5), 'o' })
     if err != nil {
         t.Error("error making move")
     }
-    err = bb.MakeMove(byte(5), byte(5), 'x')
+    err = bb.MakeMove(board.Move{ byte(5), byte(5), 'x' })
     if err != nil {
         t.Error("error making move")
     }
-    err = bb.MakeMove(byte(5), byte(1), 'o')
+    err = bb.MakeMove(board.Move{ byte(5), byte(1), 'o' })
     if err != nil {
         t.Error("error making move")
     }//check board 5
-    err = bb.MakeMove(byte(1), byte(2), 'x')
+    err = bb.MakeMove(board.Move{ byte(1), byte(2), 'x' })
     if err != nil {
         t.Error("error making move")
     }
-    err = bb.MakeMove(byte(2), byte(6), 'o')
+    err = bb.MakeMove(board.Move{ byte(2), byte(6), 'o' })
     if err != nil {
         t.Error("error making move")
     }
-    err = bb.MakeMove(byte(6), byte(1), 'x')
+    err = bb.MakeMove(board.Move{ byte(6), byte(1), 'x' })
     if err != nil {
         t.Error("error making move")
     }
-    err = bb.MakeMove(byte(1), byte(1), 'o')
+    err = bb.MakeMove(board.Move{ byte(1), byte(1), 'o' })
     if err != nil {
         t.Error("error making move")
     }
-    err = bb.MakeMove(byte(1), byte(8), 'x')
+    err = bb.MakeMove(board.Move{ byte(1), byte(8), 'x' })
     if err != nil {
         t.Error("error making move")
     }
-    err = bb.MakeMove(byte(8), byte(8), 'o')
+    err = bb.MakeMove(board.Move{ byte(8), byte(8), 'o' })
     if err != nil {
         t.Error("error making move")
     }//check board 8
-    err = bb.MakeMove(byte(1), byte(5), 'x')
+    err = bb.MakeMove(board.Move{ byte(1), byte(5), 'x' })
     if err != nil {
         t.Error("error making move")
     }//check board 1
-    err = bb.MakeMove(byte(2), byte(4), 'o')
+    err = bb.MakeMove(board.Move{ byte(2), byte(4), 'o' })
     if err != nil {
         t.Error("error making move")
     }
-    err = bb.MakeMove(byte(4), byte(7), 'x')
+    err = bb.MakeMove(board.Move{ byte(4), byte(7), 'x' })
     if err != nil {
         t.Error("error making move")
     }
-    err = bb.MakeMove(byte(7), byte(2), 'o')
+    err = bb.MakeMove(board.Move{ byte(7), byte(2), 'o' })
     if err != nil {
         t.Error("error making move")
     }
-    err = bb.MakeMove(byte(2), byte(2), 'x')
+    err = bb.MakeMove(board.Move{ byte(2), byte(2), 'x' })
     if err != nil {
         t.Error("error making move")
     }
-    err = bb.MakeMove(byte(2), byte(5), 'o')
+    err = bb.MakeMove(board.Move{ byte(2), byte(5), 'o' })
     if err != nil {
         t.Error("error making move")
     }
-    err = bb.MakeMove(byte(2), byte(3), 'x')
+    err = bb.MakeMove(board.Move{ byte(2), byte(3), 'x' })
     if err != nil {
         t.Error("error making move")
     }
-    err = bb.MakeMove(byte(3), byte(7), 'o')
+    err = bb.MakeMove(board.Move{ byte(3), byte(7), 'o' })
     if err != nil {
         t.Error("error making move")
     }
-    err = bb.MakeMove(byte(7), byte(7), 'x')
+    err = bb.MakeMove(board.Move{ byte(7), byte(7), 'x' })
     if err != nil {
         t.Error("error making move")
     }
-    err = bb.MakeMove(byte(7), byte(8), 'o')
+    err = bb.MakeMove(board.Move{ byte(7), byte(8), 'o' })
     if err != nil {
         t.Error("error making move")
     }//check board 7
-    err = bb.MakeMove(byte(4), byte(2), 'x')
+    err = bb.MakeMove(board.Move{ byte(4), byte(2), 'x' })
     if err != nil {
         t.Error("error making move")
     }
-    err = bb.MakeMove(byte(2), byte(0), 'o')
+    err = bb.MakeMove(board.Move{ byte(2), byte(0), 'o' })
     if err != nil {
         t.Error("error making move")
     }
-    err = bb.MakeMove(byte(0), byte(2), 'x')
+    err = bb.MakeMove(board.Move{ byte(0), byte(2), 'x' })
     if err != nil {
         t.Error("error making move")
     }
-    err = bb.MakeMove(byte(2), byte(1), 'o')
+    err = bb.MakeMove(board.Move{ byte(2), byte(1), 'o' })
     if err != nil {
         t.Error("error making move")
     }
@@ -318,42 +318,42 @@ func TestMoveValidity(t *testing.T) {
     bb := &board.BigBoard{}
     bb.Initialize()
 
-    err := bb.MakeMove(byte(4), byte(3), 'x')
+    err := bb.MakeMove(board.Move{ byte(4), byte(3), 'x' })
     if err != nil {
         t.Error("Valid move detected as invalid")
     }
 
-    err = bb.MakeMove(byte(4), byte(2), 'o')
+    err = bb.MakeMove(board.Move{ byte(4), byte(2), 'o' })
     if err == nil {
         t.Error("Invalid move detected as valid")
     }
 
-    err = bb.MakeMove(byte(3), byte(1), 'o')
+    err = bb.MakeMove(board.Move{ byte(3), byte(1), 'o' })
     if err != nil {
         t.Error("Valid move detected as invalid")
     }
 
-    err = bb.MakeMove(byte(9), byte(2), 'x')
+    err = bb.MakeMove(board.Move{ byte(9), byte(2), 'x' })
     if err == nil {
         t.Error("Invalid move detected as valid")
     }
 
-    err = bb.MakeMove(byte(1), byte(9), 'x')
+    err = bb.MakeMove(board.Move{ byte(1), byte(9), 'x' })
     if err == nil {
         t.Error("Invalid move detected as valid")
     }
 
-    err = bb.MakeMove(byte(1), byte(1), 'r')
+    err = bb.MakeMove(board.Move{ byte(1), byte(1), 'r' })
     if err == nil {
         t.Error("Invalid move detected as valid")
     }
 
-    err = bb.MakeMove(byte(1), byte(4), 'x')
+    err = bb.MakeMove(board.Move{ byte(1), byte(4), 'x' })
     if err != nil {
         t.Error("Valid move detected as invalid")
     }
 
-    err = bb.MakeMove(byte(4), byte(3), 'o')
+    err = bb.MakeMove(board.Move{ byte(4), byte(3), 'o' })
     if err == nil {
         t.Error("Invalid move detected as valid")
     }
@@ -363,32 +363,32 @@ func TestMoveValidity(t *testing.T) {
     bb.Boards[2].Cells[0] = 'x'
     bb.Boards[2].Cells[1] = 'x'
 
-    err = bb.MakeMove(byte(8), byte(2), 'o')
+    err = bb.MakeMove(board.Move{ byte(8), byte(2), 'o' })
     if err != nil {
         t.Error("Valid move detected as invalid")
     }
 
-    err = bb.MakeMove(byte(2), byte(2), 'x')
+    err = bb.MakeMove(board.Move{ byte(2), byte(2), 'x' })
     if err != nil {
         t.Error("Valid move detected as invalid")
     }
 
-    err = bb.MakeMove(byte(2), byte(7), 'o')
+    err = bb.MakeMove(board.Move{ byte(2), byte(7), 'o' })
     if err == nil {
         t.Error("Invalid move detected as valid")
     }
 
-    err = bb.MakeMove(byte(4), byte(2), 'o')
+    err = bb.MakeMove(board.Move{ byte(4), byte(2), 'o' })
     if err != nil {
         t.Error("Valid move detected as invalid")
     }
 
-    err = bb.MakeMove(byte(2), byte(5), 'x')
+    err = bb.MakeMove(board.Move{ byte(2), byte(5), 'x' })
     if err == nil {
         t.Error("Invalid move detected as valid")
     }
 
-    err = bb.MakeMove(byte(4), byte(3), 'x')
+    err = bb.MakeMove(board.Move{ byte(4), byte(3), 'x' })
     if err != nil {
         t.Error("Valid move detected as invalid")
     }

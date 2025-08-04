@@ -4,10 +4,11 @@ import (
 	"encoding/json"
 	"log"
 	"math"
-	"strconv"
+
 	"time"
 
 	"tic_tac_toe.fun/board"
+	"tic_tac_toe.fun/defs"
 	"tic_tac_toe.fun/models"
 )
 
@@ -49,7 +50,7 @@ func NewGame(p1, p2 *Player, mode GameMode) *Game {
 		U1:           g.players[0].u,
 		U2:           g.players[1].u,
 		DateRecorded: time.Now(),
-		Record:       "", // start with empty recording because the game just started (duuh)
+		History:       "", // start with empty recording because the game just started (duuh)
 	}
 
 	// NOTE: Could be moved to the player
@@ -98,6 +99,7 @@ func (g *Game) Run(db *models.DataBase) { // listens for user and server actions
 	defer db.UpdateGameStats(g.players[1].u)
 
 	defer func() {
+		g.BoardHistoryToString()
 		err := db.StoreGameRecord(g.GameRecord)
 		if err != nil {
 			log.Println("Error storing game record!")
@@ -128,7 +130,13 @@ func (g *Game) Run(db *models.DataBase) { // listens for user and server actions
 					continue
 				}
 
-				err := g.b.MakeMove(pos[0], pos[1], 'x') // this updates the board back-end logic/state
+				m := board.Move {
+					BigPos: pos[0],
+					SmallPos: pos[1],
+					Player: 'x',
+				}
+
+				err := g.b.MakeMove(m) // this updates the board back-end logic/state
 				if err != nil {
 					log.Println(err)
 				} else {
@@ -156,7 +164,14 @@ func (g *Game) Run(db *models.DataBase) { // listens for user and server actions
 					log.Printf("Expected position to be of length >= 2, got legnth of %d", len(pos))
 					continue
 				}
-				err := g.b.MakeMove(pos[0], pos[1], 'o')
+
+				m := board.Move {
+					BigPos: pos[0],
+					SmallPos: pos[1],
+					Player: 'o',
+				}
+
+				err := g.b.MakeMove(m)
 				if err != nil {
 					log.Println(err)
 				} else {
@@ -206,7 +221,7 @@ func (g *Game) Run(db *models.DataBase) { // listens for user and server actions
 // 		small_pos = small_pos - '0'
 // 	}
 //
-// 	g.GameRecord.Record += player + strconv.Itoa(int(big_pos)) + strconv.Itoa(int(small_pos)) + ";"
+// 	g.GameRecord.History += player + strconv.Itoa(int(big_pos)) + strconv.Itoa(int(small_pos)) + ";"
 // }
 
 func (g *Game) updateBoardVisuals() { // sends the board's back-end data to the front-end to update the ui
@@ -220,13 +235,14 @@ func (g *Game) checkWinner() { // the winner is determined from the boards Resul
 	case 'x':
 		g.players[0].u.GamesWon += 1
 		log.Printf("Player x wins!!!")
-		// g.GameRecord.Record += "X"
+		g.GameRecord.Winner = 'x'
 	case 'o':
 		g.players[1].u.GamesWon += 1
 		log.Printf("Player o wins!!!")
-		// g.GameRecord.Record += "O"
+		g.GameRecord.Winner = 'o'
 	default:
 		log.Printf("Tie!!!")
+		g.GameRecord.Winner = defs.BOARD_TIE
 	}
 
 	g.calculateNewPlayerElo() // needs to be called after a winner is determined
@@ -303,4 +319,13 @@ func (g *Game) parseGameStateToJSON() []byte { // note that the board state is t
 	}
 
 	return res
+}
+
+func (g *Game) BoardHistoryToString() {
+	for m, ok := g.b.History.Top(); ok; {
+		log.Println("Converting move:", m)
+		g.b.History.Pop()
+		m_str := string([]byte{ m.Player, m.BigPos, m.SmallPos, defs.BOARD_HISTORY_DELIMITER })
+		g.GameRecord.History = m_str + g.GameRecord.History // note that we must prepend the last-read move since we are working with a stack
+	}
 }

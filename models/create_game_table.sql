@@ -7,6 +7,7 @@ CREATE TABLE game_records (
     p2 INTEGER,
     date_recorded DATE,
     moves TEXT,
+    winner TEXT check (winner in ('x', 'o', '_')), -- 'x', 'o' or defs.BOARD_TIE
     FOREIGN KEY (p1) REFERENCES users(id),
     FOREIGN KEY (p2) REFERENCES users(id)
 );

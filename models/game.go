@@ -12,7 +12,8 @@ type GameRecord struct {
 	U1 *User
 	U2 *User
 	DateRecorded time.Time
-	Record string
+	History string
+	Winner byte
 }
 
 func (Db *DataBase) StoreGameRecord(record GameRecord) error {
@@ -21,7 +22,7 @@ func (Db *DataBase) StoreGameRecord(record GameRecord) error {
 		return nil
 	}
 
-	statement := "insert into game_records (p1, p2, date_recorded, moves) values (?, ?, ?, ?)"
+	statement := "insert into game_records (p1, p2, date_recorded, moves, winner) values (?, ?, ?, ?, ?)"
 	stmt, err := Db.Data.Prepare(statement)
 	if err != nil {
 		return err
@@ -29,7 +30,8 @@ func (Db *DataBase) StoreGameRecord(record GameRecord) error {
 
 	defer stmt.Close()
 
-	_, err = stmt.Exec(record.U1.Id, record.U2.Id, record.DateRecorded, record.Record)
+	winner_str := string([]byte{ record.Winner })
+	_, err = stmt.Exec(record.U1.Id, record.U2.Id, record.DateRecorded, record.History, winner_str)
 	return err
 }
 
@@ -40,13 +42,16 @@ func (Db *DataBase) ReadGameRecord(rec_id int) (*GameRecord, error) {
 		U2: new(User),
 	}
 
-	statemet := "select p1, p2, date_recorded, moves from game_records where id = ?"
+	var winner_str string
+
+	statemet := "select p1, p2, date_recorded, moves, winner from game_records where id = ?"
 	row := Db.Data.QueryRow(statemet, rec_id)
 	err := row.Scan(
 		&rec.U1.Id,
 		&rec.U2.Id,
 		&rec.DateRecorded,
-		&rec.Record,
+		&rec.History,
+		&winner_str,
 	)
 	if err != nil {
 		return nil, err
@@ -62,6 +67,8 @@ func (Db *DataBase) ReadGameRecord(rec_id int) (*GameRecord, error) {
 		return nil, err
 	}
 
+	rec.Winner = winner_str[0]
+
 	return rec, nil
 }
 
@@ -73,7 +80,7 @@ func (Db *DataBase) ReadGameRecordsForUser(user_id int) ([]*GameRecord, error) {
 
 	res := make([]*GameRecord, 0)
 
-	statement := "select id, p1, p2, date_recorded, moves from game_records where ? in (p1, p2)"
+	statement := "select id, p1, p2, date_recorded, moves, winner from game_records where ? in (p1, p2)"
 	rows, err := Db.Data.Query(statement, user_id)
 	if err != nil {
 		return nil, err
@@ -84,12 +91,15 @@ func (Db *DataBase) ReadGameRecordsForUser(user_id int) ([]*GameRecord, error) {
 			U1: new(User),
 			U2: new(User),
 		}
+		var winner_str string
+
 		err := rows.Scan(
 			&rec.Id,
 			&rec.U1.Id,
 			&rec.U2.Id,
 			&rec.DateRecorded,
-			&rec.Record,
+			&rec.History,
+			&winner_str,
 		)
 		if err != nil {
 			return nil, err
@@ -105,6 +115,8 @@ func (Db *DataBase) ReadGameRecordsForUser(user_id int) ([]*GameRecord, error) {
 			return nil, err
 		}
 
+		rec.Winner = winner_str[0]
+
 		res = append(res, rec)
 	}
 
@@ -113,14 +125,8 @@ func (Db *DataBase) ReadGameRecordsForUser(user_id int) ([]*GameRecord, error) {
 }
 
 func GetGameRecordWinner(record *GameRecord) int {
-	record_len := len(record.Record)
-	if record_len < 2 {
-		return defs.NO_WINNER
-	}
-
-	if record.Record[record_len - 2] == 'X' {
+	if record.Winner == 'x' {
 		return record.U1.Id
 	}
-
 	return record.U2.Id
 }

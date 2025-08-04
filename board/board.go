@@ -13,14 +13,14 @@ type Board struct {
     movesPlayed byte    // used to determine the winner of the board when it's full
 }
 
-func (b *Board) MakeMove(pos, player byte) {   // there are no safeguards in this method because the BigBoard does all the safeguards for it
-    b.Cells[pos] = player
+func (b *Board) MakeMove(m Move) {   // there are no safeguards in this method because the BigBoard does all the safeguards for it
+    b.Cells[m.SmallPos] = m.Player
     b.movesPlayed += 1
     b.UpdateResult()    // check for winner after each move
 }
 
-func (b *Board) UndoMove(pos byte) {
-	b.Cells[pos] = defs.EMPTY_CELL
+func (b *Board) UndoMove(m Move) {
+	b.Cells[m.SmallPos] = defs.EMPTY_CELL
 	b.movesPlayed -= 1
 	b.UpdateResult()
 }
