@@ -4,11 +4,13 @@ import (
 	"encoding/json"
 	"log"
 	"math"
-	"strconv"
+
 	"time"
 
 	"tic_tac_toe.fun/board"
+	"tic_tac_toe.fun/defs"
 	"tic_tac_toe.fun/models"
+	"tic_tac_toe.fun/stack"
 )
 
 type GameMode int
@@ -27,7 +29,7 @@ const (
 )
 
 type Game struct {
-	players [2]*Player
+	players      [2]*Player
 	b            *board.BigBoard
 	p1_move      bool // used to prevent the other player playing when it's not their turn
 	game_started bool
@@ -46,11 +48,13 @@ func NewGame(p1, p2 *Player, mode GameMode) *Game {
 	g.players[0].u.NumOfGamesPlayed += 1
 	g.players[1].u.NumOfGamesPlayed += 1
 	g.GameRecord = models.GameRecord{
-		U1: g.players[0].u,
-		U2: g.players[1].u,
+		U1:           g.players[0].u,
+		U2:           g.players[1].u,
 		DateRecorded: time.Now(),
-		Record: "", // start with empty recording because the game just started (duuh)
+		History:       "", // start with empty recording because the game just started (duuh)
 	}
+
+	g.b.History = stack.CreateStack[board.Move]()
 
 	// NOTE: Could be moved to the player
 	switch mode {
@@ -98,6 +102,8 @@ func (g *Game) Run(db *models.DataBase) { // listens for user and server actions
 	defer db.UpdateGameStats(g.players[1].u)
 
 	defer func() {
+		log.Println("Storing board history")
+		g.BoardHistoryToString()
 		err := db.StoreGameRecord(g.GameRecord)
 		if err != nil {
 			log.Println("Error storing game record!")
@@ -128,7 +134,13 @@ func (g *Game) Run(db *models.DataBase) { // listens for user and server actions
 					continue
 				}
 
-				err := g.b.MakeMove(pos[0], pos[1], 'x') // this updates the board back-end logic/state
+				m := board.Move {
+					BigPos: pos[0],
+					SmallPos: pos[1],
+					Player: 'x',
+				}
+
+				err := g.b.MakeMove(m) // this updates the board back-end logic/state
 				if err != nil {
 					log.Println(err)
 				} else {
@@ -136,7 +148,7 @@ func (g *Game) Run(db *models.DataBase) { // listens for user and server actions
 					// if the move was deemed valid and all, handle the timers, send the messages to update the front-end based on the back-end
 					g.players[0].timer.Pause()
 
-					g.RecordMove("x", pos[0], pos[1])
+					// g.RecordMove("x", pos[0], pos[1])
 
 					g.updateBoardVisuals()
 					if g.b.Result != 0 { // handles the game being finished and exits the function
@@ -156,14 +168,21 @@ func (g *Game) Run(db *models.DataBase) { // listens for user and server actions
 					log.Printf("Expected position to be of length >= 2, got legnth of %d", len(pos))
 					continue
 				}
-				err := g.b.MakeMove(pos[0], pos[1], 'o')
+
+				m := board.Move {
+					BigPos: pos[0],
+					SmallPos: pos[1],
+					Player: 'o',
+				}
+
+				err := g.b.MakeMove(m)
 				if err != nil {
 					log.Println(err)
 				} else {
 					log.Printf("Paused p2 timer at %s", g.players[1].timer.TimeLeft.String())
 					g.players[1].timer.Pause()
 
-					g.RecordMove("o", pos[0], pos[1])
+					// g.RecordMove("o", pos[0], pos[1])
 
 					g.updateBoardVisuals()
 
@@ -197,17 +216,17 @@ func (g *Game) Run(db *models.DataBase) { // listens for user and server actions
 	}
 }
 
-func (g *Game) RecordMove(player string, big_pos, small_pos byte) {
-	if big_pos >= '0' && big_pos <= '9' { // the positions passed in are probably ascii characters representing digis
-		big_pos = big_pos - '0'
-	}
-
-	if small_pos >= '0' && small_pos <= '9' {
-		small_pos = small_pos - '0'
-	}
-
-	g.GameRecord.Record += player + strconv.Itoa(int(big_pos)) + strconv.Itoa(int(small_pos)) + ";"
-}
+// func (g *Game) RecordMove(player string, big_pos, small_pos byte) {
+// 	if big_pos >= '0' && big_pos <= '9' { // the positions passed in are probably ascii characters representing digis
+// 		big_pos = big_pos - '0'
+// 	}
+//
+// 	if small_pos >= '0' && small_pos <= '9' {
+// 		small_pos = small_pos - '0'
+// 	}
+//
+// 	g.GameRecord.History += player + strconv.Itoa(int(big_pos)) + strconv.Itoa(int(small_pos)) + ";"
+// }
 
 func (g *Game) updateBoardVisuals() { // sends the board's back-end data to the front-end to update the ui
 	new_game_state := g.parseGameStateToJSON() // the front-end expects the board state to be in json format
@@ -220,13 +239,14 @@ func (g *Game) checkWinner() { // the winner is determined from the boards Resul
 	case 'x':
 		g.players[0].u.GamesWon += 1
 		log.Printf("Player x wins!!!")
-		g.GameRecord.Record += "X;"
+		g.GameRecord.Winner = 'x'
 	case 'o':
 		g.players[1].u.GamesWon += 1
 		log.Printf("Player o wins!!!")
-		g.GameRecord.Record += "O;"
+		g.GameRecord.Winner = 'o'
 	default:
 		log.Printf("Tie!!!")
+		g.GameRecord.Winner = defs.BOARD_TIE
 	}
 
 	g.calculateNewPlayerElo() // needs to be called after a winner is determined
@@ -277,17 +297,23 @@ func (g *Game) parseGameStateToJSON() []byte { // note that the board state is t
 	}
 
 	msg := struct {
-		Type    string   `json:"type"`
-		Board   []string `json:"board"`
-		P1_time int64 `json:"p1_time"`
-		P2_time int64 `json:"p2_time"`
-		P1_move bool `json:"p1_move"`
+		Type           string   `json:"type"`
+		Board          []string `json:"board"`
+		CompleteBoards []byte   `json:"complete_boards"`
+		P1_time        int64    `json:"p1_time"`
+		P2_time        int64    `json:"p2_time"`
+		P1_move        bool     `json:"p1_move"`
 	}{
-		Type:  "state",
-		Board: board,
+		Type:    "state",
+		Board:   board,
+		CompleteBoards: make([]byte, 0),
 		P1_time: g.players[0].timer.TimeLeft.Milliseconds(),
 		P2_time: g.players[1].timer.TimeLeft.Milliseconds(),
 		P1_move: g.p1_move,
+	}
+
+	for _, b := range g.b.Boards {
+		msg.CompleteBoards = append(msg.CompleteBoards, b.Result)
 	}
 
 	res, err := json.Marshal(msg)
@@ -297,4 +323,15 @@ func (g *Game) parseGameStateToJSON() []byte { // note that the board state is t
 	}
 
 	return res
+}
+
+func (g *Game) BoardHistoryToString() {
+	log.Println("BoardHistoryToString called")
+	for g.b.History.Len() > 0 {
+		m, _ := g.b.History.Top()
+		log.Println("Converting move:", m)
+		g.b.History.Pop()
+		m_str := string([]byte{ m.Player, m.BigPos + '0', m.SmallPos + '0', defs.BOARD_HISTORY_DELIMITER })
+		g.GameRecord.History = m_str + g.GameRecord.History // note that we must prepend the last-read move since we are working with a stack
+	}
 }

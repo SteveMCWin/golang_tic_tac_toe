@@ -87,6 +87,38 @@
       border: 2px solid #333;
       padding: 3px;
       background: #ddd;
+      position: relative;
+    }
+    
+    .mini-board.completed {
+      opacity: 0.3;
+    }
+    
+    .mini-board-winner {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 6rem;
+      font-weight: bold;
+      color: #333;
+      background: rgba(255, 255, 255, 0.9);
+      border-radius: 8px;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+      z-index: 10;
+      pointer-events: none;
+    }
+    
+    .mini-board-winner.x-winner {
+      color: #2196f3;
+    }
+    
+    .mini-board-winner.o-winner {
+      color: #f44336;
     }
     
     .cell {
@@ -100,6 +132,11 @@
       user-select: none;
       width: 60px;
       height: 60px;
+    }
+    
+    .mini-board.completed .cell {
+      cursor: not-allowed;
+      pointer-events: none;
     }
   </style>
 </head>
@@ -159,6 +196,41 @@
       }
     }
     
+    // Update mini-board winners based on CompleteBoards array
+    function updateMiniboardWinners(completeBoards) {
+      for (let i = 0; i < 9; i++) {
+        const miniBoard = document.getElementById(`mini-board-${i}`);
+        const existingWinner = miniBoard.querySelector('.mini-board-winner');
+        
+        // Remove existing winner overlay if it exists
+        if (existingWinner) {
+          existingWinner.remove();
+        }
+        
+        // Check if this mini-board is completed
+        if (completeBoards && i < completeBoards.length) {
+          const winner = String.fromCharCode(completeBoards[i]);
+          
+          if (winner === 'x' || winner === 'o') {
+            // Add completed class to dim the mini-board
+            miniBoard.classList.add('completed');
+            
+            // Create winner overlay
+            const winnerOverlay = document.createElement('div');
+            winnerOverlay.className = `mini-board-winner ${winner}-winner`;
+            winnerOverlay.textContent = winner.toUpperCase();
+            miniBoard.appendChild(winnerOverlay);
+          } else {
+            // Remove completed class if winner is not set
+            miniBoard.classList.remove('completed');
+          }
+        } else {
+          // Remove completed class if no completeBoards data
+          miniBoard.classList.remove('completed');
+        }
+      }
+    }
+    
     // Render the 81 cells into 9 mini-boards
     function renderBoard(state) {
       if (state.length !== 81) return;
@@ -173,11 +245,22 @@
       if (msg.type === 'state' && Array.isArray(msg.board)) {
         renderBoard(msg.board);
         updateGameUI(msg.p1_time, msg.p2_time, msg.p1_move);
+        
+        // Update mini-board winners if CompleteBoards data is available
+        if (msg.complete_boards) {
+          updateMiniboardWinners(msg.complete_boards);
+        }
       }
     };
     
     // Send move indexes to the server
     function handleClick(miniIndex, cellIndex) {
+        // Don't allow clicks on completed mini-boards
+        const miniBoard = document.getElementById(`mini-board-${miniIndex}`);
+        if (miniBoard.classList.contains('completed')) {
+          return;
+        }
+        
         socket.send(`${miniIndex}${cellIndex}`);
     }
     
@@ -185,6 +268,7 @@
     for (let mb = 0; mb < 9; mb++) {
       const miniBoard = document.createElement('div');
       miniBoard.className = 'mini-board';
+      miniBoard.id = `mini-board-${mb}`;
       for (let cell = 0; cell < 9; cell++) {
         const globalIndex = mb * 9 + cell;
         const div = document.createElement('div');

@@ -1,5 +1,7 @@
 package board
 
+import "tic_tac_toe.fun/defs"
+
 // board layout
 // 0 1 2
 // 3 4 5
@@ -11,10 +13,16 @@ type Board struct {
     movesPlayed byte    // used to determine the winner of the board when it's full
 }
 
-func (b *Board) MakeMove(pos byte, player byte) {   // there are no safeguards in this method because the BigBoard does all the safeguards for it
-    b.Cells[pos] = player
+func (b *Board) MakeMove(m Move) {   // there are no safeguards in this method because the BigBoard does all the safeguards for it
+    b.Cells[m.SmallPos] = m.Player
     b.movesPlayed += 1
     b.UpdateResult()    // check for winner after each move
+}
+
+func (b *Board) UndoMove(m Move) {
+	b.Cells[m.SmallPos] = defs.EMPTY_CELL
+	b.movesPlayed -= 1
+	b.UpdateResult()
 }
 
 // checks for a winner the normal way first, if no winner but board full, make the one with most plays in the board win
@@ -22,7 +30,7 @@ func (b *Board) MakeMove(pos byte, player byte) {   // there are no safeguards i
 func (b *Board) UpdateResult() {
     for i := 0; i < 3; i++ {
         // check columns
-        if b.Cells[i] == 0 {
+        if b.Cells[i] == defs.EMPTY_CELL {
             continue
         }
         if b.Cells[i] == b.Cells[i+3] && b.Cells[i] == b.Cells[i+6] {
@@ -30,7 +38,7 @@ func (b *Board) UpdateResult() {
             return 
         }
         // check rows
-        if b.Cells[3*i] == 0 {
+        if b.Cells[3*i] == defs.EMPTY_CELL {
             continue
         }
         if b.Cells[3*i] == b.Cells[3*i+1] && b.Cells[3*i] == b.Cells[3*i+2] {
@@ -40,7 +48,7 @@ func (b *Board) UpdateResult() {
     }
 
     // check diagonals
-    if b.Cells[4] == 0 {
+    if b.Cells[4] == defs.EMPTY_CELL {
         return 
     }
 
