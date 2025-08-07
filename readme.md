@@ -14,5 +14,4 @@ It would be nice if I could deploy this web app, but the front end is written mo
 - The front end
 - Matchmaking
 - Waiting for oponent page
-- Recordings of games
 - Viewing other user's profiles

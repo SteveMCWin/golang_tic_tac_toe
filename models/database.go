@@ -30,7 +30,7 @@ func (Db *DataBase) InitDatabase(is_test ...bool) error {
 		return err
 	}
 
-	spellfix_relative_path := "/models/spellfix.so"
+	spellfix_relative_path := "/extensions/spellfix.so"
 
 	sql.Register("sqlite3_with_extension",
 		&sqlite3.SQLiteDriver{
@@ -40,7 +40,7 @@ func (Db *DataBase) InitDatabase(is_test ...bool) error {
 		},
 	)
 
-	db_path := "models/"
+	db_path := "data/"
 	if len(is_test) == 0 {
 		db_path = db_path + "database.db"
 	} else {

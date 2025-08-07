@@ -26,4 +26,4 @@ go.work.sum
 
 testdata/
 tic_tac_toe.fun
-models/*.db
+data/*.db
