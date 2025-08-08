@@ -1,13 +1,15 @@
 package unit_tests
 
 import (
-    "testing"
-    "tic_tac_toe.fun/board"
+	"testing"
+
+	"tic_tac_toe.fun/board"
 )
 
 func TestGameXWins(t *testing.T) {
 
-    bb := &board.BigBoard{}
+    bb := &board.BigBoard{
+	}
     bb.Initialize()
 
     var err error
@@ -132,6 +134,9 @@ func TestGameXWins(t *testing.T) {
     if err != nil {
         t.Error("error making move")
     }
+	if bb.Result != 0 {
+		t.Errorf("No player should have won yet")
+	}
     err = bb.MakeMove(board.Move{ byte(2), byte(1), 'x' })
     if err != nil {
         t.Error("error making move")

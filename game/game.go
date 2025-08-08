@@ -2,6 +2,7 @@ package game
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"math"
 
@@ -10,7 +11,6 @@ import (
 	"tic_tac_toe.fun/board"
 	"tic_tac_toe.fun/defs"
 	"tic_tac_toe.fun/models"
-	"tic_tac_toe.fun/stack"
 )
 
 type GameMode int
@@ -53,8 +53,6 @@ func NewGame(p1, p2 *Player, mode GameMode) *Game {
 		DateRecorded: time.Now(),
 		History:       "", // start with empty recording because the game just started (duuh)
 	}
-
-	g.b.History = stack.CreateStack[board.Move]()
 
 	// NOTE: Could be moved to the player
 	switch mode {
@@ -144,14 +142,28 @@ func (g *Game) Run(db *models.DataBase) { // listens for user and server actions
 				if err != nil {
 					log.Println(err)
 				} else {
-					log.Printf("Paused p1 timer at %s", g.players[0].timer.TimeLeft.String())
+					// log.Printf("Paused p1 timer at %s", g.players[0].timer.TimeLeft.String())
 					// if the move was deemed valid and all, handle the timers, send the messages to update the front-end based on the back-end
 					g.players[0].timer.Pause()
 
 					// g.RecordMove("x", pos[0], pos[1])
 
+					for i := range 9 {
+						res := g.b.Boards[i].Result
+						if res == 0 {
+							res = '0'
+						}
+						fmt.Printf("%c ", res)
+						if i == 2 || i == 5{
+							fmt.Println()
+						}
+					}
+					fmt.Println()
+					fmt.Println()
+
 					g.updateBoardVisuals()
 					if g.b.Result != 0 { // handles the game being finished and exits the function
+						log.Println("The backend recognized the winner!!")
 						g.checkWinner()
 						return
 					}
@@ -159,7 +171,7 @@ func (g *Game) Run(db *models.DataBase) { // listens for user and server actions
 					g.p1_move = false
 					g.players[1].timer.Start()
 
-					log.Printf("Resumed p2 timer at %s", g.players[1].timer.TimeLeft.String())
+					// log.Printf("Resumed p2 timer at %s", g.players[1].timer.TimeLeft.String())
 				}
 			}
 		case pos := <-g.players[1].move: // same as the case above, just for the other player
@@ -179,10 +191,23 @@ func (g *Game) Run(db *models.DataBase) { // listens for user and server actions
 				if err != nil {
 					log.Println(err)
 				} else {
-					log.Printf("Paused p2 timer at %s", g.players[1].timer.TimeLeft.String())
+					// log.Printf("Paused p2 timer at %s", g.players[1].timer.TimeLeft.String())
 					g.players[1].timer.Pause()
 
 					// g.RecordMove("o", pos[0], pos[1])
+
+					for i := range 9 {
+						res := g.b.Boards[i].Result
+						if res == 0 {
+							res = '0'
+						}
+						fmt.Printf("%c ", res)
+						if i == 2 || i == 5{
+							fmt.Printf("\n")
+						}
+					}
+					fmt.Println()
+					fmt.Println()
 
 					g.updateBoardVisuals()
 
@@ -193,7 +218,7 @@ func (g *Game) Run(db *models.DataBase) { // listens for user and server actions
 
 					g.p1_move = true
 					g.players[0].timer.Start()
-					log.Printf("Resumed p1 timer at %s", g.players[0].timer.TimeLeft.String())
+					// log.Printf("Resumed p1 timer at %s", g.players[0].timer.TimeLeft.String())
 				}
 			}
 		case _ = <-g.players[0].exited: // in case someone exits before the game is finished, finish the game and make the other player the winner
@@ -326,10 +351,8 @@ func (g *Game) parseGameStateToJSON() []byte { // note that the board state is t
 }
 
 func (g *Game) BoardHistoryToString() {
-	log.Println("BoardHistoryToString called")
 	for g.b.History.Len() > 0 {
 		m, _ := g.b.History.Top()
-		log.Println("Converting move:", m)
 		g.b.History.Pop()
 		m_str := string([]byte{ m.Player, m.BigPos + '0', m.SmallPos + '0', defs.BOARD_HISTORY_DELIMITER })
 		g.GameRecord.History = m_str + g.GameRecord.History // note that we must prepend the last-read move since we are working with a stack

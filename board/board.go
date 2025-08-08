@@ -28,7 +28,7 @@ func (b *Board) UndoMove(m Move) {
 // checks for a winner the normal way first, if no winner but board full, make the one with most plays in the board win
 // in normal tic-tac-toe this would always result in x winning, but not in 2d tic-tac-toe
 func (b *Board) UpdateResult() {
-    for i := 0; i < 3; i++ {
+    for i := range 3 {
         // check columns
         if b.Cells[i] == defs.EMPTY_CELL {
             continue
@@ -37,6 +37,9 @@ func (b *Board) UpdateResult() {
             b.Result = b.Cells[i]
             return 
         }
+	}
+
+	for i := range 3 {
         // check rows
         if b.Cells[3*i] == defs.EMPTY_CELL {
             continue

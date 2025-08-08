@@ -125,6 +125,108 @@ func TestSmallBoardXWin(t *testing.T) {
     if(b.Result != 'x') {
         t.Errorf("Winner is supposed to be x but it's %c", b.Result)
     }
+
 }
 
+func TestSmallBoardCheckCols(t *testing.T) {
+	b := &board.Board{}
+
+	b.MakeMove(board.Move{0, 0, 'x'})
+	b.MakeMove(board.Move{0, 3, 'x'})
+    if(b.Result != 0) {
+        t.Errorf("Winner is supposed to be undecided but it's %c", b.Result)
+    }
+	b.MakeMove(board.Move{0, 6, 'x'})
+    if(b.Result != 'x') {
+        t.Errorf("Winner is supposed to be x but it's %c", b.Result)
+    }
+
+	b = &board.Board{}
+
+	b.MakeMove(board.Move{0, 1, 'x'})
+	b.MakeMove(board.Move{0, 4, 'x'})
+    if(b.Result != 0) {
+        t.Errorf("Winner is supposed to be undecided but it's %c", b.Result)
+    }
+	b.MakeMove(board.Move{0, 7, 'x'})
+    if(b.Result != 'x') {
+        t.Errorf("Winner is supposed to be x but it's %c", b.Result)
+    }
+
+	b = &board.Board{}
+
+	b.MakeMove(board.Move{0, 2, 'x'})
+	b.MakeMove(board.Move{0, 5, 'x'})
+    if(b.Result != 0) {
+        t.Errorf("Winner is supposed to be undecided but it's %c", b.Result)
+    }
+	b.MakeMove(board.Move{0, 8, 'x'})
+    if(b.Result != 'x') {
+        t.Errorf("Winner is supposed to be x but it's %c", b.Result)
+    }
+}
+
+func TestSamllBoardCheckRows(t *testing.T) {
+	b := &board.Board{}
+
+	b.MakeMove(board.Move{0, 0, 'x'})
+	b.MakeMove(board.Move{0, 1, 'x'})
+    if(b.Result != 0) {
+        t.Errorf("Winner is supposed to be undecided but it's %c", b.Result)
+    }
+	b.MakeMove(board.Move{0, 2, 'x'})
+    if(b.Result != 'x') {
+        t.Errorf("Winner is supposed to be x but it's %c", b.Result)
+    }
+
+	b = &board.Board{}
+
+	b.MakeMove(board.Move{0, 3, 'x'})
+	b.MakeMove(board.Move{0, 4, 'x'})
+    if(b.Result != 0) {
+        t.Errorf("Winner is supposed to be undecided but it's %c", b.Result)
+    }
+	b.MakeMove(board.Move{0, 5, 'x'})
+    if(b.Result != 'x') {
+        t.Errorf("Winner is supposed to be x but it's %c", b.Result)
+    }
+
+	b = &board.Board{}
+
+	b.MakeMove(board.Move{0, 6, 'x'})
+	b.MakeMove(board.Move{0, 7, 'x'})
+    if(b.Result != 0) {
+        t.Errorf("Winner is supposed to be undecided but it's %c", b.Result)
+    }
+	b.MakeMove(board.Move{0, 8, 'x'})
+    if(b.Result != 'x') {
+        t.Errorf("Winner is supposed to be x but it's %c", b.Result)
+    }
+}
+
+func TestSmallBoardCheckDiags(t *testing.T) {
+	b := &board.Board{}
+
+	b.MakeMove(board.Move{0, 0, 'x'})
+	b.MakeMove(board.Move{0, 4, 'x'})
+    if(b.Result != 0) {
+        t.Errorf("Winner is supposed to be undecided but it's %c", b.Result)
+    }
+	b.MakeMove(board.Move{0, 8, 'x'})
+    if(b.Result != 'x') {
+        t.Errorf("Winner is supposed to be x but it's %c", b.Result)
+    }
+
+	b = &board.Board{}
+
+	b.MakeMove(board.Move{0, 2, 'x'})
+	b.MakeMove(board.Move{0, 4, 'x'})
+    if(b.Result != 0) {
+        t.Errorf("Winner is supposed to be undecided but it's %c", b.Result)
+    }
+	b.MakeMove(board.Move{0, 6, 'x'})
+    if(b.Result != 'x') {
+        t.Errorf("Winner is supposed to be x but it's %c", b.Result)
+    }
+}
 
