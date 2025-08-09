@@ -45,7 +45,7 @@ func (b *Board) UpdateResult() {
             continue
         }
         if b.Cells[3*i] == b.Cells[3*i+1] && b.Cells[3*i] == b.Cells[3*i+2] {
-            b.Result = b.Cells[i]
+            b.Result = b.Cells[3*i]
             return
         }
     }

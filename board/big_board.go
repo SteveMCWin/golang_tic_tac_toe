@@ -231,7 +231,7 @@ func (bb *BigBoard) UpdateResult() { // checks if anyone won and if so, update t
 			continue
 		}
 		if bb.Boards[3*i].Result == bb.Boards[3*i+1].Result && bb.Boards[3*i].Result == bb.Boards[3*i+2].Result {
-			bb.Result = bb.Boards[i].Result
+			bb.Result = bb.Boards[3*i].Result
 			return
 		}
 	}

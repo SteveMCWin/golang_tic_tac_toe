@@ -260,6 +260,7 @@ func (g *Game) updateBoardVisuals() { // sends the board's back-end data to the 
 }
 
 func (g *Game) checkWinner() { // the winner is determined from the boards Result field
+	fmt.Println("CheckWinner called!!!!")
 	switch g.b.Result {
 	case 'x':
 		g.players[0].u.GamesWon += 1
