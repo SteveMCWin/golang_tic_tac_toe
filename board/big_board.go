@@ -3,6 +3,7 @@ package board
 import (
 	"errors"
 	"fmt"
+	// "log"
 
 	"tic_tac_toe.fun/defs"
 	"tic_tac_toe.fun/stack"
@@ -36,6 +37,8 @@ func (bb *BigBoard) Initialize() {
 	}
 
 	bb.boardToPlayIn = defs.WILD_BOARD // make sure the first play can be made in any of the mini-boards
+
+	bb.History = stack.CreateStack[Move]()
 }
 
 // big pos represents the mini-board index, the pos represents the cell index
@@ -56,8 +59,6 @@ func (bb *BigBoard) MakeMove(m Move) error {
 
 	bb.Boards[m.BigPos].MakeMove(m) // updates the board through its mini-boards
 
-	// move_bytes := []byte{m.Player, m.BigPos + '0', m.SmallPos + '0', ';'} // update board history
-	// bb.History += string(move_bytes)
 	bb.History.Push(m)
 
 	if bb.Boards[m.SmallPos].Result == 0 {
@@ -118,16 +119,103 @@ func (bb *BigBoard) UndoLastMove() error {
 	return nil
 }
 
+// func (bb *BigBoard) GenerateBoardResBitmap() (x_board []byte, o_board []byte) {
+// 	x_board = make([]byte, 9)
+// 	o_board = make([]byte, 9)
+//
+// 	for i := range 9 {
+// 		if bb.Boards[i].Result == 'x' {
+// 			x_board[i] = 'x'
+// 		} else if bb.Boards[i].Result == 'o' {
+// 			o_board[i] = 'o'
+// 		}
+// 	}
+//
+// 	return
+// }
+//
+// func getXBitboards() [][]byte {
+// 	return [][]byte{
+// 		// Row wins
+// 		{'x','x','x',
+// 		  0 , 0 , 0 ,
+// 		  0 , 0 , 0},
+//
+// 		{ 0 , 0 , 0 ,
+// 		 'x','x','x',
+// 		  0 , 0 , 0},
+//
+// 		{ 0 , 0 , 0 ,
+// 		  0 , 0 , 0 ,
+// 		 'x','x','x'},
+//
+// 		// Column wins
+// 		{'x', 0 , 0 ,
+// 		 'x', 0 , 0 ,
+// 		 'x', 0 , 0},
+//
+// 		{ 0 ,'x', 0 ,
+// 		  0 ,'x', 0 ,
+// 		  0 ,'x', 0},
+//
+// 		{ 0 , 0 ,'x',
+// 		  0 , 0 ,'x',
+// 		  0 , 0 ,'x'},
+//
+// 		// Diagonal wins
+// 		{'x', 0 , 0 ,
+// 		  0 ,'x', 0 ,
+// 		  0 , 0 ,'x'},
+//
+// 		{ 0 , 0 ,'x',
+// 		  0 ,'x', 0 ,
+// 		 'x', 0 , 0},
+// 	}
+// }
+//
+// func getOBitboards() [][]byte {
+// 	return [][]byte {
+// 		// Row wins
+// 		{'o','o','o',
+// 		  0 , 0 , 0 ,
+// 		  0 , 0 , 0},
+//
+// 		{ 0 , 0 , 0 ,
+// 		 'o','o','o',
+// 		  0 , 0 , 0},
+//
+// 		{ 0 , 0 , 0 ,
+// 		  0 , 0 , 0 ,
+// 		 'o','o','o'},
+//
+// 		// Column wins
+// 		{'o', 0 , 0 ,
+// 		 'o', 0 , 0 ,
+// 		 'o', 0 , 0},
+//
+// 		{ 0 ,'o', 0 ,
+// 		  0 ,'o', 0 ,
+// 		  0 ,'o', 0},
+//
+// 		{ 0 , 0 ,'o',
+// 		  0 , 0 ,'o',
+// 		  0 , 0 ,'o'},
+//
+// 		// Diagonal wins
+// 		{'o', 0 , 0 ,
+// 		  0 ,'o', 0 ,
+// 		  0 , 0 ,'o'},
+//
+// 		{ 0 , 0 ,'o',
+// 		  0 ,'o', 0 ,
+// 		 'o', 0 , 0},
+// 	}
+// }
+
 func (bb *BigBoard) UpdateResult() { // checks if anyone won and if so, update the board's result
 
-	// defer func() {
-	// 	if bb.Result != 0 {
-	// 		bb.History += strings.ToUpper(string([]byte{bb.Result}))
-	// 	}
-	// }()
-
-	for i := 0; i < 3; i++ {
-		// check columns
+	// check columns
+	for i := range 3 {
 		if bb.Boards[i].Result == 0 {
 			continue
 		}
@@ -135,12 +223,15 @@ func (bb *BigBoard) UpdateResult() { // checks if anyone won and if so, update t
 			bb.Result = bb.Boards[i].Result
 			return
 		}
-		// check rows
+	}
+
+	// check rows
+	for i := range 3 {
 		if bb.Boards[3*i].Result == 0 {
 			continue
 		}
 		if bb.Boards[3*i].Result == bb.Boards[3*i+1].Result && bb.Boards[3*i].Result == bb.Boards[3*i+2].Result {
-			bb.Result = bb.Boards[i].Result
+			bb.Result = bb.Boards[3*i].Result
 			return
 		}
 	}

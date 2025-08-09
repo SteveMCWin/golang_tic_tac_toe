@@ -1,7 +1,5 @@
 package stack
 
-import "log"
-
 type Stack[T any] struct {
 	elements []*T
 	len int
@@ -23,7 +21,6 @@ func (s *Stack[T]) Top() (*T, bool) {
 }
 
 func (s *Stack[T]) Push(val T) {
-	log.Println("Pushed to stack:", val)
 	s.elements = append(s.elements, &val)
 	s.len += 1
 }
