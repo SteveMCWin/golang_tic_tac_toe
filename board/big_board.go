@@ -17,6 +17,7 @@ type BigBoard struct {
 	Result         byte               // Outcome of the game. The value at the end of the game is either 'x', 'o' or defs.BoardTie ('_')
 	boardsComplete byte               // keeps track of how many mini-boards are complete to handle an over-all tie
 	History        *stack.Stack[Move] // All of the plays made in order.
+	RedoStack *stack.Stack[Move] // Used in replays. When you undo a move it is moved from the history stack to this stack. When you redo a move, it's the opposite
 }
 
 // Move represents a move on a big board by the player 'x' or the player 'o'.
@@ -28,19 +29,20 @@ type Move struct {
 
 // Initialize sets up a new board.
 func (bb *BigBoard) Initialize() {
-	for i := 0; i < 9; i++ {
+	for i := range 9 {
 		bb.Boards[i] = &Board{}
 	}
 
 	bb.BoardState = make([][]byte, 9)
 
-	for i := 0; i < 9; i++ {
+	for i := range 9 {
 		bb.BoardState[i] = make([]byte, 9)
 	}
 
 	bb.boardToPlayIn = defs.WILD_BOARD // make sure the first play can be made in any of the mini-boards
 
 	bb.History = stack.CreateStack[Move]()
+	bb.RedoStack = stack.CreateStack[Move]()
 }
 
 // MakeMove updates the board corresponding to the Move passed in, if valid, and determines the next mini board to be played in.
@@ -104,6 +106,7 @@ func (bb *BigBoard) UndoLastMove() error {
 		return err
 	}
 
+	bb.RedoStack.Push(*bb.History.Top())
 	// NOTE: Should change it so that the top of history is pushed to a redo stack or something
 	bb.History.Pop() // not checking if pop returns ok since it will always do so if it got to this point
 
@@ -115,6 +118,22 @@ func (bb *BigBoard) UndoLastMove() error {
 	} else {
 		bb.boardToPlayIn = prev_m.SmallPos
 	}
+
+	return nil
+}
+
+func (bb *BigBoard) RedoLastMove() error {
+	m := bb.RedoStack.Top()
+	if m == nil {
+		return nil
+	}
+
+	err := bb.MakeMove(*m)
+	if err != nil {
+		return err
+	}
+
+	bb.RedoStack.Pop()
 
 	return nil
 }

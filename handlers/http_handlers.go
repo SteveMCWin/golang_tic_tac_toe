@@ -140,7 +140,8 @@ func SetUpRouter(db *models.DataBase, lb *models.LeaderBoard, hub *game.Hub) htt
 	router.GET("/play", ServePlay())
 	router.GET("/profile/:user_id", MiddlewareNoCache(), HandleGetProfile(db))
 	router.GET("/profile/:user_id/games_played", HandleGetUserGames(db))
-	router.GET("/replay/:game_id", HandleGetGameReplay(db))
+	router.GET("/replay/:record_id", HandleGetGameReplay(db))
+	router.POST("/replay/", HandlePostGameReplay())
 	router.GET("/logout/:provider/", LogoutHandler())
 	router.GET("/auth/:provider", SignInWithProvider())
 	router.GET("/auth/:provider/callback/", CallbackHandler(db))
@@ -327,23 +328,77 @@ func HandleGetUserGames(db *models.DataBase) func(c *gin.Context) {
 // TODO
 func HandleGetGameReplay(db *models.DataBase) func(c *gin.Context) {
 	return func(c *gin.Context) {
-		game_id_param := c.Param("game_id")
-		game_id, err := strconv.Atoi(game_id_param)
+
+		requesting_user_id := GetUserId(c)
+		if requesting_user_id == defs.NO_USER_ID {
+			log.Println("You must be looged in to view replay")
+			c.Redirect(http.StatusTemporaryRedirect, "/")
+			return
+		}
+
+		record_id_param := c.Param("record_id")
+		record_id, err := strconv.Atoi(record_id_param)
 		if err != nil {
 			log.Println("Error getting the game id from url", err)
 			c.Redirect(http.StatusTemporaryRedirect, "/error-page")
 			return
 		}
 
-		rec, err := db.ReadGameRecord(game_id)
+		rec, err := db.ReadGameRecord(record_id)
 		if err != nil {
 			log.Println("Error reading game record:", err)
 			c.Redirect(http.StatusTemporaryRedirect, "/error-page")
 			return
 		}
 
-		_ = rec
+		game.InitGameReplay(requesting_user_id, rec)
 
+		c.HTML(http.StatusOK, "replay.html", gin.H{/*  "user_id" : requesting_user_id, "recording" : rec  */})
+	}
+}
+
+func HandlePostGameReplay() func(c *gin.Context) {
+	return func(c *gin.Context) {
+		// rec_id_param := c.Param("record_id")
+		// rec_id, err := strconv.Atoi(rec_id_param)
+		// if err != nil {
+		// 	c.JSON(http.StatusInternalServerError, gin.H{})
+		// }
+
+		requesting_user_id := GetUserId(c)
+		if requesting_user_id == defs.NO_USER_ID {
+			c.JSON(http.StatusInternalServerError, gin.H{})
+		}
+
+		msg := struct {
+			Move int `json:"msg"`
+		} {}
+		if err := c.BindJSON(msg); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{})
+		}
+
+		var new_board_state []byte
+		var err error
+		switch msg.Move {
+		case defs.NEXT_MOVE:
+			new_board_state, err = game.ReplayNextMove(requesting_user_id)		
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{})
+				return
+			}
+		case defs.PREV_MOVE:
+			new_board_state, err = game.ReplayPrevMove(requesting_user_id)		
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{})
+				return
+			}
+
+		default:
+			c.JSON(http.StatusInternalServerError, gin.H{})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{ "new_board_state": new_board_state})
 	}
 }
 

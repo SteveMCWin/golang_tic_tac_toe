@@ -77,7 +77,7 @@ func NewGame(p1, p2 *Player, mode GameMode) *Game {
 	case fischer_60_5s:
 		g.players[0].timer = MakePlayerTimer(60*time.Second, 5*time.Second)
 		g.players[1].timer = MakePlayerTimer(60*time.Second, 5*time.Second)
-		log.Println("CREATED GAME DURATION 60s+3s")
+		log.Println("CREATED GAME DURATION 60s+5s")
 	case fischer_180_3s:
 		g.players[0].timer = MakePlayerTimer(180*time.Second, 3*time.Second)
 		g.players[1].timer = MakePlayerTimer(180*time.Second, 3*time.Second)

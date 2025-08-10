@@ -4,15 +4,18 @@ import (
     "time"
 )
 
+// PlayerTimer is a countdown timer that can be paused and unpaused during a game.
+// Note that the player timer can be a standard timer or a Fischer timer.
+// To make a normal timer just set the fischer time to 0 when creating the player timer.
 type PlayerTimer struct {
     TimeLeft time.Duration
     isPaused bool
-    Finished chan bool
+    Finished chan bool // A value will be sent to this channel once the timer runs out
     lastFrame time.Time // last recorded time, used to decrease the TimeLeft based on how long ago it was recorded
-    FischerTime time.Duration   // used to add time to the TimeLeft when a player ends their turn, look it up on wikipedia
+    FischerTime time.Duration   // Used to add time to TimeLeft when a player ends their turn, look it up on wikipedia
 }
-// to make a player timer you need to pass the starting time and the fischer time
-// to make a normal timer just set the fischer time to 0
+
+// MakePlayerTimer creates a timer based on the time and fischer time passed. Note that the timer is paused on creation.
 func MakePlayerTimer(d time.Duration, ft time.Duration) (pt *PlayerTimer) {
     pt = &PlayerTimer{}
     pt.TimeLeft = d
@@ -24,12 +27,14 @@ func MakePlayerTimer(d time.Duration, ft time.Duration) (pt *PlayerTimer) {
     return
 }
 
+// Start unpauses the timer.
 func (pt *PlayerTimer) Start() {
     pt.lastFrame = time.Now()
     pt.isPaused = false
     go pt.run()
 }
 
+// Pause does the opposite of Start
 func (pt *PlayerTimer) Pause() {
     pt.TimeLeft += pt.FischerTime
     pt.isPaused = true
