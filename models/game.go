@@ -142,3 +142,4 @@ func GetGameRecordWinner(record *GameRecord) int {
 		return -1
 	}
 }
+

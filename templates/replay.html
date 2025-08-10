@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Ultimate Tic-Tac-Toe Replay</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      background: #f4f4f4;
+      padding: 20px;
+    }
+    
+    .replay-header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    
+    .replay-title {
+      font-size: 2rem;
+      font-weight: bold;
+      color: #333;
+      margin-bottom: 10px;
+    }
+    
+    .replay-controls {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+    
+    .replay-btn {
+      padding: 12px 24px;
+      font-size: 1.1rem;
+      font-weight: bold;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      min-width: 140px;
+    }
+    
+    .prev-btn {
+      background: #f44336;
+      color: white;
+    }
+    
+    .prev-btn:hover:not(:disabled) {
+      background: #d32f2f;
+      transform: translateY(-2px);
+    }
+    
+    .next-btn {
+      background: #4caf50;
+      color: white;
+    }
+    
+    .next-btn:hover:not(:disabled) {
+      background: #388e3c;
+      transform: translateY(-2px);
+    }
+    
+    .replay-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+    
+    .ultimate-board {
+      display: grid;
+      grid-template-columns: repeat(3, auto);
+      grid-template-rows: repeat(3, auto);
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    
+    .mini-board {
+      display: grid;
+      grid-template-columns: repeat(3, 60px);
+      grid-template-rows: repeat(3, 60px);
+      gap: 3px;
+      border: 2px solid #333;
+      padding: 3px;
+      background: #ddd;
+      position: relative;
+    }
+    
+    .mini-board.completed {
+      opacity: 0.3;
+    }
+    
+    .mini-board-winner {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 6rem;
+      font-weight: bold;
+      color: #333;
+      background: rgba(255, 255, 255, 0.9);
+      border-radius: 8px;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+      z-index: 10;
+      pointer-events: none;
+    }
+    
+    .mini-board-winner.x-winner {
+      color: #2196f3;
+    }
+    
+    .mini-board-winner.o-winner {
+      color: #f44336;
+    }
+    
+    .cell {
+      background-color: white;
+      border: 1px solid #444;
+      font-size: 1.5rem;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      user-select: none;
+      width: 60px;
+      height: 60px;
+      font-weight: bold;
+    }
+    
+    .cell.x {
+      color: #2196f3;
+    }
+    
+    .cell.o {
+      color: #f44336;
+    }
+    
+    .loading {
+      text-align: center;
+      font-size: 1.2rem;
+      color: #666;
+      margin: 20px 0;
+    }
+    
+    .error {
+      text-align: center;
+      color: #f44336;
+      background: #ffebee;
+      padding: 15px;
+      border-radius: 8px;
+      margin: 20px 0;
+      border: 1px solid #ffcdd2;
+    }
+  </style>
+</head>
+<body>
+  <div class="replay-header">
+    <div class="replay-title">Ultimate Tic-Tac-Toe Replay</div>
+  </div>
+
+  <div class="replay-controls">
+    <button class="replay-btn prev-btn" id="prev-btn">
+      ← Previous Move
+    </button>
+    <button class="replay-btn next-btn" id="next-btn">
+      Next Move →
+    </button>
+  </div>
+
+  <div class="ultimate-board" id="board"></div>
+  
+  <!-- Hidden CSRF token field -->
+  <div style="display: none;">
+    {{ index . "gorilla.csrf.Token" | html }}
+  </div>
+  
+  <div class="loading" id="loading" style="display: none;">Loading...</div>
+  <div class="error" id="error" style="display: none;"></div>
+  
+  <script>
+    const board = document.getElementById('board');
+    const prevBtn = document.getElementById('prev-btn');
+    const nextBtn = document.getElementById('next-btn');
+    const loadingEl = document.getElementById('loading');
+    const errorEl = document.getElementById('error');
+    
+    let isLoading = false;
+    
+    // Get CSRF token from the hidden input field
+    function getCSRFToken() {
+      const csrfInput = document.querySelector('input[name="gorilla.csrf.Token"]');
+      return csrfInput ? csrfInput.value : '';
+    }
+    
+    // Show/hide loading state
+    function setLoading(loading) {
+      isLoading = loading;
+      loadingEl.style.display = loading ? 'block' : 'none';
+      prevBtn.disabled = loading;
+      nextBtn.disabled = loading;
+    }
+    
+    // Show error message
+    function showError(message) {
+      errorEl.textContent = message;
+      errorEl.style.display = 'block';
+      setTimeout(() => {
+        errorEl.style.display = 'none';
+      }, 5000);
+    }
+    
+    // Update mini-board winners based on CompleteBoards array
+    function updateMiniboardWinners(completeBoards) {
+      for (let i = 0; i < 9; i++) {
+        const miniBoard = document.getElementById(`mini-board-${i}`);
+        const existingWinner = miniBoard.querySelector('.mini-board-winner');
+        
+        // Remove existing winner overlay if it exists
+        if (existingWinner) {
+          existingWinner.remove();
+        }
+        
+        // Check if this mini-board is completed
+        if (completeBoards && i < completeBoards.length) {
+          const winner = String.fromCharCode(completeBoards[i]);
+          
+          if (winner === 'x' || winner === 'o') {
+            // Add completed class to dim the mini-board
+            miniBoard.classList.add('completed');
+            
+            // Create winner overlay
+            const winnerOverlay = document.createElement('div');
+            winnerOverlay.className = `mini-board-winner ${winner}-winner`;
+            winnerOverlay.textContent = winner.toUpperCase();
+            miniBoard.appendChild(winnerOverlay);
+          } else {
+            // Remove completed class if winner is not set
+            miniBoard.classList.remove('completed');
+          }
+        } else {
+          // Remove completed class if no completeBoards data
+          miniBoard.classList.remove('completed');
+        }
+      }
+    }
+    
+    // Render the 81 cells into 9 mini-boards
+    function renderBoard(state) {
+      if (state.length !== 81) return;
+      for (let i = 0; i < 81; i++) {
+        const cell = board.querySelector(`#cell-${i}`);
+        const value = state[i] || '';
+        cell.textContent = value.toUpperCase();
+        
+        // Remove existing classes
+        cell.classList.remove('x', 'o');
+        
+        // Add appropriate class for styling
+        if (value === 'x') {
+          cell.classList.add('x');
+        } else if (value === 'o') {
+          cell.classList.add('o');
+        }
+      }
+    }
+    
+    // Send replay navigation request
+    async function sendReplayRequest(move) {
+      if (isLoading) return;
+      
+      console.log('Sending replay request with move:', move);
+      setLoading(true);
+      
+      try {
+        const csrfToken = getCSRFToken();
+        console.log('CSRF token:', csrfToken ? 'Found' : 'Not found');
+        
+        const headers = {
+          'Content-Type': 'application/json',
+        };
+        
+        // Add CSRF token to headers if available
+        if (csrfToken) {
+          headers['X-CSRF-Token'] = csrfToken;
+        }
+        
+        console.log('Making fetch request to /replay');
+        const response = await fetch('/replay', {
+          method: 'POST',
+          headers: headers,
+          body: JSON.stringify({ msg: move })
+        });
+        
+        console.log('Response received:', response.status, response.statusText);
+        
+        if (response.status === 403) {
+          throw new Error('Access forbidden (403) - Check server CORS/authentication settings');
+        }
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.log('Error response body:', errorText);
+          throw new Error(`HTTP error! status: ${response.status} - ${errorText || response.statusText}`);
+        }
+        
+        const data = await response.json();
+        console.log('Response data:', data);
+        
+        if (data.type && Array.isArray(data.board)) {
+          renderBoard(data.board);
+          
+          // Update mini-board winners if CompleteBoards data is available
+          if (data.complete_boards) {
+            updateMiniboardWinners(data.complete_boards);
+          }
+        } else {
+          throw new Error('Invalid response format');
+        }
+        
+      } catch (error) {
+        console.error('Replay request failed:', error);
+        showError(`Failed to load replay: ${error.message}`);
+      } finally {
+        setLoading(false);
+      }
+    }
+    
+    // Handle next move button click
+    function nextMove() {
+      console.log('Next move clicked, sending request with msg: 62');
+      sendReplayRequest(62);
+    }
+    
+    // Handle previous move button click
+    function previousMove() {
+      console.log('Previous move clicked, sending request with msg: 60');
+      sendReplayRequest(60);
+    }
+    
+    // Build the 9 mini-boards with 81 cells
+    function initializeBoard() {
+      for (let mb = 0; mb < 9; mb++) {
+        const miniBoard = document.createElement('div');
+        miniBoard.className = 'mini-board';
+        miniBoard.id = `mini-board-${mb}`;
+        for (let cell = 0; cell < 9; cell++) {
+          const globalIndex = mb * 9 + cell;
+          const div = document.createElement('div');
+          div.className = 'cell';
+          div.id = `cell-${globalIndex}`;
+          miniBoard.appendChild(div);
+        }
+        board.appendChild(miniBoard);
+      }
+    }
+    
+    // Initialize the board when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+      initializeBoard();
+      
+      // Add event listeners to buttons
+      document.getElementById('prev-btn').addEventListener('click', previousMove);
+      document.getElementById('next-btn').addEventListener('click', nextMove);
+      
+      // Don't automatically load initial state - wait for user interaction
+      // The board will be empty until the user clicks a button
+    });
+  </script>
+</body>
+</html>

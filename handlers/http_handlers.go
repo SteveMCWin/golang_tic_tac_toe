@@ -141,7 +141,7 @@ func SetUpRouter(db *models.DataBase, lb *models.LeaderBoard, hub *game.Hub) htt
 	router.GET("/profile/:user_id", MiddlewareNoCache(), HandleGetProfile(db))
 	router.GET("/profile/:user_id/games_played", HandleGetUserGames(db))
 	router.GET("/replay/:record_id", HandleGetGameReplay(db))
-	router.POST("/replay/", HandlePostGameReplay())
+	router.POST("/replay", HandlePostGameReplay())
 	router.GET("/logout/:provider/", LogoutHandler())
 	router.GET("/auth/:provider", SignInWithProvider())
 	router.GET("/auth/:provider/callback/", CallbackHandler(db))
@@ -353,7 +353,7 @@ func HandleGetGameReplay(db *models.DataBase) func(c *gin.Context) {
 
 		game.InitGameReplay(requesting_user_id, rec)
 
-		c.HTML(http.StatusOK, "replay.html", gin.H{/*  "user_id" : requesting_user_id, "recording" : rec  */})
+		c.HTML(http.StatusOK, "replay.html", gin.H{ csrf.TemplateTag: csrf.TemplateField(c.Request) })
 	}
 }
 
@@ -398,7 +398,7 @@ func HandlePostGameReplay() func(c *gin.Context) {
 			return
 		}
 
-		c.JSON(http.StatusOK, gin.H{ "new_board_state": new_board_state})
+		c.JSON(http.StatusOK, new_board_state)
 	}
 }
 

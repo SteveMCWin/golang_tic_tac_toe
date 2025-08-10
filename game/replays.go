@@ -2,6 +2,9 @@ package game
 
 import (
 	"encoding/json"
+	"errors"
+	"log"
+	"strings"
 
 	"tic_tac_toe.fun/board"
 	"tic_tac_toe.fun/models"
@@ -14,7 +17,7 @@ type GameReplay struct {
 
 var cachedReplays map[int]GameReplay
 
-func InitGameReplay(user_id int, rec *models.GameRecord) {
+func InitGameReplay(user_id int, rec *models.GameRecord) error {
 	if cachedReplays == nil {
 		cachedReplays = make(map[int]GameReplay)
 	}
@@ -22,7 +25,42 @@ func InitGameReplay(user_id int, rec *models.GameRecord) {
 	new_board := board.BigBoard{}
 	new_board.Initialize()
 
+	moves, err := RecordHistoryToMoves(rec.History)
+	if err != nil {
+		log.Println("Error while converting record history to moves")
+		return err
+	}
+
+	for i := len(moves)-1; i >= 0; i-- { // push moves in reverse order since the stack also reverses them
+		new_board.RedoStack.Push(moves[i])
+	}
+
 	cachedReplays[user_id] = GameReplay{ b: &new_board, gameRecord: rec }
+
+	return nil
+}
+
+func RecordHistoryToMoves(history string) ([]board.Move, error) {
+	moves_str := strings.Split(history[:len(history)-1], ";")
+
+	moves := make([]board.Move, len(moves_str))
+
+	for i, move_str := range moves_str {
+		if len(move_str) != 3 {
+			log.Println("len(move_str):", len(move_str))
+			log.Println("move_str:", move_str)
+			return nil, errors.New("ERROR: expected len of move_str is 3")
+		}
+
+		moves[i] = board.Move {
+			Player: move_str[0],
+			BigPos: move_str[1] - '0',
+			SmallPos: move_str[2] - '0',
+		}
+	}
+
+	return moves, nil
+
 }
 
 func ReplayNextMove(user_id int) ([]byte, error) {
