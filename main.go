@@ -15,7 +15,7 @@ func main() {
 
 	MostEloLb := &models.LeaderBoard{}
 	MostEloLb.InitLeaderBoard()
-	go MostEloLb.RunLeaderBoard(db)
+	MostEloLb.RunLeaderBoard(db)
 
     hub := game.MakeHub()
     go hub.HandleGames(db)

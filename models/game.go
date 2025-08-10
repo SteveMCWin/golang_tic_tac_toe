@@ -7,15 +7,17 @@ import (
 	"tic_tac_toe.fun/defs"
 )
 
+// GameRecord holds all data that is needed to recreate a game between two players.
 type GameRecord struct {
 	Id int
 	U1 *User
 	U2 *User
 	DateRecorded time.Time
-	History string
-	Winner byte
+	History string // Represents the exact move sequence of the game
+	Winner byte // The winner is represented with 'x', 'o', or '_' if the game resulted in a tie
 }
 
+// StoreGameRecord writes the GameRecord data into a database if at least one of the players played logged in.
 func (Db *DataBase) StoreGameRecord(record GameRecord) error {
 	// Don't store the game if neither user is logged in
 	if record.U1.Id == defs.NO_USER_ID && record.U2.Id == defs.NO_USER_ID {
@@ -35,6 +37,8 @@ func (Db *DataBase) StoreGameRecord(record GameRecord) error {
 	return err
 }
 
+// ReadGameRecord returns a populated GameRecord with data based on the record id that is passed in,
+// and also loads the user data of both players.
 func (Db *DataBase) ReadGameRecord(rec_id int) (*GameRecord, error) {
 	rec := &GameRecord{
 		Id: rec_id,
@@ -72,13 +76,15 @@ func (Db *DataBase) ReadGameRecord(rec_id int) (*GameRecord, error) {
 	return rec, nil
 }
 
+// ReadGameRecordsForUser returns a slice of all records in which one of the players is the player whose id is passed to the function.
+// Note that if the user_id passed in is equal to the defs.NO_USER_ID, there will be no error, but the slice empty.
 func (Db *DataBase) ReadGameRecordsForUser(user_id int) ([]*GameRecord, error) {
 
-	if user_id == defs.NO_USER_ID {
-		return nil, nil
-	}
-
 	res := make([]*GameRecord, 0)
+
+	if user_id == defs.NO_USER_ID {
+		return res, nil
+	}
 
 	statement := "select id, p1, p2, date_recorded, moves, winner from game_records where ? in (p1, p2)"
 	rows, err := Db.Data.Query(statement, user_id)
@@ -124,9 +130,15 @@ func (Db *DataBase) ReadGameRecordsForUser(user_id int) ([]*GameRecord, error) {
 
 }
 
+// GetGameRecordWinner is a convenience function that returns the id of a player who won the game based on the Winner field.
+// Note that user 1 is always x and user 2 is always 0, if the game was tied, -1 is returned.
 func GetGameRecordWinner(record *GameRecord) int {
-	if record.Winner == 'x' {
+	switch record.Winner {
+	case 'x':
 		return record.U1.Id
+	case 'o':
+		return record.U2.Id
+	default:
+		return -1
 	}
-	return record.U2.Id
 }

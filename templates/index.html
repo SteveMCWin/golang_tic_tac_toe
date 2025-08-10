@@ -4,104 +4,297 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>2D Tic-Tac-Toe</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-image: 
+        radial-gradient(circle at 25% 25%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 75% 75%, rgba(255, 255, 255, 0.1) 0%, transparent 50%);
+      pointer-events: none;
+    }
+
+    .container {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      padding: 50px 40px;
+      border-radius: 20px;
+      box-shadow: 
+        0 20px 60px rgba(0, 0, 0, 0.2),
+        0 8px 25px rgba(0, 0, 0, 0.1);
+      text-align: center;
+      max-width: 400px;
+      width: 90%;
+      position: relative;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+
+    .container::before {
+      content: '';
+      position: absolute;
+      top: -2px;
+      left: -2px;
+      right: -2px;
+      bottom: -2px;
+      background: linear-gradient(45deg, #667eea, #764ba2, #667eea);
+      border-radius: 20px;
+      z-index: -1;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .container:hover::before {
+      opacity: 0.3;
+    }
+
+    h1 {
+      color: #2d3748;
+      margin-bottom: 30px;
+      font-size: 2.5rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      position: relative;
+    }
+
+    h1::after {
+      content: '';
+      position: absolute;
+      bottom: -10px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 60px;
+      height: 3px;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      border-radius: 2px;
+    }
+
+    .button-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      margin-top: 20px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px 24px;
+      border-radius: 12px;
+      text-decoration: none;
+      font-size: 16px;
+      font-weight: 600;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+      border: none;
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .btn::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      transition: width 0.4s ease, height 0.4s ease;
+    }
+
+    .btn:hover::before {
+      width: 300px;
+      height: 300px;
+    }
+
+    .btn span {
+      position: relative;
+      z-index: 1;
+    }
+
+    .btn-play {
+      background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+      color: white;
+      box-shadow: 0 8px 25px rgba(238, 90, 82, 0.4);
+      font-size: 18px;
+      padding: 18px 32px;
+    }
+
+    .btn-play:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 35px rgba(238, 90, 82, 0.6);
+    }
+
+    .btn-google {
+      background: linear-gradient(135deg, #4285f4, #3367d6);
+      color: white;
+      box-shadow: 0 6px 20px rgba(66, 133, 244, 0.3);
+    }
+
+    .btn-google:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(66, 133, 244, 0.5);
+    }
+
+    .btn-github {
+      background: linear-gradient(135deg, #333, #24292e);
+      color: white;
+      box-shadow: 0 6px 20px rgba(36, 41, 46, 0.3);
+    }
+
+    .btn-github:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(36, 41, 46, 0.5);
+    }
+
+    .btn-secondary {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      box-shadow: 0 6px 20px rgba(102, 126, 234, 0.3);
+    }
+
+    .btn-secondary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(102, 126, 234, 0.5);
+    }
+
+    .btn-outline {
+      background: transparent;
+      color: #667eea;
+      border: 2px solid #667eea;
+      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);
+    }
+
+    .btn-outline:hover {
+      background: #667eea;
+      color: white;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+    }
+
+    .divider {
+      margin: 20px 0;
+      position: relative;
+    }
+
+    .divider::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, #e2e8f0, transparent);
+    }
+
+    .fade-in {
+      animation: fadeInUp 0.6s ease-out;
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .btn:nth-child(1) { animation-delay: 0.1s; }
+    .btn:nth-child(2) { animation-delay: 0.2s; }
+    .btn:nth-child(3) { animation-delay: 0.3s; }
+    .btn:nth-child(4) { animation-delay: 0.4s; }
+    .btn:nth-child(5) { animation-delay: 0.5s; }
+
+    @media (max-width: 480px) {
+      .container {
+        padding: 30px 20px;
+        margin: 20px;
+      }
+
+      h1 {
+        font-size: 2rem;
+      }
+
+      .btn {
+        padding: 14px 20px;
+        font-size: 15px;
+      }
+
+      .btn-play {
+        padding: 16px 28px;
+        font-size: 17px;
+      }
+    }
+  </style>
 </head>
-<body 
-        style="
-         font-family: Arial, sans-serif; 
-         background-color: #f0f0f0; 
-         display: flex; 
-         justify-content: center; 
-         align-items: center; 
-         height: 100vh;"
->
-    <div 
-        style="
-        background-color: #fff; 
-        padding: 40px; 
-        border-radius: 8px; 
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); 
-        text-align: center;"
-    >
-        <h1 style="color: #333; margin-bottom: 20px;">Welcome</h1>
+<body>
+  <div class="container fade-in">
+    <h1>Welcome</h1>
+    
+    <div class="button-grid">
+      <a href="/hub" class="btn btn-play fade-in">
+        <span>🎮 Start Playing</span>
+      </a>
 
-        <a href="/hub"  style="
-        display: inline-flex; 
-        align-items: center; 
-        justify-content: center; 
-        background-color: #4285f4; 
-        color: #fff; 
-        text-decoration: none; 
-        padding: 12px 20px; 
-        border-radius: 4px; 
-        transition: background-color 0.3s ease;">
-        <span style="font-size: 16px; font-weight: bold;">Play?</span>
-        </a>
+      {{if eq .user_id 0}}
+      <div class="divider"></div>
+      
+      <a href="/auth/google" class="btn btn-google fade-in">
+        <span>Sign in with Google</span>
+      </a>
 
-        <a href="/auth/google"  style="
-        display: inline-flex; 
-        align-items: center; 
-        justify-content: center; 
-        background-color: #4285f4; 
-        color: #fff; 
-        text-decoration: none; 
-        padding: 12px 20px; 
-        border-radius: 4px; 
-        transition: background-color 0.3s ease;">
-        <span style="font-size: 16px; font-weight: bold;">Sign in with Google</span>
-        </a>
+      <a href="/auth/github" class="btn btn-github fade-in">
+        <span>Sign in with GitHub</span>
+      </a>
+      {{end}}
 
-        <a href="/auth/github"  style="
-        display: inline-flex; 
-        align-items: center; 
-        justify-content: center; 
-        background-color: #4285f4; 
-        color: #fff; 
-        text-decoration: none; 
-        padding: 12px 20px; 
-        border-radius: 4px; 
-        transition: background-color 0.3s ease;">
-        <span style="font-size: 16px; font-weight: bold;">Sign in with Github</span>
-        </a>
+      {{if ne .user_id 0}}
+      <a href="/profile/{{.user_id}}" class="btn btn-secondary fade-in">
+        <span>👤 View Profile</span>
+      </a>
+      {{end}}
 
-            <a href="/profile/{{ .user_id }}"  style="
-        display: inline-flex; 
-        align-items: center; 
-        justify-content: center; 
-        background-color: #4285f4; 
-        color: #fff; 
-        text-decoration: none; 
-        padding: 12px 20px; 
-        border-radius: 4px; 
-        transition: background-color 0.3s ease;">
-        <span style="font-size: 16px; font-weight: bold;">View profile</span>
-        </a>
+      <div class="divider"></div>
 
-        <a href="/leaderboard"  style="
-        display: inline-flex; 
-        align-items: center; 
-        justify-content: center; 
-        background-color: #4285f4; 
-        color: #fff; 
-        text-decoration: none; 
-        padding: 12px 20px; 
-        border-radius: 4px; 
-        transition: background-color 0.3s ease;">
-        <span style="font-size: 16px; font-weight: bold;">View leaderboard</span>
-        </a>
+      <a href="/leaderboard" class="btn btn-secondary fade-in">
+        <span>🏆 Leaderboard</span>
+      </a>
 
-        <a href="/about"  style="
-        display: inline-flex; 
-        align-items: center; 
-        justify-content: center; 
-        background-color: #4285f4; 
-        color: #fff; 
-        text-decoration: none; 
-        padding: 12px 20px; 
-        border-radius: 4px; 
-        transition: background-color 0.3s ease;">
-        <span style="font-size: 16px; font-weight: bold;">About</span>
-        </a>
- 
+      <a href="/about" class="btn btn-outline fade-in">
+        <span>ℹ️ About</span>
+      </a>
+    </div>
   </div>
 </body>
 </html>
