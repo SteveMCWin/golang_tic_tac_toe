@@ -1,3 +1,5 @@
+// Package models holds the golang representation of data models stored in the sqlite database
+// and provides functions that operate on that data.
 package models
 
 import (
@@ -8,11 +10,13 @@ import (
 	"github.com/mattn/go-sqlite3"
 )
 
+// DataBase is used to make changes to the actual database.db file with sqlite querries.
 type DataBase struct {
-	Data    *sql.DB
+	Data    *sql.DB // the connection to the database through which all operations on the said database are preformed
 	is_open bool
 }
 
+// Close handles the closing of a connection to the databse
 func (dataBase *DataBase) Close() {
 	dataBase.Data.Close()
 	dataBase.is_open = false
@@ -20,6 +24,8 @@ func (dataBase *DataBase) Close() {
 
 // initializes the database
 // if any parameters are passed, uses the test_database
+
+// InitDatabase opens a connection to the database and loads the needed extensions.
 func (Db *DataBase) InitDatabase(is_test ...bool) error {
 	if Db.is_open {
 		return errors.New("ERROR: Database already open")

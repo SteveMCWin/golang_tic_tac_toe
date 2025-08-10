@@ -188,11 +188,11 @@
                         <div class="stat-label">Games Played</div>
                     </a>
                     <div class="stat-card">
-                        <div class="stat-value">{{.GamesWon}}</div>
+                        <div class="stat-value">{{.NumOfGamesWon}}</div>
                         <div class="stat-label">Games Won</div>
                         {{if gt .NumOfGamesPlayed 0}}
                             <div class="win-rate">
-                                Win Rate: {{printf "%.1f" (mul (div (float64 .GamesWon) (float64 .NumOfGamesPlayed)) 100.0)}}%
+                                Win Rate: {{printf "%.1f" (mul (div (float64 .NumOfGamesWon) (float64 .NumOfGamesPlayed)) 100.0)}}%
                             </div>
                         {{end}}
                     </div>

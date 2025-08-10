@@ -1,3 +1,4 @@
+// Package handlers is used for setting up the router and handling http requests.
 package handlers
 
 import (
@@ -23,19 +24,10 @@ import (
 	"github.com/alexedwards/scs/v2"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/csrf"
-	"github.com/gorilla/websocket"
 )
 
-var upgrader = websocket.Upgrader{
-	ReadBufferSize:  1024,
-	WriteBufferSize: 1024,
-}
+var sessionManager *scs.SessionManager
 
-var SessionManager *scs.SessionManager
-
-var Domain string
-
-// used by gin to load template funcs
 func templateFuncs() template.FuncMap {
 	return template.FuncMap{
 		"add": func(a, b int) int {
@@ -60,6 +52,20 @@ func templateFuncs() template.FuncMap {
 	}
 }
 
+// SetUpRouter does what it says.
+// It expects the following .env variables:
+// - DOMAIN
+// - CSRF_KEY
+// - SESSION_KEY
+// - GOOGLE_CLIENT_ID
+// - GOOGLE_CLIENT_SECRET
+// - GOOGLE_CALLBACK_URL
+// - GITHUB_CLIENT_ID
+// - GITHUB_CLIENT_SECRET
+// - GITHUB_CALLBACK_URL
+// - DOMAIN
+// - DOMAIN
+// It sets up the goth package for OAuth 2.0, and also wraps the default gin handler with csrf protection and session management.
 func SetUpRouter(db *models.DataBase, lb *models.LeaderBoard, hub *game.Hub) http.Handler {
 
 	err := godotenv.Load() // loads data like client secrets from the .env file in the project root dir
@@ -74,7 +80,7 @@ func SetUpRouter(db *models.DataBase, lb *models.LeaderBoard, hub *game.Hub) htt
 		log.Fatal("Missing domain or csrf_key")
 	}
 
-	Domain = domain
+	// Domain = domain
 
 	sessionKey := os.Getenv("SESSION_KEY")
 
@@ -111,17 +117,17 @@ func SetUpRouter(db *models.DataBase, lb *models.LeaderBoard, hub *game.Hub) htt
 		github.New(githubClientID, githubClientSecret, githubCallbackURL, "user"),
 	)
 
-	SessionManager = scs.New()
-	SessionManager.Lifetime = time.Hour * 24 * 30
-	SessionManager.Store = sqlite3store.New(db.Data)
-	SessionManager.Cookie.Persist = true
-	SessionManager.Cookie.Secure = true
+	sessionManager = scs.New()
+	sessionManager.Lifetime = time.Hour * 24 * 30
+	sessionManager.Store = sqlite3store.New(db.Data)
+	sessionManager.Cookie.Persist = true
+	sessionManager.Cookie.Secure = true
 
 	if gin.Mode() == gin.TestMode {
 		log.Println("WARNING: TEST MODE")
-		SessionManager.Cookie.Secure = false
-		SessionManager.Cookie.SameSite = http.SameSiteDefaultMode
-		SessionManager.Cookie.Name = "test_session"
+		sessionManager.Cookie.Secure = false
+		sessionManager.Cookie.SameSite = http.SameSiteDefaultMode
+		sessionManager.Cookie.Name = "test_session"
 	}
 
 	router := gin.Default()
@@ -134,6 +140,7 @@ func SetUpRouter(db *models.DataBase, lb *models.LeaderBoard, hub *game.Hub) htt
 	router.GET("/play", ServePlay())
 	router.GET("/profile/:user_id", MiddlewareNoCache(), HandleGetProfile(db))
 	router.GET("/profile/:user_id/games_played", HandleGetUserGames(db))
+	router.GET("/replay/:game_id", HandleGetGameReplay(db))
 	router.GET("/logout/:provider/", LogoutHandler())
 	router.GET("/auth/:provider", SignInWithProvider())
 	router.GET("/auth/:provider/callback/", CallbackHandler(db))
@@ -142,7 +149,7 @@ func SetUpRouter(db *models.DataBase, lb *models.LeaderBoard, hub *game.Hub) htt
 	router.SetFuncMap(templateFuncs())
 	router.LoadHTMLGlob("templates/*") // loads all templates from the templates directory
 
-	handler := SessionManager.LoadAndSave(router)
+	handler := sessionManager.LoadAndSave(router)
 
 	if gin.Mode() != gin.TestMode {
 		handler = csrf.Protect(
@@ -154,13 +161,17 @@ func SetUpRouter(db *models.DataBase, lb *models.LeaderBoard, hub *game.Hub) htt
 	return handler
 }
 
+// GetUserId uses the scs session manager to return the user's id from their browser.
+// If there is no user id stored (meaning the user is not logged in), the NO_USER_ID value from the defs package is returned.
 func GetUserId(c *gin.Context) int {
-	if SessionManager.Exists(c.Request.Context(), "user_id") == false {
+	if sessionManager.Exists(c.Request.Context(), "user_id") == false {
 		return defs.NO_USER_ID
 	}
-	return SessionManager.GetInt(c.Request.Context(), "user_id")
+	return sessionManager.GetInt(c.Request.Context(), "user_id")
 }
 
+// HandleGetHome displays the landing page of the website.
+// Calls GetUserId to determine if it should display the login buttons or the profile button.
 func HandleGetHome() func(c *gin.Context) {
 	return func(c *gin.Context) {
 		user_id := GetUserId(c)
@@ -168,18 +179,21 @@ func HandleGetHome() func(c *gin.Context) {
 	}
 }
 
+// HandleGetAbout page just redirects the user to the github readme of the project.
 func HandleGetAbout() func(c *gin.Context) {
 	return func(c *gin.Context) {
 		c.Redirect(http.StatusPermanentRedirect, "https://github.com/SteveMCWin/golang_tic_tac_toe/blob/master/readme.md")
 	}
 }
 
+// HandleGetErrorPage is used for unexpected errors.
 func HandleGetErrorPage() func(c *gin.Context) {
 	return func(c *gin.Context) {
 		c.String(http.StatusOK, "Error Encountered :<") 
 	}
 }
 
+// HandleGetLeaderboard displays the top players(by elo).
 func HandleGetLeaderboard(lb *models.LeaderBoard) func(c *gin.Context) {
 	return func(c *gin.Context) {
 		c.HTML(http.StatusOK, "leaderboard.html", gin.H{
@@ -188,6 +202,7 @@ func HandleGetLeaderboard(lb *models.LeaderBoard) func(c *gin.Context) {
 	}
 }
 
+// SignInWithProvider begins the gothic authentication process, after which the user will be redirected to the CallbackHandler.
 func SignInWithProvider() func(c *gin.Context) {
 	return func(c *gin.Context) {
 		provider := c.Param("provider") // we need to pass the provider into the gin context url manually for some reason, I forgor why :skull::skull:
@@ -205,6 +220,9 @@ func SignInWithProvider() func(c *gin.Context) {
 	}
 }
 
+// CallbackHandler finalizes the OAuth 2.0 process started by the gothic package.
+// If the user authentication is completed successfully and the user's email is retrieved, the StoreUser() function is called,
+// the session manager stores the user_id in the browser and the user is taken to their profile page.
 func CallbackHandler(db *models.DataBase) func(c *gin.Context) { // this gets called once the user logs in with a provider
 	return func(c *gin.Context) {
 		provider := c.Param("provider") // need to pass this again to gin because it's used in the completeion of the user auth
@@ -239,18 +257,18 @@ func CallbackHandler(db *models.DataBase) func(c *gin.Context) { // this gets ca
 			return
 		}
 
-		SessionManager.Put(c.Request.Context(), "user_id", usr.Id)
+		sessionManager.Put(c.Request.Context(), "user_id", usr.Id)
 
 		c.Redirect(http.StatusTemporaryRedirect, "/profile/"+strconv.Itoa(usr.Id))
 	}
 }
 
+// HandleGetProfile displays the profile page of the user whose id is in the url.
 func HandleGetProfile(db *models.DataBase) func(c *gin.Context) { // displays users profile page
 	return func(c *gin.Context) {
 
 		requesting_user_id := GetUserId(c)
 		if requesting_user_id == defs.NO_USER_ID {
-			// c.Redirect(http.StatusPermanentRedirect, "/user/login")
 			c.Redirect(http.StatusPermanentRedirect, "/") // TODO: add a login page to redirect to
 			return
 		}
@@ -276,6 +294,8 @@ func HandleGetProfile(db *models.DataBase) func(c *gin.Context) { // displays us
 	}
 }
 
+// HandleGetUserGames reads the GameRecords which include the user (whose id was passed in the url)
+// as one of the players and displays them as an html page.
 func HandleGetUserGames(db *models.DataBase) func(c *gin.Context) {
 	return func(c *gin.Context) {
 		user_id_param := c.Param("user_id")
@@ -298,20 +318,46 @@ func HandleGetUserGames(db *models.DataBase) func(c *gin.Context) {
 		for i, rec := range records {
 			winner_ids[i] = models.GetGameRecordWinner(rec)
 		}
-
+		// WARNING: Update the html to handle -1 in winner_ids
 		c.HTML(http.StatusOK, "view_games_history.html", gin.H{ "records": records, "winner_ids": winner_ids, "user_id": user_id })
 	}
 }
 
+// HandleGetGameReplay 
+// TODO
+func HandleGetGameReplay(db *models.DataBase) func(c *gin.Context) {
+	return func(c *gin.Context) {
+		game_id_param := c.Param("game_id")
+		game_id, err := strconv.Atoi(game_id_param)
+		if err != nil {
+			log.Println("Error getting the game id from url", err)
+			c.Redirect(http.StatusTemporaryRedirect, "/error-page")
+			return
+		}
+
+		rec, err := db.ReadGameRecord(game_id)
+		if err != nil {
+			log.Println("Error reading game record:", err)
+			c.Redirect(http.StatusTemporaryRedirect, "/error-page")
+			return
+		}
+
+		_ = rec
+
+	}
+}
+
+// LogoutHandler deletes the session data and calls the gotich logout function.
 func LogoutHandler() func(c *gin.Context) { // logging out erases the cookies that are used for remembering the user and telling
 	return func(c *gin.Context) {
 		// NOTE: not logging out with goth since it makes scs panic
 		gothic.Logout(c.Writer, c.Request)
-		SessionManager.Destroy(c.Request.Context())
+		sessionManager.Destroy(c.Request.Context())
 		c.Redirect(http.StatusTemporaryRedirect, "/")
 	}
 }
 
+// HandleWebsocketConnection connects the player to the socket by calling game.ConnectPlayerToSocketa.
 func HandleWebsocketConnection(hub *game.Hub, db *models.DataBase) func(c *gin.Context) {
 	return func(c *gin.Context) {
 		user_id := GetUserId(c)
@@ -332,6 +378,7 @@ func HandleWebsocketConnection(hub *game.Hub, db *models.DataBase) func(c *gin.C
 	}
 }
 
+// ServePlay displays the board the players will play on and initializes the websocket connection through the html it serves.
 func ServePlay() func(c *gin.Context) {
 	return func(c *gin.Context) {
 		game_mode := c.Query("game_mode")
@@ -345,6 +392,7 @@ func ServePlay() func(c *gin.Context) {
 	}
 }
 
+// ServeHub displays the pre-game hub where the user selects which game mode they want to play.
 func ServeHub() func(c *gin.Context) {
 	return func(c *gin.Context) {
 		c.HTML(http.StatusOK, "hub.html", gin.H{})
@@ -355,6 +403,7 @@ func ServeHub() func(c *gin.Context) {
 // MIDDLEWARE
 
 
+// MiddlewareNoCache is used to wipe the cached pages. Useful when you don't want to allow a user to log out and then go back to their profile with the back arrow.
 func MiddlewareNoCache() func(c *gin.Context) {
 	return func(c *gin.Context) {
 		c.Writer.Header().Set("Cache-Control", "no-store")

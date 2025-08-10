@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"time"
 
+	"tic_tac_toe.fun/defs"
 	"tic_tac_toe.fun/models"
 
 	"github.com/gin-gonic/gin"
@@ -18,25 +19,12 @@ var upgrader = websocket.Upgrader{
 	WriteBufferSize: 1024,
 }
 
-const (
-	// Time allowed to write a message to the peer.
-	writeWait = 10 * time.Second
-
-	// Time allowed to read the next pong message from the peer.
-	pongWait = 60 * time.Second
-
-	// Send pings to peer with this period. Must be less than pongWait.
-	pingPeriod = (pongWait * 9) / 10
-
-	// Maximum message size allowed from peer.
-	maxMessageSize = 512
-)
-
 var (
 	newline = []byte{'\n'}
 	space   = []byte{' '}
 )
 
+// Player represents a user inside a game.
 type Player struct {
     u *models.User
     conn *websocket.Conn
@@ -46,8 +34,8 @@ type Player struct {
 	timer *PlayerTimer
 }
 
+// ConnectPlayerToSocket  upgrades the users connection to a websocket connection and puts them in a queue for a game.
 func ConnectPlayerToSocket(hub *Hub, usr *models.User, c *gin.Context) error {
-
 	connection, err := upgrader.Upgrade(c.Writer, c.Request, nil)   // set up websocket connection
 	if err != nil {
 		return err
@@ -62,20 +50,21 @@ func ConnectPlayerToSocket(hub *Hub, usr *models.User, c *gin.Context) error {
 		return err
 	}
 
-	hub.AddPlayer(new_player, game_mode)
+	hub.AddPlayer(new_player, GameMode(game_mode))
 
 	return nil
 }
 
-func (p *Player) ListenToSocket() { // listens to the response from the websocket (player)
+// ListenToSocket is a layer between the player and the server. Once a player makes a move, this function passes it to the backend to get handled.
+func (p *Player) ListenToSocket() { 
     defer func() {
         log.Printf("Player %s exited", p.u.UserName)
         p.exited <- true
         p.conn.Close()
     }()
-    p.conn.SetReadLimit(maxMessageSize)
-    p.conn.SetReadDeadline(time.Now().Add(pongWait))
-    p.conn.SetPongHandler(func(string) error { p.conn.SetReadDeadline(time.Now().Add(pongWait)); return nil })
+    p.conn.SetReadLimit(defs.MAX_WEBSOCKET_MESSAGE_SIZE)
+    p.conn.SetReadDeadline(time.Now().Add(defs.PONG_WAIT))
+    p.conn.SetPongHandler(func(string) error { p.conn.SetReadDeadline(time.Now().Add(defs.PONG_WAIT)); return nil })
 
     for {
         _, message, err := p.conn.ReadMessage()
@@ -90,8 +79,9 @@ func (p *Player) ListenToSocket() { // listens to the response from the websocke
     }
 }
 
+// ListenToServer is a layer between the server and the player. Once the server valides and realizes a board move, it lets the players know so their front end ui can get updated.
 func (p *Player) ListenToServer() { // listens to the response of the server, which is a new board state that is used to update the front-end ui
-    ticker := time.NewTicker(pingPeriod)
+    ticker := time.NewTicker(defs.PING_PERIOD)
 	defer func() {
         p.exited <- true
 		ticker.Stop()
@@ -100,7 +90,7 @@ func (p *Player) ListenToServer() { // listens to the response of the server, wh
     for {
         select {
         case new_state, ok := <- p.game_state:
-            p.conn.SetWriteDeadline(time.Now().Add(writeWait))
+            p.conn.SetWriteDeadline(time.Now().Add(defs.WRITE_WAIT))
             if !ok {
                 p.conn.WriteMessage(websocket.CloseMessage, []byte{})
                 return
@@ -116,7 +106,7 @@ func (p *Player) ListenToServer() { // listens to the response of the server, wh
                 return
             }
         case <-ticker.C:
-            p.conn.SetWriteDeadline(time.Now().Add(writeWait))
+            p.conn.SetWriteDeadline(time.Now().Add(defs.WRITE_WAIT))
             if err := p.conn.WriteMessage(websocket.PingMessage, nil); err != nil {
                 return
             }

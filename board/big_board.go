@@ -9,22 +9,24 @@ import (
 	"tic_tac_toe.fun/stack"
 )
 
+// BigBoard is a collection of 9 normal (here usually referred to as mini) boards.
 type BigBoard struct {
-	boardToPlayIn  byte      // the next mini-board to make a move in
-	Boards         [9]*Board // mini-boards
-	BoardState     [][]byte  // this is used to update the front end ui
-	Result         byte      // outcome-of the game, the value is either 0, 'x', 'o' or defs.BoardTie ('_')
-	boardsComplete byte      // keeps track of how many mini-boards are complete to handle an over-all tie
-	// History        string
-	History *stack.Stack[Move]
+	boardToPlayIn  byte               // the next mini-board to make a move in
+	Boards         [9]*Board          // Mini-Boards
+	BoardState     [][]byte           // A simpler representation of the big board with all plays made so far. Used to update the front end ui.
+	Result         byte               // Outcome of the game. The value at the end of the game is either 'x', 'o' or defs.BoardTie ('_')
+	boardsComplete byte               // keeps track of how many mini-boards are complete to handle an over-all tie
+	History        *stack.Stack[Move] // All of the plays made in order.
 }
 
+// Move represents a move on a big board by the player 'x' or the player 'o'.
 type Move struct {
-	BigPos   byte `json:"BigPos"`
-	SmallPos byte `json:"SmallPos"`
-	Player   byte `json:"Player"`
+	BigPos   byte `json:"BigPos"`   // Index of a mini board inside of BigBoard
+	SmallPos byte `json:"SmallPos"` // Index of a cell inside a mini board
+	Player   byte `json:"Player"`   // 'x' or 'o'
 }
 
+// Initialize sets up a new board.
 func (bb *BigBoard) Initialize() {
 	for i := 0; i < 9; i++ {
 		bb.Boards[i] = &Board{}
@@ -41,7 +43,9 @@ func (bb *BigBoard) Initialize() {
 	bb.History = stack.CreateStack[Move]()
 }
 
-// big pos represents the mini-board index, the pos represents the cell index
+// MakeMove updates the board corresponding to the Move passed in, if valid, and determines the next mini board to be played in.
+// Note that on every MakeMove call, the history of the board gets updated.
+// If the move made results in a mini board being won by a player, MakeMove checks if either player won the big board as well.
 func (bb *BigBoard) MakeMove(m Move) error {
 
 	if m.BigPos >= '0' && m.BigPos <= '9' { // the positions passed in are (probably) ascii characters representing digits
@@ -70,29 +74,22 @@ func (bb *BigBoard) MakeMove(m Move) error {
 	if bb.Boards[m.BigPos].Result != byte(0) { // if the board that was just played in gets completed, check for win and update counter
 		bb.boardsComplete += 1
 		bb.UpdateResult()
-		// if bb.Result != 0 {
-		// 	bb.History += strings.ToUpper(string([]byte{ bb.Result }))
-		// }
 	}
 
-	for i := 0; i < 9; i++ { // update the board state partially, since only one mini-board can change per move
+	for i := range 9 { // update the board state partially, since only one mini-board can change per move
 		bb.BoardState[m.BigPos][i] = bb.Boards[m.BigPos].Cells[i]
 	}
 
 	return nil
 }
 
+// UndoLastMove removes the last move made on the board and from the history.
 func (bb *BigBoard) UndoLastMove() error {
 
-	// if bb.History[len(bb.History)-1] != defs.BOARD_HISTORY_DELIMITER { // if the history is 'complete' and we want to remove the last move, chop off the winner character first
-	// 	bb.History = bb.History[:len(bb.History)-1]
-	// }
-	m, ok := bb.History.Top()
-	if !ok {
+	m := bb.History.Top()
+	if m == nil {
 		return nil
 	}
-
-	bb.History.Pop() // not checking if pop returns ok since it will always do so if it got to this point
 
 	if m.BigPos >= '0' && m.BigPos <= '9' { // the positions passed in are (probably) ascii characters representing digits
 		m.BigPos = m.BigPos - '0'
@@ -107,10 +104,13 @@ func (bb *BigBoard) UndoLastMove() error {
 		return err
 	}
 
+	// NOTE: Should change it so that the top of history is pushed to a redo stack or something
+	bb.History.Pop() // not checking if pop returns ok since it will always do so if it got to this point
+
 	bb.Boards[m.BigPos].UndoMove(*m)
 
-	prev_m, ok := bb.History.Top()
-	if !ok {
+	prev_m:= bb.History.Top()
+	if prev_m == nil {
 		bb.boardToPlayIn = defs.WILD_BOARD
 	} else {
 		bb.boardToPlayIn = prev_m.SmallPos
@@ -119,99 +119,7 @@ func (bb *BigBoard) UndoLastMove() error {
 	return nil
 }
 
-// func (bb *BigBoard) GenerateBoardResBitmap() (x_board []byte, o_board []byte) {
-// 	x_board = make([]byte, 9)
-// 	o_board = make([]byte, 9)
-//
-// 	for i := range 9 {
-// 		if bb.Boards[i].Result == 'x' {
-// 			x_board[i] = 'x'
-// 		} else if bb.Boards[i].Result == 'o' {
-// 			o_board[i] = 'o'
-// 		}
-// 	}
-//
-// 	return
-// }
-//
-// func getXBitboards() [][]byte {
-// 	return [][]byte{
-// 		// Row wins
-// 		{'x','x','x',
-// 		  0 , 0 , 0 ,
-// 		  0 , 0 , 0},
-//
-// 		{ 0 , 0 , 0 ,
-// 		 'x','x','x',
-// 		  0 , 0 , 0},
-//
-// 		{ 0 , 0 , 0 ,
-// 		  0 , 0 , 0 ,
-// 		 'x','x','x'},
-//
-// 		// Column wins
-// 		{'x', 0 , 0 ,
-// 		 'x', 0 , 0 ,
-// 		 'x', 0 , 0},
-//
-// 		{ 0 ,'x', 0 ,
-// 		  0 ,'x', 0 ,
-// 		  0 ,'x', 0},
-//
-// 		{ 0 , 0 ,'x',
-// 		  0 , 0 ,'x',
-// 		  0 , 0 ,'x'},
-//
-// 		// Diagonal wins
-// 		{'x', 0 , 0 ,
-// 		  0 ,'x', 0 ,
-// 		  0 , 0 ,'x'},
-//
-// 		{ 0 , 0 ,'x',
-// 		  0 ,'x', 0 ,
-// 		 'x', 0 , 0},
-// 	}
-// }
-//
-// func getOBitboards() [][]byte {
-// 	return [][]byte {
-// 		// Row wins
-// 		{'o','o','o',
-// 		  0 , 0 , 0 ,
-// 		  0 , 0 , 0},
-//
-// 		{ 0 , 0 , 0 ,
-// 		 'o','o','o',
-// 		  0 , 0 , 0},
-//
-// 		{ 0 , 0 , 0 ,
-// 		  0 , 0 , 0 ,
-// 		 'o','o','o'},
-//
-// 		// Column wins
-// 		{'o', 0 , 0 ,
-// 		 'o', 0 , 0 ,
-// 		 'o', 0 , 0},
-//
-// 		{ 0 ,'o', 0 ,
-// 		  0 ,'o', 0 ,
-// 		  0 ,'o', 0},
-//
-// 		{ 0 , 0 ,'o',
-// 		  0 , 0 ,'o',
-// 		  0 , 0 ,'o'},
-//
-// 		// Diagonal wins
-// 		{'o', 0 , 0 ,
-// 		  0 ,'o', 0 ,
-// 		  0 , 0 ,'o'},
-//
-// 		{ 0 , 0 ,'o',
-// 		  0 ,'o', 0 ,
-// 		 'o', 0 , 0},
-// 	}
-// }
-
+// UpdateResult checks if eigher player won the big board.
 func (bb *BigBoard) UpdateResult() { // checks if anyone won and if so, update the board's result
 
 	// check columns
