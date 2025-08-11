@@ -3,7 +3,8 @@ My first golang project.\
 2D Tic Tac Toe is more commonly known as [Ultimate Tic Tac Toe](https://en.wikipedia.org/wiki/Ultimate_tic-tac-toe), but when I first came across it I decided to call it 2D Tic Tac Toe ¯\\\_(ツ)_/¯
 
 This project was part of my 100 hour journey of learning golang and back-end web development.\
-It would be nice if I could deploy this web app, but the front end is written mostly by ChatGPT. Until that is sorted out, you can play the game someplace else, like [here.](https://michaelxing.com/UltimateTTT/v3/)
+The web app is deployed using [render.com](https://render.com/) and Docker.\
+You can be play it [here](https://tic-tac-toe-fun.onrender.com), tho there probably won't be any other players, so feel free to contact me if you want a 1v1.
 
 ## Features
 - User authentication (with Google and Github) using the [goth package](https://github.com/markbates/goth)
