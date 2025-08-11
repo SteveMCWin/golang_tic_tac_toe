@@ -139,6 +139,8 @@ func SetUpRouter(db *models.DataBase, lb *models.LeaderBoard, hub *game.Hub) htt
 	router.GET("/hub", ServeHub())
 	router.GET("/play", ServePlay())
 	router.GET("/profile/:user_id", MiddlewareNoCache(), HandleGetProfile(db))
+	router.GET("/profile/:user_id", MiddlewareNoCache(), HandleGetDeleteProfile())
+	router.DELETE("/profile/:user_id", HandleDeleteProfile(db))
 	router.GET("/profile/:user_id/games_played", HandleGetUserGames(db))
 	router.GET("/replay/:record_id", HandleGetGameReplay(db))
 	router.POST("/replay", HandlePostGameReplay())
@@ -454,6 +456,56 @@ func ServePlay() func(c *gin.Context) {
 func ServeHub() func(c *gin.Context) {
 	return func(c *gin.Context) {
 		c.HTML(http.StatusOK, "hub.html", gin.H{})
+	}
+}
+
+func HandleGetDeleteProfile() func(c *gin.Context) {
+	return func(c *gin.Context) {
+		user_id_param := c.Param("user_id")
+		user_id, err := strconv.Atoi(user_id_param)
+		if err != nil {
+			log.Println("Error converting user_id_param to int")
+			c.Redirect(http.StatusPermanentRedirect, "/error-page")
+			return
+		}
+
+		c.HTML(http.StatusOK, "delete_account.html", gin.H{ "user_id": user_id })
+	}
+}
+
+func HandleDeleteProfile(db *models.DataBase) func(c *gin.Context) {
+	return func(c *gin.Context) {
+
+		requesting_user_id := GetUserId(c)
+		if requesting_user_id == defs.NO_USER_ID {
+			log.Println("You cannot delete an account if you are not logged into that account")
+			// c.Redirect(http.StatusPermanentRedirect, "/")
+			c.JSON(http.StatusInternalServerError, gin.H{})
+			return
+		}
+
+		user_id_param := c.Param("user_id")
+		user_id, err := strconv.Atoi(user_id_param)
+		if err != nil {
+			log.Println("Error converting user_id_param to int")
+			c.JSON(http.StatusInternalServerError, gin.H{})
+			return
+		}
+
+		if user_id != requesting_user_id {
+			log.Println("You cannot delete another users account")
+			c.JSON(http.StatusInternalServerError, gin.H{})
+			return
+		}
+
+		err = db.DeleteUser(user_id)
+		if err != nil {
+			log.Println("Error deleting user profile")
+			c.JSON(http.StatusInternalServerError, gin.H{})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{})
 	}
 }
 

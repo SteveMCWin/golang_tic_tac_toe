@@ -76,6 +76,61 @@ func (Db *DataBase) ReadGameRecord(rec_id int) (*GameRecord, error) {
 	return rec, nil
 }
 
+func (Db *DataBase) UpdateRecordsDeletedUser(user_id int) error {
+	tx, err := Db.Data.Begin()
+	if err != nil {
+		return err
+	}
+
+	statement_update_records_p1 := "update records set p1 = ? where p1 = ?"
+	statement_update_records_p2 := "update records set p2 = ? where p2 = ?"
+
+	stmt_p1, err := tx.Prepare(statement_update_records_p1)
+	if err != nil {
+		return err
+	}
+
+	defer stmt_p1.Close()
+
+	stmt_p2, err := tx.Prepare(statement_update_records_p2)
+	if err != nil {
+		return err
+	}
+
+	defer stmt_p2.Close()
+
+	_, err = stmt_p1.Exec(defs.DELETED_USER_ID, user_id)
+	if err != nil {
+		return err
+	}
+	_, err = stmt_p2.Exec(defs.DELETED_USER_ID, user_id)
+	if err != nil {
+		return err
+	}
+
+	err = Db.DeleteUnneededRecords()
+	if err != nil {
+		return err
+	}
+
+	err = tx.Commit()
+
+	return err
+}
+
+func (Db *DataBase) DeleteUnneededRecords() error {
+	statement := "delete from records where p1 in (?, ?) and p2 in (?, ?)"
+	stmt, err := Db.Data.Prepare(statement)
+	if err != nil {
+		return err
+	}
+
+	defer stmt.Close()
+
+	_, err = stmt.Exec(defs.NO_USER_ID, defs.DELETED_USER_ID, defs.NO_USER_ID, defs.DELETED_USER_ID)
+	return err
+}
+
 // ReadGameRecordsForUser returns a slice of all records in which one of the players is the player whose id is passed to the function.
 // Note that if the user_id passed in is equal to the defs.NO_USER_ID, there will be no error, but the slice empty.
 func (Db *DataBase) ReadGameRecordsForUser(user_id int) ([]*GameRecord, error) {
