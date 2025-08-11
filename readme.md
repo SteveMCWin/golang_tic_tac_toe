@@ -9,9 +9,16 @@ It would be nice if I could deploy this web app, but the front end is written mo
 - User authentication (with Google and Github) using the [goth package](https://github.com/markbates/goth)
 - Websocket implementation allowing multiplayer using the [gorilla websocket package.](https://github.com/gorilla/websocket)
 - Elo system
+- Leaderboard system
+- Game history and replay viewing
+
+## Screenshots
+![Check out the screenshots directory](screenshots/profile_screenshot.png?raw=true)
+![Check out the screenshots directory](screenshots/history_screenshot.png?raw=true)
+![Check out the screenshots directory](screenshots/gameplay_screenshot?raw=true)
 
 ## Things left to implement
 - The front end
-- Matchmaking
+- Better matchmaking
 - Waiting for oponent page
 - Viewing other user's profiles
