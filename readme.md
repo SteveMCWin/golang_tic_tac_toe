@@ -15,7 +15,7 @@ It would be nice if I could deploy this web app, but the front end is written mo
 ## Screenshots
 ![Check out the screenshots directory](screenshots/profile_screenshot.png?raw=true)
 ![Check out the screenshots directory](screenshots/history_screenshot.png?raw=true)
-![Check out the screenshots directory](screenshots/gameplay_screenshot?raw=true)
+![Check out the screenshots directory](screenshots/gameplay_screenshot.png?raw=true)
 
 ## Things left to implement
 - The front end
