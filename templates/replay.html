@@ -177,9 +177,9 @@
 
   <div class="ultimate-board" id="board"></div>
   
-  <!-- Hidden CSRF token field -->
-  <div style="display: none;">
-    {{ index . "gorilla.csrf.Token" | html }}
+  <!-- Hidden CSRF token field - trying multiple approaches -->
+  <div style="display: none;" id="csrf-debug">
+    {{ .csrfField }}
   </div>
   
   <div class="loading" id="loading" style="display: none;">Loading...</div>
@@ -189,21 +189,43 @@
     const board = document.getElementById('board');
     const prevBtn = document.getElementById('prev-btn');
     const nextBtn = document.getElementById('next-btn');
-    const loadingEl = document.getElementById('loading');
+    <!-- const loadingEl = document.getElementById('loading'); -->
     const errorEl = document.getElementById('error');
     
     let isLoading = false;
     
     // Get CSRF token from the hidden input field
     function getCSRFToken() {
-      const csrfInput = document.querySelector('input[name="gorilla.csrf.Token"]');
-      return csrfInput ? csrfInput.value : '';
+      // Try multiple ways to find the CSRF token
+      let csrfInput = document.querySelector('input[name="gorilla.csrf.Token"]');
+      if (!csrfInput) {
+        csrfInput = document.querySelector('input[name="_token"]');
+      }
+      if (!csrfInput) {
+        csrfInput = document.querySelector('input[type="hidden"]');
+      }
+      
+      console.log('CSRF input element:', csrfInput);
+      if (csrfInput) {
+        console.log('CSRF token value:', csrfInput.value);
+        return csrfInput.value;
+      }
+      
+      // Also try to find it in meta tags
+      const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+      if (csrfMeta) {
+        console.log('CSRF token from meta:', csrfMeta.getAttribute('content'));
+        return csrfMeta.getAttribute('content');
+      }
+      
+      console.log('No CSRF token found');
+      return '';
     }
     
     // Show/hide loading state
     function setLoading(loading) {
       isLoading = loading;
-      loadingEl.style.display = loading ? 'block' : 'none';
+      <!-- loadingEl.style.display = loading ? 'block' : 'none'; -->
       prevBtn.disabled = loading;
       nextBtn.disabled = loading;
     }
@@ -216,42 +238,37 @@
         errorEl.style.display = 'none';
       }, 5000);
     }
-    
-    // Update mini-board winners based on CompleteBoards array
-    function updateMiniboardWinners(completeBoards) {
+
+        // Update mini-board winners based on CompleteBoards array
+    function updateMiniboardWinners(completeBoardsBase64) {
+      const binaryString = atob(completeBoardsBase64);
+      const completeBoards = Array.from(binaryString, char => char.charCodeAt(0));
+
       for (let i = 0; i < 9; i++) {
         const miniBoard = document.getElementById(`mini-board-${i}`);
         const existingWinner = miniBoard.querySelector('.mini-board-winner');
         
-        // Remove existing winner overlay if it exists
         if (existingWinner) {
           existingWinner.remove();
         }
         
-        // Check if this mini-board is completed
-        if (completeBoards && i < completeBoards.length) {
+        if (i < completeBoards.length) {
           const winner = String.fromCharCode(completeBoards[i]);
-          
           if (winner === 'x' || winner === 'o') {
-            // Add completed class to dim the mini-board
             miniBoard.classList.add('completed');
-            
-            // Create winner overlay
             const winnerOverlay = document.createElement('div');
             winnerOverlay.className = `mini-board-winner ${winner}-winner`;
             winnerOverlay.textContent = winner.toUpperCase();
             miniBoard.appendChild(winnerOverlay);
           } else {
-            // Remove completed class if winner is not set
             miniBoard.classList.remove('completed');
           }
         } else {
-          // Remove completed class if no completeBoards data
           miniBoard.classList.remove('completed');
         }
       }
     }
-    
+
     // Render the 81 cells into 9 mini-boards
     function renderBoard(state) {
       if (state.length !== 81) return;
@@ -281,7 +298,7 @@
       
       try {
         const csrfToken = getCSRFToken();
-        console.log('CSRF token:', csrfToken ? 'Found' : 'Not found');
+        console.log('CSRF token:', csrfToken ? `Found: ${csrfToken.substring(0, 10)}...` : 'Not found');
         
         const headers = {
           'Content-Type': 'application/json',
@@ -292,6 +309,8 @@
           headers['X-CSRF-Token'] = csrfToken;
         }
         
+        console.log('Request headers:', headers);
+        console.log('Request body:', JSON.stringify({ msg: move }));
         console.log('Making fetch request to /replay');
         const response = await fetch('/replay', {
           method: 'POST',
@@ -306,8 +325,17 @@
         }
         
         if (!response.ok) {
-          const errorText = await response.text();
-          console.log('Error response body:', errorText);
+          let errorText = '';
+          try {
+            // Try to parse as JSON first
+            const errorData = await response.json();
+            errorText = JSON.stringify(errorData);
+            console.log('Error response JSON:', errorData);
+          } catch {
+            // If not JSON, get as text
+            errorText = await response.text();
+            console.log('Error response text:', errorText);
+          }
           throw new Error(`HTTP error! status: ${response.status} - ${errorText || response.statusText}`);
         }
         

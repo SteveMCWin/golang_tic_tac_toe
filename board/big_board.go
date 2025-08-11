@@ -3,7 +3,6 @@ package board
 import (
 	"errors"
 	"fmt"
-	// "log"
 
 	"tic_tac_toe.fun/defs"
 	"tic_tac_toe.fun/stack"
@@ -78,11 +77,18 @@ func (bb *BigBoard) MakeMove(m Move) error {
 		bb.UpdateResult()
 	}
 
-	for i := range 9 { // update the board state partially, since only one mini-board can change per move
-		bb.BoardState[m.BigPos][i] = bb.Boards[m.BigPos].Cells[i]
-	}
+	bb.updateBoardState(int(m.BigPos))
+	// for i := range 9 { // update the board state partially, since only one mini-board can change per move
+	// 	bb.BoardState[m.BigPos][i] = bb.Boards[m.BigPos].Cells[i]
+	// }
 
 	return nil
+}
+
+func (bb *BigBoard) updateBoardState(big_pos int) {
+	for i := range 9 {
+		bb.BoardState[big_pos][i] = bb.Boards[big_pos].Cells[i]
+	}
 }
 
 // UndoLastMove removes the last move made on the board and from the history.
@@ -92,6 +98,8 @@ func (bb *BigBoard) UndoLastMove() error {
 	if m == nil {
 		return nil
 	}
+
+	// log.Println("Undo Move:", m)
 
 	if m.BigPos >= '0' && m.BigPos <= '9' { // the positions passed in are (probably) ascii characters representing digits
 		m.BigPos = m.BigPos - '0'
@@ -106,11 +114,13 @@ func (bb *BigBoard) UndoLastMove() error {
 		return err
 	}
 
-	bb.RedoStack.Push(*bb.History.Top())
+	bb.RedoStack.Push(*m)
 	// NOTE: Should change it so that the top of history is pushed to a redo stack or something
 	bb.History.Pop() // not checking if pop returns ok since it will always do so if it got to this point
 
 	bb.Boards[m.BigPos].UndoMove(*m)
+
+	bb.updateBoardState(int(m.BigPos))
 
 	prev_m:= bb.History.Top()
 	if prev_m == nil {
@@ -118,6 +128,7 @@ func (bb *BigBoard) UndoLastMove() error {
 	} else {
 		bb.boardToPlayIn = prev_m.SmallPos
 	}
+
 
 	return nil
 }
@@ -224,9 +235,9 @@ func (bb *BigBoard) isMakeMoveValid(m Move) error { // checks if received input 
 
 func (bb *BigBoard) isUndoMoveValid(m Move) error { // checks if received input for a move is valid
 
-	if m.BigPos != bb.boardToPlayIn && bb.boardToPlayIn != defs.WILD_BOARD {
-		return fmt.Errorf("invalid call to UndoMove:\nm.BigPos and prev_pos missmatch: m.BigPos = %d, prev_pos = %d", m.BigPos, bb.boardToPlayIn)
-	}
+	// if m.BigPos != bb.boardToPlayIn && bb.boardToPlayIn != defs.WILD_BOARD {
+	// 	return fmt.Errorf("invalid call to UndoMove:\nm.BigPos and prev_pos missmatch: m.BigPos = %d, prev_pos = %d", m.BigPos, bb.boardToPlayIn)
+	// }
 
 	if m.BigPos < 0 || m.BigPos > 8 {
 		return fmt.Errorf("invalid call to UndoMove:\nExpected m.BigPos 0-8, got %d", m.BigPos)
