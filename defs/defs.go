@@ -17,6 +17,8 @@ const (
 	BOARD_TIE = '_'    // used in the BigBoard's Result field if it comes to a tie
 	BOARD_HISTORY_DELIMITER = byte(';')
 	EMPTY_CELL = 0
+	PREV_MOVE = 60
+	NEXT_MOVE = 62
 
 	LEADERBOARD_UPDATE_DURATION = 10 * time.Second
 

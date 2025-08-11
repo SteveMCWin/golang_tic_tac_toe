@@ -64,6 +64,14 @@
             border: 1px solid #e9ecef;
             position: relative;
             overflow: hidden;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+        .game-card:hover {
+            text-decoration: none;
+            color: inherit;
         }
         .game-card::before {
             content: '';
@@ -261,7 +269,7 @@
             </div>
             
             <div class="history-content">
-                <a href="/profile/{{ .user_id }}" class="back-button">
+                <a href="/profile" class="back-button">
                     <i class="fa fa-arrow-left"></i>
                     Back to Profile
                 </a>
@@ -284,7 +292,7 @@
                                 {{$result_class = "result-lost"}}
                             {{end}}
                             
-                            <div class="game-card {{$card_class}}">
+                            <a href="/replay/{{$record.Id}}" class="game-card {{$card_class}}">
                                 <div class="game-header">
                                     <div class="game-date">
                                         <i class="fa fa-calendar"></i>
@@ -328,7 +336,7 @@
                                 </div>
                                 
                                 <div class="game-id">Game ID: {{$record.Id}}</div>
-                            </div>
+                            </a>
                         {{end}}
                     </div>
                 {{else}}

@@ -140,7 +140,8 @@ func SetUpRouter(db *models.DataBase, lb *models.LeaderBoard, hub *game.Hub) htt
 	router.GET("/play", ServePlay())
 	router.GET("/profile/:user_id", MiddlewareNoCache(), HandleGetProfile(db))
 	router.GET("/profile/:user_id/games_played", HandleGetUserGames(db))
-	router.GET("/replay/:game_id", HandleGetGameReplay(db))
+	router.GET("/replay/:record_id", HandleGetGameReplay(db))
+	router.POST("/replay", HandlePostGameReplay())
 	router.GET("/logout/:provider/", LogoutHandler())
 	router.GET("/auth/:provider", SignInWithProvider())
 	router.GET("/auth/:provider/callback/", CallbackHandler(db))
@@ -175,7 +176,7 @@ func GetUserId(c *gin.Context) int {
 func HandleGetHome() func(c *gin.Context) {
 	return func(c *gin.Context) {
 		user_id := GetUserId(c)
-		c.HTML(http.StatusOK, "index.html", gin.H{ "user_id": user_id }) 
+		c.HTML(http.StatusOK, "index.html", gin.H{"user_id": user_id})
 	}
 }
 
@@ -189,7 +190,7 @@ func HandleGetAbout() func(c *gin.Context) {
 // HandleGetErrorPage is used for unexpected errors.
 func HandleGetErrorPage() func(c *gin.Context) {
 	return func(c *gin.Context) {
-		c.String(http.StatusOK, "Error Encountered :<") 
+		c.String(http.StatusOK, "Error Encountered :<")
 	}
 }
 
@@ -212,7 +213,7 @@ func SignInWithProvider() func(c *gin.Context) {
 
 		user_id := GetUserId(c)
 		if user_id != defs.NO_USER_ID {
-			c.Redirect(http.StatusPermanentRedirect, "/profile/" + strconv.Itoa(user_id))
+			c.Redirect(http.StatusPermanentRedirect, "/profile/"+strconv.Itoa(user_id))
 			return
 		}
 
@@ -319,31 +320,88 @@ func HandleGetUserGames(db *models.DataBase) func(c *gin.Context) {
 			winner_ids[i] = models.GetGameRecordWinner(rec)
 		}
 		// WARNING: Update the html to handle -1 in winner_ids
-		c.HTML(http.StatusOK, "view_games_history.html", gin.H{ "records": records, "winner_ids": winner_ids, "user_id": user_id })
+		c.HTML(http.StatusOK, "view_games_history.html", gin.H{"records": records, "winner_ids": winner_ids, "user_id": user_id})
 	}
 }
 
-// HandleGetGameReplay 
+// HandleGetGameReplay
 // TODO
 func HandleGetGameReplay(db *models.DataBase) func(c *gin.Context) {
 	return func(c *gin.Context) {
-		game_id_param := c.Param("game_id")
-		game_id, err := strconv.Atoi(game_id_param)
+
+		requesting_user_id := GetUserId(c)
+		if requesting_user_id == defs.NO_USER_ID {
+			log.Println("You must be looged in to view replay")
+			c.Redirect(http.StatusTemporaryRedirect, "/")
+			return
+		}
+
+		record_id_param := c.Param("record_id")
+		record_id, err := strconv.Atoi(record_id_param)
 		if err != nil {
 			log.Println("Error getting the game id from url", err)
 			c.Redirect(http.StatusTemporaryRedirect, "/error-page")
 			return
 		}
 
-		rec, err := db.ReadGameRecord(game_id)
+		rec, err := db.ReadGameRecord(record_id)
 		if err != nil {
 			log.Println("Error reading game record:", err)
 			c.Redirect(http.StatusTemporaryRedirect, "/error-page")
 			return
 		}
 
-		_ = rec
+		game.InitGameReplay(requesting_user_id, rec)
 
+		c.HTML(http.StatusOK, "replay.html", gin.H{csrf.TemplateTag: csrf.TemplateField(c.Request)})
+	}
+}
+
+func HandlePostGameReplay() func(c *gin.Context) {
+	return func(c *gin.Context) {
+		// rec_id_param := c.Param("record_id")
+		// rec_id, err := strconv.Atoi(rec_id_param)
+		// if err != nil {
+		// 	c.JSON(http.StatusInternalServerError, gin.H{})
+		// }
+
+		requesting_user_id := GetUserId(c)
+		if requesting_user_id == defs.NO_USER_ID {
+			c.JSON(http.StatusInternalServerError, gin.H{})
+		}
+
+		msg := struct {
+			Move int `json:"msg"`
+		}{}
+
+		if err := c.BindJSON(&msg); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{})
+		}
+
+		var new_board_state []byte
+		var err error
+		switch msg.Move {
+		case defs.NEXT_MOVE:
+			new_board_state, err = game.ReplayNextMove(requesting_user_id)
+			if err != nil {
+				log.Println("Error calling game.ReplayNextMove:", err)
+				c.JSON(http.StatusInternalServerError, gin.H{})
+				return
+			}
+		case defs.PREV_MOVE:
+			new_board_state, err = game.ReplayPrevMove(requesting_user_id)
+			if err != nil {
+				log.Println("Error calling game.ReplayPrevMove:", err)
+				c.JSON(http.StatusInternalServerError, gin.H{})
+				return
+			}
+		default:
+			log.Println("Recieved neither defs.NEXT_MOVE nor defs.PREV_MOVE")
+			c.JSON(http.StatusInternalServerError, gin.H{})
+			return
+		}
+
+		c.String(http.StatusOK, string(new_board_state)) // NOTE: the new_board_state is already json encoded, so just put it in the response body as is
 	}
 }
 
@@ -382,11 +440,11 @@ func HandleWebsocketConnection(hub *game.Hub, db *models.DataBase) func(c *gin.C
 func ServePlay() func(c *gin.Context) {
 	return func(c *gin.Context) {
 		game_mode := c.Query("game_mode")
-		if game_mode == "" {    // safeguard
+		if game_mode == "" { // safeguard
 			game_mode = "0"
 		}
 
-		c.HTML(http.StatusOK, "board.html", gin.H{  // this sets up the websocket in html and then the html redirects to /ws which calls MakePlayer
+		c.HTML(http.StatusOK, "board.html", gin.H{ // this sets up the websocket in html and then the html redirects to /ws which calls MakePlayer
 			"game_mode": game_mode,
 		})
 	}
@@ -399,9 +457,7 @@ func ServeHub() func(c *gin.Context) {
 	}
 }
 
-
 // MIDDLEWARE
-
 
 // MiddlewareNoCache is used to wipe the cached pages. Useful when you don't want to allow a user to log out and then go back to their profile with the back arrow.
 func MiddlewareNoCache() func(c *gin.Context) {

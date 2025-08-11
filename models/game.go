@@ -86,7 +86,7 @@ func (Db *DataBase) ReadGameRecordsForUser(user_id int) ([]*GameRecord, error) {
 		return res, nil
 	}
 
-	statement := "select id, p1, p2, date_recorded, moves, winner from game_records where ? in (p1, p2)"
+	statement := "select id, p1, p2, date_recorded, moves, winner from game_records where ? in (p1, p2) order by date_recorded desc"
 	rows, err := Db.Data.Query(statement, user_id)
 	if err != nil {
 		return nil, err
@@ -142,3 +142,4 @@ func GetGameRecordWinner(record *GameRecord) int {
 		return -1
 	}
 }
+
