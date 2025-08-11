@@ -139,7 +139,7 @@ func SetUpRouter(db *models.DataBase, lb *models.LeaderBoard, hub *game.Hub) htt
 	router.GET("/hub", ServeHub())
 	router.GET("/play", ServePlay())
 	router.GET("/profile/:user_id", MiddlewareNoCache(), HandleGetProfile(db))
-	router.GET("/profile/:user_id", MiddlewareNoCache(), HandleGetDeleteProfile())
+	router.GET("/profile/:user_id/delete", MiddlewareNoCache(), HandleGetDeleteProfile())
 	router.DELETE("/profile/:user_id", HandleDeleteProfile(db))
 	router.GET("/profile/:user_id/games_played", HandleGetUserGames(db))
 	router.GET("/replay/:record_id", HandleGetGameReplay(db))
@@ -461,6 +461,14 @@ func ServeHub() func(c *gin.Context) {
 
 func HandleGetDeleteProfile() func(c *gin.Context) {
 	return func(c *gin.Context) {
+
+		requesting_user_id := GetUserId(c)
+		if requesting_user_id == defs.NO_USER_ID {
+			log.Println("You cannot delete an account if you are not logged into that account")
+			c.Redirect(http.StatusPermanentRedirect, "/")
+			return
+		}
+
 		user_id_param := c.Param("user_id")
 		user_id, err := strconv.Atoi(user_id_param)
 		if err != nil {
@@ -469,17 +477,17 @@ func HandleGetDeleteProfile() func(c *gin.Context) {
 			return
 		}
 
-		c.HTML(http.StatusOK, "delete_account.html", gin.H{ "user_id": user_id })
+		c.HTML(http.StatusOK, "delete_account.html", gin.H{ "user_id": user_id, csrf.TemplateTag: csrf.TemplateField(c.Request) })
 	}
 }
 
 func HandleDeleteProfile(db *models.DataBase) func(c *gin.Context) {
 	return func(c *gin.Context) {
 
+		log.Println("Called DELETE profile")
 		requesting_user_id := GetUserId(c)
 		if requesting_user_id == defs.NO_USER_ID {
 			log.Println("You cannot delete an account if you are not logged into that account")
-			// c.Redirect(http.StatusPermanentRedirect, "/")
 			c.JSON(http.StatusInternalServerError, gin.H{})
 			return
 		}
@@ -504,6 +512,9 @@ func HandleDeleteProfile(db *models.DataBase) func(c *gin.Context) {
 			c.JSON(http.StatusInternalServerError, gin.H{})
 			return
 		}
+
+		gothic.Logout(c.Writer, c.Request)
+		sessionManager.Destroy(c.Request.Context())
 
 		c.JSON(http.StatusOK, gin.H{})
 	}
