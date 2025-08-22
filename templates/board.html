@@ -17,6 +17,24 @@
       padding: 20px;
     }
     
+    .waiting-message {
+      font-size: 2rem;
+      font-weight: bold;
+      color: #666;
+      text-align: center;
+      margin-bottom: 20px;
+      padding: 20px;
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.7; }
+    }
+    
     .game-info {
       display: flex;
       justify-content: space-between;
@@ -138,10 +156,18 @@
       cursor: not-allowed;
       pointer-events: none;
     }
+    
+    .hidden {
+      display: none;
+    }
   </style>
 </head>
 <body>
-  <div class="game-info">
+  <div class="waiting-message" id="waiting-message">
+    Waiting for opponents...
+  </div>
+  
+  <div class="game-info" id="game-info">
     <div class="player-info" id="player1-info">
       <div class="player-name">Player 1 (X)</div>
       <div class="player-timer" id="p1-timer">--:--</div>
@@ -166,6 +192,8 @@
     const p2TimerEl = document.getElementById('p2-timer');
     const player1InfoEl = document.getElementById('player1-info');
     const player2InfoEl = document.getElementById('player2-info');
+    const waitingMessageEl = document.getElementById('waiting-message');
+    const gameInfoEl = document.getElementById('game-info');
     
     const gameMode = {{ .game_mode | js }};
     const socket = new WebSocket('wss://' + window.location.host + '/ws?game_mode=' + gameMode);
@@ -242,6 +270,12 @@
     // Handle incoming WebSocket messages
     socket.onmessage = event => {
       const msg = JSON.parse(event.data);
+      
+      // Check for game start message
+      if (msg.type === 'start') {
+        waitingMessageEl.classList.add('hidden');
+      }
+      
       if (msg.type === 'state' && Array.isArray(msg.board)) {
         renderBoard(msg.board);
         updateGameUI(msg.p1_time, msg.p2_time, msg.p1_move);

@@ -27,4 +27,7 @@ const (
 	PONG_WAIT = 60 * time.Second // Time allowed to read the next pong message from the peer in a websocket connection.
 	PING_PERIOD = (PONG_WAIT * 9) / 10 // Send pings to peer with this period in a websocket connection. Must be less than pongWait.
 	MAX_WEBSOCKET_MESSAGE_SIZE = 512 // Maximum message size allowed from peer in a websocket connection.
+
+	MSG_TYPE_STATE = "state"
+	MSG_TYPE_START = "start"
 )
