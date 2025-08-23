@@ -85,6 +85,24 @@ func (Db *DataBase) StoreUser(usr *User) error { // writes the user to the db ba
 	return err
 }
 
+func (Db *DataBase) DeleteUser(user_id int) error {
+	statement_delete_profile := "delete from users where id = ?"
+	stmt_delete_profile, err := Db.Data.Prepare(statement_delete_profile)
+	if err != nil {
+		return err
+	}
+
+	defer stmt_delete_profile.Close()
+
+	_, err = stmt_delete_profile.Exec(user_id)
+	if err != nil {
+		return err
+	}
+
+	err = Db.UpdateRecordsDeletedUser(user_id)
+	return err
+}
+
 // not used but still here in case I find it useful somehow
 func (usr *User) storeUserPfp() (err error) { // used to locally store the user's avatar as an image file
 	log.Println("AVATAR URL:", usr.AvatarURL)

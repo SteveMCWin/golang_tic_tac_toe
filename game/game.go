@@ -129,6 +129,7 @@ func (g *Game) Run(db *models.DataBase) {
 		log.Println("GOOO")
 		g.game_started = true
 		g.players[0].timer.Start()
+		g.updateBoardVisuals(defs.MSG_TYPE_START)
 	}() // this being in a goroutine prevents the players from filling up the input channel before the game starts which may lead to the 'o' player going first
 
 	for {
@@ -154,7 +155,7 @@ func (g *Game) Run(db *models.DataBase) {
 					// if the move was deemed valid and all, handle the timers, send the messages to update the front-end based on the back-end
 					g.players[0].timer.Pause()
 
-					g.updateBoardVisuals()
+					g.updateBoardVisuals(defs.MSG_TYPE_STATE)
 					if g.b.Result != 0 { // handles the game being finished and exits the function
 						log.Println("The backend recognized the winner!!")
 						g.checkWinner()
@@ -185,7 +186,7 @@ func (g *Game) Run(db *models.DataBase) {
 				} else {
 					g.players[1].timer.Pause()
 
-					g.updateBoardVisuals()
+					g.updateBoardVisuals(defs.MSG_TYPE_STATE)
 
 					if g.b.Result != 0 {
 						g.checkWinner()
@@ -216,8 +217,8 @@ func (g *Game) Run(db *models.DataBase) {
 	}
 }
 
-func (g *Game) updateBoardVisuals() { // sends the board's back-end data to the front-end to update the ui
-	new_game_state := g.parseGameStateToJSON() // the front-end expects the board state to be in json format
+func (g *Game) updateBoardVisuals(msg_type string) { // sends the board's back-end data to the front-end to update the ui
+	new_game_state := g.parseGameStateToJSON(msg_type) // the front-end expects the board state to be in json format
 	g.players[0].game_state <- new_game_state
 	g.players[1].game_state <- new_game_state
 }
@@ -270,7 +271,7 @@ func (g *Game) calculateNewPlayerElo() { // calculates each players new elo base
 	g.players[1].u.Elo += int(math.Round(K * (Sb - Eb)))
 }
 
-func (g *Game) parseGameStateToJSON() []byte { // note that the board state is turned into a normal byte array instead of a 2d byte array
+func (g *Game) parseGameStateToJSON(msg_type string) []byte { // note that the board state is turned into a normal byte array instead of a 2d byte array
 
 	var board []string
 	for _, b := range g.b.BoardState {
@@ -293,7 +294,7 @@ func (g *Game) parseGameStateToJSON() []byte { // note that the board state is t
 		P2_time        int64    `json:"p2_time"`
 		P1_move        bool     `json:"p1_move"`
 	}{
-		Type:    "state",
+		Type:    msg_type,
 		Board:   board,
 		CompleteBoards: make([]byte, 0),
 		P1_time: g.players[0].timer.TimeLeft.Milliseconds(),
