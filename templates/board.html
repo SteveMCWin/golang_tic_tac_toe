@@ -160,6 +160,84 @@
     .hidden {
       display: none;
     }
+    
+    .game-over-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.8);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+    
+    .game-over-overlay.hidden {
+      display: none;
+    }
+    
+    .game-over-modal {
+      background: white;
+      padding: 40px;
+      border-radius: 15px;
+      text-align: center;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+      max-width: 400px;
+      width: 90%;
+    }
+    
+    .game-over-title {
+      font-size: 2.5rem;
+      font-weight: bold;
+      margin-bottom: 30px;
+      color: #333;
+    }
+    
+    .game-over-title.x-wins {
+      color: #2196f3;
+    }
+    
+    .game-over-title.o-wins {
+      color: #f44336;
+    }
+    
+    .game-over-buttons {
+      display: flex;
+      gap: 15px;
+      justify-content: center;
+    }
+    
+    .game-over-button {
+      padding: 12px 24px;
+      font-size: 1.1rem;
+      font-weight: bold;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-block;
+      transition: background-color 0.3s;
+    }
+    
+    .home-button {
+      background: #666;
+      color: white;
+    }
+    
+    .home-button:hover {
+      background: #555;
+    }
+    
+    .play-again-button {
+      background: #4caf50;
+      color: white;
+    }
+    
+    .play-again-button:hover {
+      background: #45a049;
+    }
   </style>
 </head>
 <body>
@@ -185,6 +263,17 @@
 
   <div class="ultimate-board" id="board"></div>
   
+  <!-- Game Over Overlay -->
+  <div class="game-over-overlay hidden" id="game-over-overlay">
+    <div class="game-over-modal">
+      <div class="game-over-title" id="game-over-title"></div>
+      <div class="game-over-buttons">
+        <a href="/" class="game-over-button home-button">Home</a>
+        <a href="/hub" class="game-over-button play-again-button">Play Again</a>
+      </div>
+    </div>
+  </div>
+  
   <script>
     const board = document.getElementById('board');
     const currentTurnEl = document.getElementById('current-turn');
@@ -194,6 +283,8 @@
     const player2InfoEl = document.getElementById('player2-info');
     const waitingMessageEl = document.getElementById('waiting-message');
     const gameInfoEl = document.getElementById('game-info');
+    const gameOverOverlayEl = document.getElementById('game-over-overlay');
+    const gameOverTitleEl = document.getElementById('game-over-title');
     
     const gameMode = {{ .game_mode | js }};
     const socket = new WebSocket('wss://' + window.location.host + '/ws?game_mode=' + gameMode);
@@ -274,6 +365,22 @@
       // Check for game start message
       if (msg.type === 'start') {
         waitingMessageEl.classList.add('hidden');
+        
+        // Update player names
+        if (msg.p1name) {
+          document.querySelector('#player1-info .player-name').textContent = `${msg.p1name} (X)`;
+        }
+        if (msg.p2name) {
+          document.querySelector('#player2-info .player-name').textContent = `${msg.p2name} (O)`;
+        }
+      }
+      
+      // Check for game finish message
+      if (msg.type === 'finish') {
+        const winner = String.fromCharCode(msg.winner).toUpperCase();
+        gameOverTitleEl.textContent = `Player ${winner} Won!`;
+        gameOverTitleEl.className = `game-over-title ${winner.toLowerCase()}-wins`;
+        gameOverOverlayEl.classList.remove('hidden');
       }
       
       if (msg.type === 'state' && Array.isArray(msg.board)) {

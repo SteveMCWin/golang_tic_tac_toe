@@ -21,5 +21,4 @@ You can be play it [here](https://tic-tac-toe-fun.onrender.com), tho there proba
 ## Things left to implement
 - The front end
 - Better matchmaking
-- Waiting for oponent page
 - Viewing other user's profiles

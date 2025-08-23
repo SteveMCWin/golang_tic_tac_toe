@@ -53,7 +53,7 @@ func NewGame(p1, p2 *Player, mode GameMode) *Game {
 		U1:           g.players[0].u,
 		U2:           g.players[1].u,
 		DateRecorded: time.Now(),
-		History:       "", // start with empty recording because the game just started (duuh)
+		History:      "", // start with empty recording because the game just started (duuh)
 	}
 
 	// NOTE: Could be moved to the player
@@ -142,10 +142,10 @@ func (g *Game) Run(db *models.DataBase) {
 					continue
 				}
 
-				m := board.Move {
-					BigPos: pos[0],
+				m := board.Move{
+					BigPos:   pos[0],
 					SmallPos: pos[1],
-					Player: 'x',
+					Player:   'x',
 				}
 
 				err := g.b.MakeMove(m) // this updates the board back-end logic/state
@@ -155,14 +155,15 @@ func (g *Game) Run(db *models.DataBase) {
 					// if the move was deemed valid and all, handle the timers, send the messages to update the front-end based on the back-end
 					g.players[0].timer.Pause()
 
+					g.p1_move = false // needs to be updated before calling updateBoardVisuals
 					g.updateBoardVisuals(defs.MSG_TYPE_STATE)
+
 					if g.b.Result != 0 { // handles the game being finished and exits the function
 						log.Println("The backend recognized the winner!!")
 						g.checkWinner()
 						return
 					}
 
-					g.p1_move = false
 					g.players[1].timer.Start()
 
 				}
@@ -174,10 +175,10 @@ func (g *Game) Run(db *models.DataBase) {
 					continue
 				}
 
-				m := board.Move {
-					BigPos: pos[0],
+				m := board.Move{
+					BigPos:   pos[0],
 					SmallPos: pos[1],
-					Player: 'o',
+					Player:   'o',
 				}
 
 				err := g.b.MakeMove(m)
@@ -186,6 +187,7 @@ func (g *Game) Run(db *models.DataBase) {
 				} else {
 					g.players[1].timer.Pause()
 
+					g.p1_move = true
 					g.updateBoardVisuals(defs.MSG_TYPE_STATE)
 
 					if g.b.Result != 0 {
@@ -193,7 +195,6 @@ func (g *Game) Run(db *models.DataBase) {
 						return
 					}
 
-					g.p1_move = true
 					g.players[0].timer.Start()
 				}
 			}
@@ -239,6 +240,8 @@ func (g *Game) checkWinner() { // the winner is determined from the boards Resul
 		g.gameRecord.Winner = defs.BOARD_TIE
 	}
 
+	g.updateBoardVisuals(defs.MSG_TYPE_FINISH)
+
 	g.calculateNewPlayerElo() // needs to be called after a winner is determined
 
 }
@@ -273,40 +276,70 @@ func (g *Game) calculateNewPlayerElo() { // calculates each players new elo base
 
 func (g *Game) parseGameStateToJSON(msg_type string) []byte { // note that the board state is turned into a normal byte array instead of a 2d byte array
 
-	var board []string
-	for _, b := range g.b.BoardState {
-		for _, cell := range b {
-			if cell == 'x' {
-				board = append(board, "x")
-			} else if cell == 'o' {
-				board = append(board, "o")
-			} else {
-				board = append(board, "")
+	var res []byte
+	var err error
+
+	switch msg_type {
+	case defs.MSG_TYPE_START:
+		msg := struct {
+			Type   string `json:"type"`
+			P1Name string `json:"p1name"`
+			P2Name string `json:"p2name"`
+		}{
+			Type:   msg_type,
+			P1Name: g.players[0].u.UserName,
+			P2Name: g.players[1].u.UserName,
+		}
+		
+		res, err = json.Marshal(msg)
+	case defs.MSG_TYPE_STATE:
+		var board []string
+		for _, b := range g.b.BoardState {
+			for _, cell := range b {
+				if cell == 'x' {
+					board = append(board, "x")
+				} else if cell == 'o' {
+					board = append(board, "o")
+				} else {
+					board = append(board, "")
+				}
 			}
 		}
+
+		msg := struct {
+			Type           string   `json:"type"`
+			Board          []string `json:"board"`
+			CompleteBoards []byte   `json:"complete_boards"`
+			P1_time        int64    `json:"p1_time"`
+			P2_time        int64    `json:"p2_time"`
+			P1_move        bool     `json:"p1_move"`
+		}{
+			Type:           msg_type,
+			Board:          board,
+			CompleteBoards: make([]byte, 0),
+			P1_time:        g.players[0].timer.TimeLeft.Milliseconds(),
+			P2_time:        g.players[1].timer.TimeLeft.Milliseconds(),
+			P1_move:        g.p1_move,
+		}
+
+		for _, b := range g.b.Boards {
+			msg.CompleteBoards = append(msg.CompleteBoards, b.Result)
+		}
+
+		res, err = json.Marshal(msg)
+	case defs.MSG_TYPE_FINISH:
+		msg := struct {
+			Type string `json:"type"`
+			Winner byte `json:"winner"`
+		} {
+			Type: msg_type,
+			Winner: g.b.Result,
+		}
+
+		res, err = json.Marshal(msg)
+	default:
 	}
 
-	msg := struct {
-		Type           string   `json:"type"`
-		Board          []string `json:"board"`
-		CompleteBoards []byte   `json:"complete_boards"`
-		P1_time        int64    `json:"p1_time"`
-		P2_time        int64    `json:"p2_time"`
-		P1_move        bool     `json:"p1_move"`
-	}{
-		Type:    msg_type,
-		Board:   board,
-		CompleteBoards: make([]byte, 0),
-		P1_time: g.players[0].timer.TimeLeft.Milliseconds(),
-		P2_time: g.players[1].timer.TimeLeft.Milliseconds(),
-		P1_move: g.p1_move,
-	}
-
-	for _, b := range g.b.Boards {
-		msg.CompleteBoards = append(msg.CompleteBoards, b.Result)
-	}
-
-	res, err := json.Marshal(msg)
 	if err != nil {
 		log.Println("ERROR PARSING BOARD STATE TO JSON:")
 		log.Println(err)
@@ -322,7 +355,7 @@ func (g *Game) boardHistoryToString() {
 			return
 		}
 		g.b.History.Pop()
-		m_str := string([]byte{ m.Player, m.BigPos + '0', m.SmallPos + '0', defs.BOARD_HISTORY_DELIMITER })
+		m_str := string([]byte{m.Player, m.BigPos + '0', m.SmallPos + '0', defs.BOARD_HISTORY_DELIMITER})
 		g.gameRecord.History = m_str + g.gameRecord.History // note that we must prepend the last-read move since we are working with a stack
 	}
 }
