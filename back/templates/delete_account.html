@@ -1,0 +1,192 @@
+<!doctype html>
+<html>
+<head>
+    <title>Delete Account</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <style>
+        body { 
+            padding-top: 70px; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .delete-container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+        }
+        .delete-header {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+            color: white;
+            padding: 40px 20px;
+            position: relative;
+        }
+        .delete-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 20"><defs><radialGradient id="a" cx="50%" cy="0%" r="100%"><stop offset="0%" stop-color="white" stop-opacity=".1"/><stop offset="100%" stop-color="white" stop-opacity="0"/></radialGradient></defs><rect width="100" height="20" fill="url(%23a)"/></svg>') repeat-x;
+            opacity: 0.1;
+        }
+
+        .delete-title {
+            font-size: 2rem;
+            font-weight: 300;
+            margin-bottom: 10px;
+            position: relative;
+            z-index: 1;
+        }
+        .delete-message {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            position: relative;
+            z-index: 1;
+        }
+        .delete-content {
+            padding: 40px;
+        }
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 30px;
+        }
+        .btn-custom {
+            border-radius: 25px;
+            padding: 12px 30px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            transition: all 0.3s ease;
+            border: none;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+        .btn-delete {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+            color: white;
+        }
+        .btn-delete:hover {
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(220, 53, 69, 0.4);
+        }
+        .btn-delete:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        .btn-cancel {
+            background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
+            color: white;
+        }
+        .btn-cancel:hover {
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(108, 117, 125, 0.4);
+        }
+        .loading-spinner {
+            display: none;
+            margin-left: 5px;
+        }
+        .spinner-border-sm {
+            width: 1rem;
+            height: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="delete-container">
+        <div class="delete-header">
+            <h1 class="delete-title">We Will Miss You!</h1>
+            <p class="delete-message">Are you sure you want to delete your account?</p>
+        </div>
+        
+        <div class="delete-content">
+            <p class="text-muted">This action cannot be undone. All your game history, statistics, and profile information will be permanently removed.</p>
+            
+            <div class="action-buttons">
+                <button type="button" onclick="window.location.href='/profile/{{.user_id}}'" class="btn btn-custom btn-cancel">
+                    <i class="fa fa-arrow-left"></i>
+                    Cancel
+                </button>
+                <button type="button" id="deleteBtn" class="btn btn-custom btn-delete">
+                    <i class="fa fa-trash"></i>
+                    Delete My Account
+                    <span id="loadingSpinner" class="loading-spinner">
+                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                    </span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CSRF field hidden (Go template will fill this) -->
+    <!-- <div style="display: none;" id="csrf-debug"> -->
+    <!--     {{ .csrfField }} -->
+    <!-- </div> -->
+
+    <script>
+        console.log('Script loaded successfully');
+        const userId = '{{.user_id}}';
+        console.log('User ID from template:', userId);
+
+        const deleteBtn = document.getElementById('deleteBtn');
+        const loadingSpinner = document.getElementById('loadingSpinner');
+
+        deleteBtn.addEventListener('click', async (e) => {
+            e.preventDefault();
+            console.log('Delete button clicked');
+
+            deleteBtn.disabled = true;
+            loadingSpinner.style.display = 'inline-block';
+
+            // Extract CSRF token if present
+            const csrfInput = document.querySelector('#csrf-debug input[name="csrf_token"]');
+            const csrfToken = csrfInput ? csrfInput.value : null;
+            console.log('CSRF Token:', csrfToken);
+
+            try {
+                console.log(`Sending DELETE request to: /profile/${userId}`);
+                const res = await fetch(`/profile/${userId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...(csrfToken ? { 'X-CSRF-Token': csrfToken } : {})
+                    }
+                });
+
+                console.log('Response status:', res.status);
+
+                if (res.status === 200) {
+                    console.log('Account deleted - redirecting to home');
+                    window.location.href = '/';
+                } else {
+                    console.warn('Delete failed - redirecting to error page');
+                    window.location.href = '/error-page';
+                }
+            } catch (err) {
+                console.error('Fetch error:', err);
+                alert('Request failed: ' + err.message);
+                deleteBtn.disabled = false;
+                loadingSpinner.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>
