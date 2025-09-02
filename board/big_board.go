@@ -194,8 +194,6 @@ func (bb *BigBoard) UpdateResult() { // checks if anyone won and if so, update t
 		bb.Result = defs.BOARD_TIE
 		return
 	}
-
-	return
 }
 
 func (bb *BigBoard) isMakeMoveValid(m Move) error { // checks if received input for a move is valid
@@ -205,12 +203,12 @@ func (bb *BigBoard) isMakeMoveValid(m Move) error { // checks if received input 
 
 	}
 
-	if m.BigPos < 0 || m.BigPos > 8 {
+	if m.BigPos > 8 {
 		return fmt.Errorf("invalid call to make_move:\nExpected m.BigPos 0-8, got %d", m.BigPos)
 
 	}
 
-	if m.SmallPos < 0 || m.SmallPos > 8 {
+	if m.SmallPos > 8 {
 		return fmt.Errorf("invalid call to make_move:\nExpected m.SmallPos 0-8, got %d", m.SmallPos)
 
 	}
@@ -239,11 +237,11 @@ func (bb *BigBoard) isUndoMoveValid(m Move) error { // checks if received input 
 	// 	return fmt.Errorf("invalid call to UndoMove:\nm.BigPos and prev_pos missmatch: m.BigPos = %d, prev_pos = %d", m.BigPos, bb.boardToPlayIn)
 	// }
 
-	if m.BigPos < 0 || m.BigPos > 8 {
+	if m.BigPos > 8 {
 		return fmt.Errorf("invalid call to UndoMove:\nExpected m.BigPos 0-8, got %d", m.BigPos)
 	}
 
-	if m.SmallPos < 0 || m.SmallPos > 8 {
+	if m.SmallPos > 8 {
 		return fmt.Errorf("invalid call to UndoMove:\nExpected m.SmallPos 0-8, got %d", m.SmallPos)
 	}
 
