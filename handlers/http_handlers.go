@@ -54,7 +54,6 @@ func templateFuncs() template.FuncMap {
 
 // SetUpRouter does what it says.
 // It expects the following .env variables:
-// - DOMAIN
 // - CSRF_KEY
 // - SESSION_KEY
 // - GOOGLE_CLIENT_ID
@@ -63,7 +62,6 @@ func templateFuncs() template.FuncMap {
 // - GITHUB_CLIENT_ID
 // - GITHUB_CLIENT_SECRET
 // - GITHUB_CALLBACK_URL
-// - DOMAIN
 // - DOMAIN
 // It sets up the goth package for OAuth 2.0, and also wraps the default gin handler with csrf protection and session management.
 func SetUpRouter(db *models.DataBase, lb *models.LeaderBoard, hub *game.Hub) http.Handler {
