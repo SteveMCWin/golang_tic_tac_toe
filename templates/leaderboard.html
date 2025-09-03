@@ -1,33 +1,45 @@
 <!DOCTYPE html>
 <html>
+
 <head>
-<meta http-equiv="refresh" content="10">
+    <meta http-equiv="refresh" content="10">
     <title>Leaderboard</title>
     <style>
         body {
             font-family: Arial, sans-serif;
             padding: 1em;
         }
+
         h2 {
             text-align: center;
         }
+
         table {
             width: 70%;
             margin: 0 auto;
             border-collapse: collapse;
             box-shadow: 0 0 10px #ccc;
         }
-        th, td {
+
+        th,
+        td {
             padding: 0.75em;
             text-align: center;
             border: 1px solid #ddd;
         }
+
         th {
             background-color: #f4f4f4;
         }
+
         tr:nth-child(even) {
             background-color: #fafafa;
         }
+
+        a {
+            text-decoration: none;
+        }
+
         .avatar {
             width: 40px;
             height: 40px;
@@ -35,6 +47,7 @@
         }
     </style>
 </head>
+
 <body>
     <h2>Leaderboard - Top Elo Players</h2>
     <table>
@@ -51,7 +64,7 @@
             <tr>
                 <td>{{ add $index 1}}</td>
                 <td><img class="avatar" src="{{$player.AvatarURL}}" alt="Avatar"></td>
-                <td>{{$player.UserName}}</td>
+                <td><a href="/profile/{{$player.Id}}">{{$player.UserName}}</a></td>
                 <td>{{$player.Elo}}</td>
             </tr>
             {{end}}
@@ -59,5 +72,5 @@
     </table>
     <a href="/">Back to home</a><br><br>
 </body>
-</html>
 
+</html>

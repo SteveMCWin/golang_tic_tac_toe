@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Find Users</title>
+<style>
+    body { font-family: sans-serif; padding: 40px; background-color: #f9f9f9; text-align: center; }
+    .search-container { max-width: 400px; margin: auto; }
+    .results { margin-top: 20px; display: flex; flex-direction: column; gap: 10px; }
+    .user-btn {
+        padding: 10px;
+        background-color: #4CAF50;
+        color: white;
+        text-decoration: none;
+        border-radius: 5px;
+        display: block;
+    }
+</style>
+</head>
+<body>
+
+<h2>Find Users</h2>
+
+<div class="search-container">
+    <input type="text" id="searchQuery" placeholder="Enter a name">
+    <button onclick="findUsers()">Find</button>
+</div>
+
+<div class="results" id="results"></div>
+
+<script>
+async function findUsers() {
+    const query = document.getElementById("searchQuery").value.trim();
+    const resultsContainer = document.getElementById("results");
+    resultsContainer.innerHTML = "";  // clear old results
+
+    if (!query) {
+        return;
+    }
+
+    const res = await fetch(`/search?name=` + encodeURIComponent(query));
+    if (!res.ok) {
+        resultsContainer.innerHTML = "<p style='color:red;'>Error searching users.</p>";
+        return;
+    }
+
+    const users = await res.json();
+
+    if (users.length === 0) {
+        resultsContainer.innerHTML = "<p>No users found.</p>";
+        return;
+    }
+
+    for (const user of users) {
+        const link = document.createElement("a");
+        link.href = `/profile/${user.id}`;
+        link.textContent = user.username;
+        link.className = "user-btn";
+        resultsContainer.appendChild(link);
+    }
+}
+</script>
+
+</body>
+</html>

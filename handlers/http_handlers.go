@@ -54,7 +54,6 @@ func templateFuncs() template.FuncMap {
 
 // SetUpRouter does what it says.
 // It expects the following .env variables:
-// - DOMAIN
 // - CSRF_KEY
 // - SESSION_KEY
 // - GOOGLE_CLIENT_ID
@@ -63,7 +62,6 @@ func templateFuncs() template.FuncMap {
 // - GITHUB_CLIENT_ID
 // - GITHUB_CLIENT_SECRET
 // - GITHUB_CALLBACK_URL
-// - DOMAIN
 // - DOMAIN
 // It sets up the goth package for OAuth 2.0, and also wraps the default gin handler with csrf protection and session management.
 func SetUpRouter(db *models.DataBase, lb *models.LeaderBoard, hub *game.Hub) http.Handler {
@@ -138,6 +136,7 @@ func SetUpRouter(db *models.DataBase, lb *models.LeaderBoard, hub *game.Hub) htt
 	router.GET("/leaderboard", HandleGetLeaderboard(lb))
 	router.GET("/hub", ServeHub())
 	router.GET("/play", ServePlay())
+	router.GET("/search", HandleGetSearch(db))
 	router.GET("/profile/:user_id", MiddlewareNoCache(), HandleGetProfile(db))
 	router.GET("/profile/:user_id/delete", MiddlewareNoCache(), HandleGetDeleteProfile())
 	router.DELETE("/profile/:user_id", HandleDeleteProfile(db))
@@ -449,6 +448,24 @@ func ServePlay() func(c *gin.Context) {
 		c.HTML(http.StatusOK, "board.html", gin.H{ // this sets up the websocket in html and then the html redirects to /ws which calls MakePlayer
 			"game_mode": game_mode,
 		})
+	}
+}
+
+func HandleGetSearch(db *models.DataBase) func(c *gin.Context) {
+	return func(c *gin.Context) {
+		query := c.Query("name")
+		if query == "" {
+			c.HTML(http.StatusOK, "search_users.html", gin.H{})
+		} else {
+			requesting_user_id := GetUserId(c)
+			results, err := db.SearchForUsers(query, requesting_user_id)
+			if err != nil {
+				log.Println(err)
+				c.Redirect(http.StatusPermanentRedirect, "/error-page")
+				return
+			}
+			c.JSON(200, results)
+		}
 	}
 }
 

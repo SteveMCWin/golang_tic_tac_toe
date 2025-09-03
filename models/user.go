@@ -14,15 +14,15 @@ import (
 
 // User is a subset of data provided by a provider when logging in, plus game related stats.
 type User struct {
-	Id        int
-	UserName  string
-	Email     string
-	AvatarURL string
-	Provider  string // Represents the last provider used to log in to the account with the stored email. Actually useless at the moment.
+	Id        int    `json:"id"`
+	UserName  string `json:"username"`
+	Email     string `json:"email"`
+	AvatarURL string `json:"avatar_url"`
+	Provider  string `json:"provider"` // Represents the last provider used to log in to the account with the stored email. Actually useless at the moment.
 	// Game related
-	NumOfGamesPlayed int
-	NumOfGamesWon    int
-	Elo              int
+	NumOfGamesPlayed int `json:"numOfGamesPlayed"`
+	NumOfGamesWon    int `json:"numOfGamesWon"`
+	Elo              int `json:"elo"`
 }
 
 // ReadUser populates a User struct with data linked to the id passed to the function.
@@ -139,4 +139,29 @@ func (Db *DataBase) UpdateGameStats(usr *User) error { // called at the end of t
 	_, err := Db.Data.Exec("update users set games_played = ?, games_won = ?, elo = ? where id = ?", usr.NumOfGamesPlayed, usr.NumOfGamesWon, usr.Elo, usr.Id)
 
 	return err
+}
+
+func (Db *DataBase) SearchForUsers(username string, requesting_user_id int) ([]User, error) {
+	log.Println("Started searching for users!!")
+	log.Println("Username searching for:", username)
+	rows, err := Db.Data.Query("select id, username, avatar_url from spellfix_users inner join users on word = username where word match ? and id != ?", username, requesting_user_id)
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	matches := make([]User, 0)
+
+	for rows.Next() {
+		var usr User
+		err = rows.Scan(&usr.Id, &usr.UserName, &usr.AvatarURL)
+		if err != nil {
+			return nil, err
+		}
+
+		matches = append(matches, usr)
+	}
+
+	return matches, nil
 }

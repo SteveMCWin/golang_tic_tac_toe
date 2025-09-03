@@ -34,7 +34,7 @@ func (lb *LeaderBoard) RunLeaderBoard(Db *DataBase) {
 }
 
 func (lb *LeaderBoard) updateLeaderboard(Db *DataBase) { // just pulls the top players (based on elo) from the db
-    stmt := "SELECT username, avatar_url, elo FROM users ORDER BY elo DESC LIMIT 10"
+    stmt := "SELECT id, username, avatar_url, elo FROM users ORDER BY elo DESC LIMIT 10"
     rows, err := Db.Data.Query(stmt);
     if err != nil {
         log.Println("update leaderboard error:")
@@ -54,7 +54,7 @@ func (lb *LeaderBoard) updateLeaderboard(Db *DataBase) { // just pulls the top p
 
     for rows.Next() {
         usr := User{}
-        err = rows.Scan(&usr.UserName, &usr.AvatarURL, &usr.Elo)
+        err = rows.Scan(&usr.Id, &usr.UserName, &usr.AvatarURL, &usr.Elo)
         if err != nil {
             log.Println("Error scanning leaderboard user")
             log.Println(err)
