@@ -136,6 +136,7 @@ func SetUpRouter(db *models.DataBase, lb *models.LeaderBoard, hub *game.Hub) htt
 	router.GET("/leaderboard", HandleGetLeaderboard(lb))
 	router.GET("/hub", ServeHub())
 	router.GET("/play", ServePlay())
+	router.GET("/search", HandleGetSearch(db))
 	router.GET("/profile/:user_id", MiddlewareNoCache(), HandleGetProfile(db))
 	router.GET("/profile/:user_id/delete", MiddlewareNoCache(), HandleGetDeleteProfile())
 	router.DELETE("/profile/:user_id", HandleDeleteProfile(db))
@@ -447,6 +448,24 @@ func ServePlay() func(c *gin.Context) {
 		c.HTML(http.StatusOK, "board.html", gin.H{ // this sets up the websocket in html and then the html redirects to /ws which calls MakePlayer
 			"game_mode": game_mode,
 		})
+	}
+}
+
+func HandleGetSearch(db *models.DataBase) func(c *gin.Context) {
+	return func(c *gin.Context) {
+		query := c.Query("name")
+		if query == "" {
+			c.HTML(http.StatusOK, "search_users.html", gin.H{})
+		} else {
+			requesting_user_id := GetUserId(c)
+			results, err := db.SearchForUsers(query, requesting_user_id)
+			if err != nil {
+				log.Println(err)
+				c.Redirect(http.StatusPermanentRedirect, "/error-page")
+				return
+			}
+			c.JSON(200, results)
+		}
 	}
 }
 
