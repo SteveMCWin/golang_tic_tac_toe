@@ -1,0 +1,196 @@
+/* ===========================================
+   LEADERBOARD SPECIFIC STYLES
+   =========================================== */
+
+.container {
+    max-width: 800px;
+    padding: var(--spacing-lg);
+}
+
+h2 {
+    text-align: center;
+    color: var(--text-primary);
+    margin-bottom: var(--spacing-lg);
+    font-size: 2rem;
+    font-weight: 700;
+}
+
+/* ===========================================
+   TABLE STYLES
+   =========================================== */
+.table-container {
+    background-color: var(--color-primary-light);
+    border-radius: var(--border-radius);
+    padding: var(--spacing-md);
+    box-shadow: var(--shadow-md);
+    overflow-x: auto;
+    margin-bottom: var(--spacing-lg);
+}
+
+.leaderboard-table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: transparent;
+}
+
+.leaderboard-table th,
+.leaderboard-table td {
+    padding: var(--spacing-sm);
+    text-align: center;
+    border-bottom: 1px solid var(--color-primary-lighter);
+}
+
+.leaderboard-table th {
+    background-color: var(--color-secondary);
+    color: var(--text-primary);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-size: 14px;
+}
+
+.leaderboard-table th:first-child {
+    border-top-left-radius: var(--border-radius);
+}
+
+.leaderboard-table th:last-child {
+    border-top-right-radius: var(--border-radius);
+}
+
+.leaderboard-table tr:hover {
+    background-color: var(--color-primary-lighter);
+    transition: background-color 0.2s ease;
+}
+
+.leaderboard-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* ===========================================
+   TABLE CELL SPECIFIC STYLES
+   =========================================== */
+.rank {
+    font-weight: 700;
+    color: var(--color-accent);
+    font-size: 18px;
+    width: 80px;
+}
+
+.avatar-cell {
+    width: 80px;
+}
+
+.avatar-link {
+    display: inline-block;
+    transition: transform 0.2s ease;
+}
+
+.avatar-link:hover {
+    transform: scale(1.1);
+}
+
+.avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 7px;
+    object-fit: cover;
+    border: 2px solid var(--color-secondary);
+    transition: border-color 0.2s ease;
+}
+
+.avatar-link:hover .avatar {
+    border-color: var(--color-accent);
+}
+
+.username-cell {
+    text-align: left;
+    padding-left: var(--spacing-md);
+}
+
+.username-link {
+    color: var(--text-primary);
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s ease;
+}
+
+.username-link:hover {
+    color: var(--color-accent);
+}
+
+.elo {
+    font-weight: 600;
+    color: var(--color-accent);
+    font-size: 16px;
+    width: 100px;
+}
+
+/* ===========================================
+   BACK LINK STYLES
+   =========================================== */
+.back-link {
+    text-align: center;
+}
+
+/* ===========================================
+   RESPONSIVE DESIGN
+   =========================================== */
+@media (max-width: 768px) {
+    .container {
+        padding: var(--spacing-md);
+    }
+    
+    h2 {
+        font-size: 1.5rem;
+    }
+    
+    .table-container {
+        padding: var(--spacing-sm);
+    }
+    
+    .leaderboard-table th,
+    .leaderboard-table td {
+        padding: var(--spacing-xs);
+        font-size: 14px;
+    }
+    
+    .avatar {
+        width: 32px;
+        height: 32px;
+    }
+    
+    .rank {
+        font-size: 16px;
+    }
+    
+    .elo {
+        font-size: 14px;
+    }
+    
+    .username-cell {
+        padding-left: var(--spacing-sm);
+    }
+}
+
+@media (max-width: 480px) {
+    .leaderboard-table th,
+    .leaderboard-table td {
+        padding: 6px;
+        font-size: 12px;
+    }
+    
+    .avatar {
+        width: 28px;
+        height: 28px;
+    }
+    
+    .rank {
+        font-size: 14px;
+        width: 60px;
+    }
+    
+    .elo {
+        font-size: 12px;
+        width: 80px;
+    }
+}

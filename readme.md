@@ -19,6 +19,5 @@ You can be play it [here](https://tic-tac-toe-fun.onrender.com), tho there proba
 ![Check out the screenshots directory](screenshots/gameplay_screenshot.png?raw=true)
 
 ## Things left to implement
-- The front end
+- Good looking front end
 - Better matchmaking
-- Viewing other user's profiles

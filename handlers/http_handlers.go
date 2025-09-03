@@ -130,6 +130,8 @@ func SetUpRouter(db *models.DataBase, lb *models.LeaderBoard, hub *game.Hub) htt
 
 	router := gin.Default()
 
+	router.Static("/css", "./css")
+
 	router.GET("/", HandleGetHome())
 	router.GET("/error-page", HandleGetErrorPage())
 	router.GET("/about", HandleGetAbout())
