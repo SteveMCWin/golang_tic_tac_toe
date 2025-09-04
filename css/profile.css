@@ -1,0 +1,263 @@
+/* ===========================================
+   PROFILE PAGE SPECIFIC STYLES
+   =========================================== */
+
+.container {
+    max-width: 800px;
+    padding: var(--spacing-lg);
+}
+
+/* ===========================================
+   PROFILE CONTAINER
+   =========================================== */
+.profile-container {
+    background-color: var(--color-primary-light);
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-lg);
+    overflow: hidden;
+}
+
+/* ===========================================
+   PROFILE HEADER
+   =========================================== */
+.profile-header {
+    background-color: var(--color-secondary);
+    padding: var(--spacing-xl);
+    text-align: center;
+    border-bottom: 2px solid var(--color-primary-lighter);
+}
+
+.profile-avatar {
+    width: 120px;
+    height: 120px;
+    margin: 0 auto var(--spacing-md);
+    border-radius: 12px;
+    overflow: hidden;
+    border: 3px solid var(--color-accent);
+    position: relative;
+}
+
+.avatar-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.avatar-placeholder {
+    width: 100%;
+    height: 100%;
+    background-color: var(--color-accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 48px;
+    font-weight: 700;
+    color: var(--color-primary);
+    text-transform: uppercase;
+}
+
+.profile-name {
+    font-size: 2.2rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: var(--spacing-xs);
+}
+
+.profile-email {
+    font-size: 1.1rem;
+    color: var(--text-secondary);
+    margin-bottom: var(--spacing-sm);
+}
+
+.provider-badge {
+    background-color: var(--color-primary-lighter);
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--border-radius);
+    font-size: 0.9rem;
+    color: var(--color-accent);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* ===========================================
+   PROFILE CONTENT
+   =========================================== */
+.profile-content {
+    padding: var(--spacing-xl);
+}
+
+/* ===========================================
+   STATS GRID
+   =========================================== */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-xl);
+}
+
+.stat-card {
+    background-color: var(--color-secondary);
+    border-radius: var(--border-radius);
+    padding: var(--spacing-md);
+    text-align: center;
+    border: 2px solid transparent;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    border-color: var(--color-accent);
+    box-shadow: var(--shadow-md);
+}
+
+.stat-card.clickable {
+    cursor: pointer;
+    text-decoration: none;
+    color: inherit;
+    display: block;
+}
+
+.stat-card.clickable:hover {
+    text-decoration: none;
+    color: inherit;
+    background-color: var(--color-secondary-light);
+}
+
+.stat-value {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--color-accent);
+    margin-bottom: var(--spacing-xs);
+    line-height: 1;
+}
+
+.stat-label {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+}
+
+.win-rate {
+    font-size: 0.85rem;
+    color: var(--color-accent-light);
+    margin-top: var(--spacing-xs);
+    font-weight: 500;
+}
+
+/* ===========================================
+   ACTION BUTTONS
+   =========================================== */
+.action-buttons {
+    display: flex;
+    gap: var(--spacing-sm);
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.action-buttons .btn {
+    min-width: 140px;
+}
+
+/* Danger button for delete action */
+.btn-danger {
+    background-color: #ff5555;
+    color: var(--text-primary);
+    box-shadow: var(--shadow-sm);
+}
+
+.btn-danger:hover {
+    background-color: #ff6b6b;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+/* ===========================================
+   RESPONSIVE DESIGN
+   =========================================== */
+@media (max-width: 768px) {
+    .container {
+        padding: var(--spacing-md);
+    }
+    
+    .profile-header {
+        padding: var(--spacing-lg);
+    }
+    
+    .profile-content {
+        padding: var(--spacing-lg);
+    }
+    
+    .profile-avatar {
+        width: 100px;
+        height: 100px;
+        border-radius: 10px;
+    }
+    
+    .avatar-placeholder {
+        font-size: 40px;
+    }
+    
+    .profile-name {
+        font-size: 1.8rem;
+    }
+    
+    .stats-grid {
+        grid-template-columns: 1fr;
+        gap: var(--spacing-sm);
+    }
+    
+    .stat-value {
+        font-size: 2rem;
+    }
+    
+    .action-buttons {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .action-buttons .btn {
+        width: 100%;
+        max-width: 280px;
+    }
+}
+
+@media (max-width: 480px) {
+    .profile-header {
+        padding: var(--spacing-md);
+    }
+    
+    .profile-content {
+        padding: var(--spacing-md);
+    }
+    
+    .profile-avatar {
+        width: 80px;
+        height: 80px;
+        border-radius: 8px;
+    }
+    
+    .avatar-placeholder {
+        font-size: 32px;
+    }
+    
+    .profile-name {
+        font-size: 1.5rem;
+    }
+    
+    .profile-email {
+        font-size: 1rem;
+    }
+    
+    .stat-card {
+        padding: var(--spacing-sm);
+    }
+    
+    .stat-value {
+        font-size: 1.8rem;
+    }
+}

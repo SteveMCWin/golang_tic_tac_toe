@@ -142,8 +142,6 @@ func (Db *DataBase) UpdateGameStats(usr *User) error { // called at the end of t
 }
 
 func (Db *DataBase) SearchForUsers(username string, requesting_user_id int) ([]User, error) {
-	log.Println("Started searching for users!!")
-	log.Println("Username searching for:", username)
 	rows, err := Db.Data.Query("select id, username, avatar_url from spellfix_users inner join users on word = username where word match ? and id != ?", username, requesting_user_id)
 	if err != nil {
 		return nil, err

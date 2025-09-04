@@ -1,49 +1,52 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
+  <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hub</title>
-    <link rel="stylesheet" href="css/styles.css">
-    <link rel="stylesheet" href="css/hub.css">
-</head>
-<body>
+    <link rel="stylesheet" href="/css/styles.css">
+    <link rel="stylesheet" href="/css/hub.css">
+  </head>
+  <body>
     <div class="container">
-        <h1>Choose game mode</h1>
-
-        <div class="game-modes">
-            <a href="/play?game_mode=0" class="btn btn-secondary">
-                <span>Normal 180s</span>
-            </a>
-
-            <a href="/play?game_mode=1" class="btn btn-secondary">
-                <span>Normal 300s</span>
-            </a>
-
-            <a href="/play?game_mode=2" class="btn btn-secondary">
-                <span>Normal 600s</span>
-            </a>
-
-            <a href="/play?game_mode=3" class="btn btn-secondary">
-                <span>60s + 3s</span>
-            </a>
-
-            <a href="/play?game_mode=4" class="btn btn-secondary">
-                <span>60s + 5s</span>
-            </a>
-
-            <a href="/play?game_mode=5" class="btn btn-secondary">
-                <span>180s + 3s</span>
-            </a>
-
-            <a href="/play?game_mode=6" class="btn btn-secondary">
-                <span>180s + 5s</span>
-            </a>
+      <h1>Game Modes</h1>
+      <div class="game-modes">
+        <div class="normal-modes">
+          <h3>Normal</h3>
+          <a href="/play?game_mode=0" class="btn btn-secondary">
+            <span>180s</span>
+          </a>
+          <div class="divider"></div>
+          <a href="/play?game_mode=1" class="btn btn-secondary">
+            <span>300s</span>
+          </a>
+          <div class="divider"></div>
+          <a href="/play?game_mode=2" class="btn btn-secondary">
+            <span>600s</span>
+          </a>
         </div>
-
-        <div class="back-link">
-            <a href="/" class="btn btn-outline">Back to home</a>
+        <div class="increment-modes">
+          <h3>Increment</h3>
+          <a href="/play?game_mode=3" class="btn btn-secondary">
+            <span>60s + 3s</span>
+          </a>
+          <div class="divider"></div>
+          <a href="/play?game_mode=4" class="btn btn-secondary">
+            <span>60s + 5s</span>
+          </a>
+          <div class="divider"></div>
+          <a href="/play?game_mode=5" class="btn btn-secondary">
+            <span>180s + 3s</span>
+          </a>
+          <div class="divider"></div>
+          <a href="/play?game_mode=6" class="btn btn-secondary">
+            <span>180s + 5s</span>
+          </a>
         </div>
+      </div>
+      <div class="back-link">
+        <a href="/" class="btn btn-outline">Back to home</a>
+      </div>
     </div>
-</body>
+  </body>
 </html>
