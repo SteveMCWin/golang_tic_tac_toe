@@ -34,6 +34,9 @@ func (Db *DataBase) ReadUser(user_id int) (*User, error) {
 	if user_id == defs.NO_USER_ID {
 		usr = &User{UserName: "Guest", Elo: defs.STARTING_ELO}
 		return usr, nil
+	} else if user_id == defs.DELETED_USER_ID {
+		usr = &User{UserName: "Deleted User"}
+		return usr, nil
 	}
 
 	err := Db.Data.QueryRow("select username, email, avatar_url, provider, games_played, games_won, elo from users where id = ?", user_id).Scan(

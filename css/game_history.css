@@ -1,0 +1,341 @@
+/* ===========================================
+   GAME HISTORY PAGE SPECIFIC STYLES
+   =========================================== */
+
+.container {
+    max-width: 800px;
+    padding: var(--spacing-lg);
+}
+
+/* ===========================================
+   HISTORY CONTAINER
+   =========================================== */
+.history-container {
+    background-color: var(--color-primary-light);
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-lg);
+    overflow: hidden;
+}
+
+/* ===========================================
+   HISTORY HEADER
+   =========================================== */
+.history-header {
+    background-color: var(--color-secondary);
+    color: var(--text-primary);
+    padding: var(--spacing-xl);
+    text-align: center;
+    border-bottom: 2px solid var(--color-primary-lighter);
+}
+
+.history-title {
+    font-size: 2.2rem;
+    font-weight: 700;
+    margin-bottom: var(--spacing-xs);
+}
+
+.history-subtitle {
+    font-size: 1.1rem;
+    color: var(--text-secondary);
+}
+
+/* ===========================================
+   HISTORY CONTENT
+   =========================================== */
+.history-content {
+    padding: var(--spacing-xl);
+}
+
+.back-link {
+    margin-bottom: var(--spacing-xl);
+}
+
+/* ===========================================
+   GAMES LIST
+   =========================================== */
+.games-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+}
+
+.game-card {
+    background-color: var(--color-secondary);
+    border-radius: var(--border-radius);
+    padding: var(--spacing-md);
+    transition: all 0.2s ease;
+    text-decoration: none;
+    color: inherit;
+    display: block;
+    border: 2px solid transparent;
+    border-left: 4px solid var(--color-primary-lighter);
+    position: relative;
+}
+
+.game-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+    text-decoration: none;
+    color: inherit;
+    background-color: var(--color-secondary-light);
+}
+
+/* Game result styling */
+.game-card.won {
+    border-left-color: #50fa7b;
+}
+
+.game-card.won:hover {
+    border-color: #50fa7b;
+}
+
+.game-card.lost {
+    border-left-color: #ff5555;
+}
+
+.game-card.lost:hover {
+    border-color: #ff5555;
+}
+
+.game-card.tie {
+    border-left-color: var(--color-accent);
+}
+
+.game-card.tie:hover {
+    border-color: var(--color-accent);
+}
+
+/* ===========================================
+   GAME CARD CONTENT
+   =========================================== */
+.game-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-sm);
+    flex-wrap: wrap;
+    gap: var(--spacing-xs);
+}
+
+.game-date {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.game-result {
+    font-weight: 700;
+    padding: 4px 12px;
+    border-radius: var(--border-radius);
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.result-won {
+    background-color: rgba(80, 250, 123, 0.2);
+    color: #50fa7b;
+    border: 1px solid rgba(80, 250, 123, 0.3);
+}
+
+.result-lost {
+    background-color: rgba(255, 85, 85, 0.2);
+    color: #ff5555;
+    border: 1px solid rgba(255, 85, 85, 0.3);
+}
+
+.result-tie {
+    background-color: rgba(189, 147, 249, 0.2);
+    color: var(--color-accent);
+    border: 1px solid rgba(189, 147, 249, 0.3);
+}
+
+/* ===========================================
+   PLAYERS SECTION
+   =========================================== */
+.players-section {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-sm);
+}
+
+.player-info {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.player-info.current-user {
+    font-weight: 600;
+}
+
+.player-info.current-user .player-name {
+    color: var(--color-accent);
+}
+
+.player-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 7px;
+    overflow: hidden;
+    border: 2px solid var(--color-primary-lighter);
+    flex-shrink: 0;
+}
+
+.avatar-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.avatar-placeholder {
+    width: 100%;
+    height: 100%;
+    background-color: var(--color-accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--color-primary);
+    text-transform: uppercase;
+}
+
+.player-details {
+    flex: 1;
+    min-width: 0;
+}
+
+.player-name {
+    font-size: 1rem;
+    margin-bottom: 2px;
+    color: var(--text-primary);
+}
+
+.player-elo {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+.vs-divider {
+    background-color: var(--color-accent);
+    color: var(--color-primary);
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.8rem;
+}
+
+.game-id {
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    text-align: center;
+    padding-top: var(--spacing-xs);
+    border-top: 1px solid var(--color-primary-lighter);
+}
+
+/* ===========================================
+   NO GAMES STATE
+   =========================================== */
+.no-games {
+    text-align: center;
+    padding: var(--spacing-xl) var(--spacing-md);
+    color: var(--text-secondary);
+}
+
+.no-games-icon {
+    font-size: 4rem;
+    margin-bottom: var(--spacing-md);
+    color: var(--color-accent);
+    font-weight: 700;
+}
+
+.no-games h3 {
+    margin-bottom: var(--spacing-sm);
+    color: var(--text-primary);
+    font-size: 1.5rem;
+}
+
+.no-games p {
+    color: var(--text-secondary);
+}
+
+/* ===========================================
+   RESPONSIVE DESIGN
+   =========================================== */
+@media (max-width: 768px) {
+    .container {
+        padding: var(--spacing-md);
+    }
+    
+    .history-header {
+        padding: var(--spacing-lg);
+    }
+    
+    .history-content {
+        padding: var(--spacing-lg);
+    }
+    
+    .history-title {
+        font-size: 1.8rem;
+    }
+    
+    .players-section {
+        grid-template-columns: 1fr;
+        gap: var(--spacing-xs);
+        text-align: center;
+    }
+    
+    .vs-divider {
+        justify-self: center;
+    }
+    
+    .game-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--spacing-xs);
+    }
+}
+
+@media (max-width: 480px) {
+    .history-header {
+        padding: var(--spacing-md);
+    }
+    
+    .history-content {
+        padding: var(--spacing-md);
+    }
+    
+    .history-title {
+        font-size: 1.5rem;
+    }
+    
+    .history-subtitle {
+        font-size: 1rem;
+    }
+    
+    .game-card {
+        padding: var(--spacing-sm);
+    }
+    
+    .player-avatar {
+        width: 32px;
+        height: 32px;
+    }
+    
+    .avatar-placeholder {
+        font-size: 14px;
+    }
+    
+    .vs-divider {
+        width: 28px;
+        height: 28px;
+        font-size: 0.7rem;
+    }
+}

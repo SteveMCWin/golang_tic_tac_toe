@@ -156,6 +156,8 @@ func (Db *DataBase) ReadGameRecordsForUser(user_id int) ([]*GameRecord, error) {
 		return nil, err
 	}
 
+	defer rows.Close()
+
 	for rows.Next() {
 		rec := &GameRecord{
 			U1: new(User),
