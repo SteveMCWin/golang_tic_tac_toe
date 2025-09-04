@@ -3,7 +3,7 @@
 // =========================================== 
 
 document.addEventListener('DOMContentLoaded', function() {
-    const userId = '{{.user_id}}';
+    const userId = window.appConfig.userId;
     const deleteBtn = document.getElementById('deleteBtn');
     const deleteText = document.getElementById('deleteText');
     const loadingSpinner = document.getElementById('loadingSpinner');
@@ -16,7 +16,7 @@ document.addEventListener('DOMContentLoaded', function() {
         deleteBtn.classList.add('loading');
 
         // Extract CSRF token if present
-        const csrfInput = document.querySelector('#csrf-debug input[name="csrf_token"]');
+        const csrfInput = document.querySelector('#csrf-debug input');
         const csrfToken = csrfInput ? csrfInput.value : null;
 
         try {

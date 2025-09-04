@@ -165,7 +165,7 @@
 
 /* Danger button for delete action */
 .btn-danger {
-    background-color: #ff5555;
+    background-color: var(--color-accent);
     color: var(--text-primary);
     box-shadow: var(--shadow-sm);
 }

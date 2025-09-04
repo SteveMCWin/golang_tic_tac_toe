@@ -99,6 +99,7 @@ func (Db *DataBase) DeleteUser(user_id int) error {
 		return err
 	}
 
+	log.Println("Going into UpdateRecordsDeletedUser")
 	err = Db.UpdateRecordsDeletedUser(user_id)
 	return err
 }

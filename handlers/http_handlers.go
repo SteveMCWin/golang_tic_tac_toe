@@ -518,7 +518,6 @@ func HandleGetDeleteProfile() func(c *gin.Context) {
 func HandleDeleteProfile(db *models.DataBase) func(c *gin.Context) {
 	return func(c *gin.Context) {
 
-		// The problem is the csrf key!!!
 		log.Println("Called DELETE profile")
 		requesting_user_id := GetUserId(c)
 		if requesting_user_id == defs.NO_USER_ID {
@@ -543,7 +542,7 @@ func HandleDeleteProfile(db *models.DataBase) func(c *gin.Context) {
 
 		err = db.DeleteUser(user_id)
 		if err != nil {
-			log.Println("Error deleting user profile")
+			log.Println("Error deleting user profile:", err)
 			c.JSON(http.StatusInternalServerError, gin.H{})
 			return
 		}

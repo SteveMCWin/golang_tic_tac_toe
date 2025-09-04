@@ -21,14 +21,14 @@
     overflow: hidden;
     width: 100%;
     text-align: center;
-    border: 2px solid #ff5555;
+    border: 2px solid var(--color-accent);
 }
 
 /* ===========================================
    DELETE HEADER
    =========================================== */
 .delete-header {
-    background-color: #ff5555;
+    background-color: var(--color-accent);
     color: var(--text-primary);
     padding: var(--spacing-xl);
 }
@@ -60,7 +60,7 @@
     background-color: var(--color-secondary);
     padding: var(--spacing-md);
     border-radius: var(--border-radius);
-    border-left: 4px solid #ff5555;
+    /* border-left: 4px solid var(--color-accent); */
 }
 
 /* ===========================================
@@ -80,17 +80,17 @@
 
 /* Enhanced danger button styling */
 .btn-danger {
-    background-color: #ff5555;
+    background-color: var(--color-accent);
     color: var(--text-primary);
     box-shadow: var(--shadow-sm);
     border: 2px solid transparent;
 }
 
 .btn-danger:hover:not(:disabled) {
-    background-color: #ff6b6b;
+    background-color: var(--color-accent-light);
     transform: translateY(-2px);
     box-shadow: var(--shadow-md);
-    border-color: #ff7777;
+    border-color: var(--color-accent);
 }
 
 .btn-danger:disabled {

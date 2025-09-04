@@ -1,37 +1,42 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
+  <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Delete Account</title>
     <link rel="stylesheet" href="/css/styles.css">
     <link rel="stylesheet" href="/css/delete_account.css">
-</head>
-<body>
-    <div class="container">
-        <div class="delete-container">
-            <div class="delete-header">
-                <h1 class="delete-title">We Will Miss You!</h1>
-                <p class="delete-message">Are you sure you want to delete your account?</p>
-            </div>
-            
-            <div class="delete-content">
-                <p class="warning-text">This action cannot be undone. All your game history, statistics, and profile information will be permanently removed.</p>
-                
-                <div class="action-buttons">
-                    <button type="button" onclick="window.location.href='/profile/{{.user_id}}'" class="btn btn-secondary">
-                        <span>Cancel</span>
-                    </button>
-                    
-                    <button type="button" id="deleteBtn" class="btn btn-danger">
-                        <span id="deleteText">Delete My Account</span>
-                        <span id="loadingSpinner" class="loading-spinner">Deleting...</span>
-                    </button>
-                </div>
-            </div>
-        </div>
+  </head>
+  <body>
+    <div style="display: none;" id="csrf-debug">
+      {{ .csrfField }}
     </div>
-
+    <div class="container">
+      <div class="delete-container">
+        <div class="delete-header">
+          <h1 class="delete-title">We Will Miss You!</h1>
+          <p class="delete-message">Are you sure you want to delete your account?</p>
+        </div>
+        <div class="delete-content">
+          <p class="warning-text">This action cannot be undone. All your game history, statistics, and profile
+                    information will be permanently removed.</p>
+          <div class="action-buttons">
+            <button type="button" onclick="window.location.href='/profile/{{.user_id}}'" class="btn btn-secondary">
+              <span>Cancel</span>
+            </button>
+            <button type="button" id="deleteBtn" class="btn btn-danger">
+              <span id="deleteText">Delete My Account</span>
+              <span id="loadingSpinner" class="loading-spinner">Deleting...</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script>
+      window.appConfig = {
+            userId: '{{ .user_id }}',
+        };
+    </script>
     <script src="/js/delete_account.js"></script>
-</body>
+  </body>
 </html>
