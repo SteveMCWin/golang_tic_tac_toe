@@ -4,7 +4,8 @@ My first golang project.\
 
 This project was part of my 100 hour journey of learning golang and back-end web development.\
 The web app is deployed using [render.com](https://render.com/) and Docker.\
-You can be play it [here](https://tic-tac-toe-fun.onrender.com), tho there probably won't be any other players, so feel free to contact me if you want a 1v1.
+You can be play it [here](https://tic-tac-toe-fun.onrender.com), tho there probably won't be any other players, so feel free to contact me if you want a 1v1.\
+Also note that 99% of the frontend is done by [claude.ai](https://claude.ai), I just tweaked some stuff that didn't work. I hate doing frontend.
 
 ## Features
 - User authentication (with Google and Github) using the [goth package](https://github.com/markbates/goth)
@@ -19,5 +20,5 @@ You can be play it [here](https://tic-tac-toe-fun.onrender.com), tho there proba
 ![Check out the screenshots directory](screenshots/gameplay_screenshot.png?raw=true)
 
 ## Things left to implement
-- Good looking front end
+- Legit frontend
 - Better matchmaking
