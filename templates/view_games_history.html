@@ -1,102 +1,95 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
+  <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Game History</title>
     <link rel="stylesheet" href="/css/styles.css">
     <link rel="stylesheet" href="/css/game_history.css">
-</head>
-<body>
+  </head>
+  <body>
     <div class="container">
-        <div class="history-container">
-            <div class="history-header">
-                <h1 class="history-title">Game History</h1>
-                <p class="history-subtitle">Track your gaming journey</p>
-            </div>
-            
-            <div class="history-content">
-                <div class="back-link">
-                    <a href="/profile/{{.user_id}}" class="btn btn-outline">
-                        <span>Back to Profile</span>
-                    </a>
-                </div>
-                
-                {{if .records}}
-                    <div class="games-list">
-                        {{range $index, $record := .records}}
-                            {{$winner_id := index $.winner_ids $index}}
-                            {{$card_class := "tie"}}
-                            {{$result_text := "Tie"}}
-                            {{$result_class := "result-tie"}}
-                            
-                            {{if eq $winner_id $.user_id}}
-                                {{$card_class = "won"}}
-                                {{$result_text = "Won"}}
-                                {{$result_class = "result-won"}}
-                            {{else if ne $winner_id -1}}
-                                {{$card_class = "lost"}}
-                                {{$result_text = "Lost"}}
-                                {{$result_class = "result-lost"}}
-                            {{end}}
-                            
-                            <a href="/replay/{{$record.Id}}" class="game-card {{$card_class}}">
-                                <div class="game-header">
-                                    <div class="game-date">
-                                        {{$record.DateRecorded.Format "Jan 2, 2006 at 3:04 PM"}}
-                                    </div>
-                                    <div class="game-result {{$result_class}}">
-                                        {{$result_text}}
-                                    </div>
-                                </div>
-                                
-                                <div class="players-section">
-                                    <div class="player-info {{if eq $record.U1.Id $.user_id}}current-user{{end}}">
-                                        <div class="player-avatar">
-                                            {{if $record.U1.AvatarURL}}
-                                                <img src="{{$record.U1.AvatarURL}}" alt="{{$record.U1.UserName}} Avatar" class="avatar-image">
-                                            {{else}}
-                                                <div class="avatar-placeholder">
-                                                    <span>{{substr $record.U1.UserName 0 1}}</span>
-                                                </div>
-                                            {{end}}
-                                        </div>
-                                        <div class="player-details">
-                                            <div class="player-name">{{$record.U1.UserName}}</div>
-                                            <div class="player-elo">ELO: {{$record.U1.Elo}}</div>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="vs-divider">VS</div>
-                                    
-                                    <div class="player-info {{if eq $record.U2.Id $.user_id}}current-user{{end}}">
-                                        <div class="player-details">
-                                            <div class="player-name">{{$record.U2.UserName}}</div>
-                                            <div class="player-elo">ELO: {{$record.U2.Elo}}</div>
-                                        </div>
-                                    <div class="player-avatar">
-                                        {{if $record.U2.AvatarURL}}
-                                        <img src="{{$record.U2.AvatarURL}}" alt="{{$record.U2.UserName}} Avatar" class="avatar-image">
-                                        {{else}}
-                                        <div class="avatar-placeholder">
-                                            <span>{{substr $record.U2.UserName 0 1}}</span>
-                                        </div>
-                                        {{end}}
-                                    </div>
-                                    </div>
-                                </div>
-                            </a>
-                        {{end}}
-                    </div>
-                {{else}}
-                    <div class="no-games">
-                        <div class="no-games-icon">?</div>
-                        <h3>No Games Played Yet</h3>
-                        <p>Start playing to see your game history here!</p>
-                    </div>
-                {{end}}
-            </div>
+      <div class="history-container">
+        <div class="history-header">
+          <h1 class="history-title">Game History</h1>
+          <p class="history-subtitle">Track your gaming journey</p>
         </div>
+        <div class="history-content">
+          <div class="back-link">
+            <a href="/profile/{{.user_id}}" class="btn btn-outline">
+              <span>Back to Profile</span>
+            </a>
+          </div>
+          {{if .records}}
+          <div class="games-list">
+            {{range $index, $record := .records}}
+                {{$winner_id := index $.winner_ids $index}}
+                {{$card_class := "tie"}}
+                {{$result_text := "Tie"}}
+                {{$result_class := "result-tie"}}
+
+                {{if eq $winner_id $.user_id}}
+                {{$card_class = "won"}}
+                {{$result_text = "Won"}}
+                {{$result_class = "result-won"}}
+                {{else if ne $winner_id -1}}
+                {{$card_class = "lost"}}
+                {{$result_text = "Lost"}}
+                {{$result_class = "result-lost"}}
+            {{end}}
+            <a href="/replay/{{$record.Id}}?user_id={{$.user_id}}" class="game-card {{$card_class}}">
+              <div class="game-header">
+                <div class="game-date">
+                  {{$record.DateRecorded.Format "Jan 2, 2006 at 3:04 PM"}}
+                </div>
+                <div class="game-result {{$result_class}}">
+                  {{$result_text}}
+                </div>
+              </div>
+              <div class="players-section">
+                <div class="player-info {{if eq $record.U1.Id $.user_id}}current-user{{end}}">
+                  <div class="player-avatar">
+                    {{if $record.U1.AvatarURL}}
+                    <img src="{{$record.U1.AvatarURL}}" alt="{{$record.U1.UserName}} Avatar" class="avatar-image">
+                    {{else}}
+                    <div class="avatar-placeholder">
+                      <span>{{substr $record.U1.UserName 0 1}}</span>
+                    </div>
+                    {{end}}
+                  </div>
+                  <div class="player-details">
+                    <div class="player-name">{{$record.U1.UserName}}</div>
+                    <div class="player-elo">ELO: {{$record.U1.Elo}}</div>
+                  </div>
+                </div>
+                <div class="vs-divider">VS</div>
+                <div class="player-info {{if eq $record.U2.Id $.user_id}}current-user{{end}}">
+                  <div class="player-details">
+                    <div class="player-name">{{$record.U2.UserName}}</div>
+                    <div class="player-elo">ELO: {{$record.U2.Elo}}</div>
+                  </div>
+                  <div class="player-avatar">
+                    {{if $record.U2.AvatarURL}}
+                    <img src="{{$record.U2.AvatarURL}}" alt="{{$record.U2.UserName}} Avatar" class="avatar-image">
+                    {{else}}
+                    <div class="avatar-placeholder">
+                      <span>{{substr $record.U2.UserName 0 1}}</span>
+                    </div>
+                    {{end}}
+                  </div>
+                </div>
+              </div>
+            </a>
+            {{end}}
+          </div>
+          {{else}}
+          <div class="no-games">
+            <div class="no-games-icon">?</div>
+            <h3>No Games Played Yet</h3>
+          </div>
+          {{end}}
+        </div>
+      </div>
     </div>
-</body>
+  </body>
 </html>

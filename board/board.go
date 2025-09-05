@@ -58,7 +58,7 @@ func (b *Board) UpdateResult() {
 
     // check diagonals
     if b.Cells[4] == defs.EMPTY_CELL {
-        return 
+		b.Result = defs.EMPTY_CELL
     }
 
     if b.Cells[0] == b.Cells[4] && b.Cells[0] == b.Cells[8] {
@@ -89,7 +89,5 @@ func (b *Board) UpdateResult() {
         }
 
         b.Result = winner
-
     }
-
 }

@@ -1,0 +1,304 @@
+/* ===========================================
+   REPLAY PAGE SPECIFIC STYLES
+   =========================================== */
+
+body {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: var(--spacing-md);
+}
+
+/* ===========================================
+   REPLAY CONTAINER
+   =========================================== */
+.replay-container {
+    width: 100%;
+    max-width: 800px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--spacing-lg);
+}
+
+/* ===========================================
+   REPLAY HEADER
+   =========================================== */
+.replay-header {
+    text-align: center;
+    background-color: var(--color-primary-light);
+    padding: var(--spacing-lg);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-md);
+    width: 100%;
+}
+
+.replay-title {
+    font-size: 2.2rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: var(--spacing-xs);
+}
+
+.replay-subtitle {
+    font-size: 1.1rem;
+    color: var(--text-secondary);
+}
+
+/* ===========================================
+   REPLAY CONTROLS
+   =========================================== */
+.replay-controls {
+    display: flex;
+    gap: var(--spacing-sm);
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.replay-controls .btn {
+    min-width: 160px;
+    font-size: 1rem;
+    transition: all 0.2s ease;
+}
+
+.replay-controls .btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* ===========================================
+   BOARD CONTAINER
+   =========================================== */
+.board-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: var(--spacing-md);
+    background-color: var(--color-primary-light);
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-lg);
+}
+
+/* ===========================================
+   ULTIMATE BOARD (reuse from board.css)
+   =========================================== */
+.ultimate-board {
+    display: grid;
+    grid-template-columns: repeat(3, auto);
+    grid-template-rows: repeat(3, auto);
+    gap: 8px;
+    padding: 8px;
+    background-color: var(--color-primary);
+    border-radius: var(--border-radius);
+    border: 3px solid var(--color-secondary);
+    transition: border-color 0.3s ease;
+}
+
+.ultimate-board.highlight-all {
+    border-color: var(--color-accent);
+    box-shadow: 0 0 0 2px rgba(189, 147, 249, 0.5);
+}
+
+/* ===========================================
+   MINI BOARDS
+   =========================================== */
+.mini-board {
+    display: grid;
+    grid-template-columns: repeat(3, 50px);
+    grid-template-rows: repeat(3, 50px);
+    gap: 2px;
+    border: 2px solid var(--color-secondary);
+    padding: 4px;
+    background-color: var(--color-primary-lighter);
+    position: relative;
+    border-radius: var(--border-radius);
+    transition: all 0.3s ease;
+}
+
+.mini-board.highlight {
+    border-color: var(--color-accent);
+    background-color: rgba(189, 147, 249, 0.1);
+    box-shadow: 0 0 0 2px rgba(189, 147, 249, 0.3);
+}
+
+.mini-board.completed {
+    opacity: 0.6;
+}
+
+/* ===========================================
+   MINI BOARD WINNERS
+   =========================================== */
+.mini-board-winner {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 4rem;
+    font-weight: 700;
+    background-color: rgba(40, 42, 54, 0.95);
+    border-radius: var(--border-radius);
+    z-index: 10;
+    pointer-events: none;
+}
+
+.mini-board-winner.x-winner {
+    color: #50fa7b;
+}
+
+.mini-board-winner.o-winner {
+    color: #ff5555;
+}
+
+/* ===========================================
+   CELLS
+   =========================================== */
+.cell {
+    background-color: var(--color-primary);
+    border: 1px solid var(--color-secondary);
+    font-size: 1.2rem;
+    font-weight: 700;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    user-select: none;
+    width: 50px;
+    height: 50px;
+    border-radius: 4px;
+    color: var(--text-primary);
+    cursor: default;
+}
+
+.cell.x {
+    color: #50fa7b;
+}
+
+.cell.o {
+    color: #ff5555;
+}
+
+/* ===========================================
+   REPLAY INFO
+   =========================================== */
+.replay-info {
+    background-color: var(--color-primary-light);
+    padding: var(--spacing-md);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-sm);
+    width: 100%;
+    text-align: center;
+}
+
+.move-info {
+    color: var(--text-secondary);
+    font-size: 1rem;
+}
+
+/* ===========================================
+   BACK LINK
+   =========================================== */
+.back-link {
+    margin-top: var(--spacing-md);
+}
+
+/* ===========================================
+   ERROR MESSAGE
+   =========================================== */
+.error-message {
+    position: fixed;
+    top: var(--spacing-md);
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #ff5555;
+    color: var(--text-primary);
+    padding: var(--spacing-md) var(--spacing-lg);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-lg);
+    z-index: 1000;
+    max-width: 90%;
+    text-align: center;
+    font-weight: 500;
+}
+
+/* ===========================================
+   UTILITY CLASSES
+   =========================================== */
+.hidden {
+    display: none !important;
+}
+
+/* ===========================================
+   RESPONSIVE DESIGN
+   =========================================== */
+@media (max-width: 768px) {
+    body {
+        padding: var(--spacing-sm);
+    }
+    
+    .replay-header {
+        padding: var(--spacing-md);
+    }
+    
+    .replay-title {
+        font-size: 1.8rem;
+    }
+    
+    .replay-controls {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .replay-controls .btn {
+        width: 100%;
+        max-width: 280px;
+    }
+    
+    .mini-board {
+        grid-template-columns: repeat(3, 45px);
+        grid-template-rows: repeat(3, 45px);
+    }
+    
+    .cell {
+        width: 45px;
+        height: 45px;
+        font-size: 1rem;
+    }
+    
+    .mini-board-winner {
+        font-size: 3rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .mini-board {
+        grid-template-columns: repeat(3, 40px);
+        grid-template-rows: repeat(3, 40px);
+        gap: 1px;
+        padding: 2px;
+    }
+    
+    .cell {
+        width: 40px;
+        height: 40px;
+        font-size: 0.9rem;
+    }
+    
+    .mini-board-winner {
+        font-size: 2.5rem;
+    }
+    
+    .ultimate-board {
+        gap: 6px;
+        padding: 6px;
+    }
+    
+    .replay-title {
+        font-size: 1.5rem;
+    }
+}

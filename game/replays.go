@@ -11,7 +11,7 @@ import (
 )
 
 type GameReplay struct {
-	b *board.BigBoard
+	b          *board.BigBoard
 	gameRecord *models.GameRecord
 }
 
@@ -31,11 +31,11 @@ func InitGameReplay(user_id int, rec *models.GameRecord) error {
 		return err
 	}
 
-	for i := len(moves)-1; i >= 0; i-- { // push moves in reverse order since the stack also reverses them
+	for i := len(moves) - 1; i >= 0; i-- { // push moves in reverse order since the stack also reverses them
 		new_board.RedoStack.Push(moves[i])
 	}
 
-	cachedReplays[user_id] = GameReplay{ b: &new_board, gameRecord: rec }
+	cachedReplays[user_id] = GameReplay{b: &new_board, gameRecord: rec}
 
 	return nil
 }
@@ -52,9 +52,9 @@ func RecordHistoryToMoves(history string) ([]board.Move, error) {
 			return nil, errors.New("ERROR: expected len of move_str is 3")
 		}
 
-		moves[i] = board.Move {
-			Player: move_str[0],
-			BigPos: move_str[1] - '0',
+		moves[i] = board.Move{
+			Player:   move_str[0],
+			BigPos:   move_str[1] - '0',
 			SmallPos: move_str[2] - '0',
 		}
 	}
@@ -103,10 +103,12 @@ func parseReplayStateToJSON(replay *GameReplay) ([]byte, error) {
 		Type           string   `json:"type"`
 		Board          []string `json:"board"`
 		CompleteBoards []byte   `json:"complete_boards"`
+		NextBoard      byte     `json:"board_to_play_in"`
 	}{
-		Type:    "state",
-		Board:   board,
+		Type:           "state",
+		Board:          board,
 		CompleteBoards: make([]byte, 0),
+		NextBoard: replay.b.GetNextMiniBoard(),
 	}
 
 	for _, b := range replay.b.Boards {

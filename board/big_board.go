@@ -103,8 +103,6 @@ func (bb *BigBoard) UndoLastMove() error {
 		return nil
 	}
 
-	// log.Println("Undo Move:", m)
-
 	if m.BigPos >= '0' && m.BigPos <= '9' { // the positions passed in are (probably) ascii characters representing digits
 		m.BigPos = m.BigPos - '0'
 	}
@@ -119,7 +117,6 @@ func (bb *BigBoard) UndoLastMove() error {
 	}
 
 	bb.RedoStack.Push(*m)
-	// NOTE: Should change it so that the top of history is pushed to a redo stack or something
 	bb.History.Pop() // not checking if pop returns ok since it will always do so if it got to this point
 
 	bb.Boards[m.BigPos].UndoMove(*m)
@@ -132,7 +129,6 @@ func (bb *BigBoard) UndoLastMove() error {
 	} else {
 		bb.boardToPlayIn = prev_m.SmallPos
 	}
-
 
 	return nil
 }

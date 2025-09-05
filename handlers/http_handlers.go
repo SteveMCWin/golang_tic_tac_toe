@@ -342,10 +342,15 @@ func HandleGetUserGames(db *models.DataBase) func(c *gin.Context) {
 	}
 }
 
-// HandleGetGameReplay
-// TODO
 func HandleGetGameReplay(db *models.DataBase) func(c *gin.Context) {
 	return func(c *gin.Context) {
+		user_id_param := c.Query("user_id")
+		user_id, err := strconv.Atoi(user_id_param)
+		if err != nil {
+			log.Println("Error getting the user id from usrl:", err)
+			c.Redirect(http.StatusTemporaryRedirect, "/error-page")
+			return
+		}
 
 		requesting_user_id := GetUserId(c)
 		if requesting_user_id == defs.NO_USER_ID {
@@ -371,7 +376,7 @@ func HandleGetGameReplay(db *models.DataBase) func(c *gin.Context) {
 
 		game.InitGameReplay(requesting_user_id, rec)
 
-		c.HTML(http.StatusOK, "replay.html", gin.H{csrf.TemplateTag: csrf.TemplateField(c.Request)})
+		c.HTML(http.StatusOK, "replay.html", gin.H{csrf.TemplateTag: csrf.TemplateField(c.Request), "user_id": user_id})
 	}
 }
 

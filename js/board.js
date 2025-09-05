@@ -14,6 +14,7 @@ class GameBoard {
         this.lastUpdateTime = Date.now();
         this.currentPlayer = 1; // 1 for player1, 2 for player2
         this.timerInterval = null;
+        this.timersStarted = false; // Track if timers have been started
         
         // Board state
         this.boardToPlayIn = '?'; // Start with all boards highlighted
@@ -101,6 +102,9 @@ class GameBoard {
         const msg = JSON.parse(event.data);
         
         switch (msg.type) {
+            case 'found':
+                this.handleOpponentFound(msg);
+                break;
             case 'start':
                 this.handleGameStart(msg);
                 break;
@@ -113,7 +117,7 @@ class GameBoard {
         }
     }
     
-    handleGameStart(msg) {
+    handleOpponentFound(msg) {
         // Hide waiting message and show game
         this.waitingMessageEl.classList.add('hidden');
         this.gameContainerEl.classList.remove('hidden');
@@ -126,6 +130,24 @@ class GameBoard {
             this.player2InfoEl.querySelector('.player-name').textContent = msg.p2name;
         }
         
+        // Set timer display to --:-- and don't start timers yet
+        this.p1TimerEl.textContent = '--:--';
+        this.p2TimerEl.textContent = '--:--';
+        this.timersStarted = false;
+        
+        // Set initial turn display (assuming player 1/X starts)
+        this.currentTurnEl.textContent = "Player X's Turn";
+        this.player1InfoEl.className = "player-info active";
+        this.player2InfoEl.className = "player-info inactive";
+        
+        console.log('Opponent found:', msg);
+    }
+    
+    handleGameStart(msg) {
+        // Set the flag first, then update timers with server values and start them
+        this.timersStarted = true;
+        this.updateTimersFromServer(msg.p1_time, msg.p2_time, true);
+        
         console.log('Game started:', msg);
     }
     
@@ -134,8 +156,11 @@ class GameBoard {
             this.renderBoard(msg.board);
         }
         
-        // Update timers with server correction
-        this.updateTimersFromServer(msg.p1_time, msg.p2_time, msg.p1_move);
+        // Only update timers if they have been started
+        if (this.timersStarted) {
+            // Update timers with server correction
+            this.updateTimersFromServer(msg.p1_time, msg.p2_time, msg.p1_move);
+        }
         
         // Update UI state
         this.updateGameUI(msg.p1_move);
@@ -198,8 +223,10 @@ class GameBoard {
         // Update display immediately
         this.updateTimerDisplay();
         
-        // Start/restart the client-side timer
-        this.startTimer();
+        // Only start/restart the client-side timer if timers have been started
+        if (this.timersStarted) {
+            this.startTimer();
+        }
     }
     
     startTimer() {
@@ -241,8 +268,12 @@ class GameBoard {
     }
     
     updateTimerDisplay() {
-        this.p1TimerEl.textContent = this.formatTime(this.p1Time);
-        this.p2TimerEl.textContent = this.formatTime(this.p2Time);
+        // Only update timer display with actual values if timers have been started
+        if (this.timersStarted) {
+            this.p1TimerEl.textContent = this.formatTime(this.p1Time);
+            this.p2TimerEl.textContent = this.formatTime(this.p2Time);
+        }
+        // Otherwise keep showing --:-- (set in handleOpponentFound)
     }
     
     formatTime(milliseconds) {
@@ -375,6 +406,12 @@ class GameBoard {
     handleCellClick(miniIndex, cellIndex) {
         console.log(`Cell clicked: mini-board ${miniIndex}, cell ${cellIndex}`);
         console.log('Current boardToPlayIn:', this.boardToPlayIn);
+        
+        // Don't allow clicks if timers haven't started yet
+        if (!this.timersStarted) {
+            console.log('Click blocked: game has not started yet');
+            return;
+        }
         
         // Don't allow clicks on completed mini-boards
         const miniBoard = document.getElementById(`mini-board-${miniIndex}`);
