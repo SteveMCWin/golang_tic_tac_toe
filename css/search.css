@@ -1,0 +1,153 @@
+/* ===========================================
+   SEARCH PAGE SPECIFIC STYLES
+   =========================================== */
+
+.container {
+    max-width: 600px;
+    padding: var(--spacing-xl);
+}
+
+h1 {
+    margin-bottom: var(--spacing-xl);
+}
+
+/* ===========================================
+   SEARCH INPUT STYLES
+   =========================================== */
+.search-container {
+    margin-bottom: var(--spacing-xl);
+}
+
+.search-input-group {
+    display: flex;
+    gap: var(--spacing-sm);
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+#searchQuery {
+    flex: 1;
+    padding: var(--spacing-sm);
+    border: 2px solid var(--color-secondary);
+    border-radius: var(--border-radius);
+    background-color: var(--color-primary-light);
+    color: var(--text-primary);
+    font-size: 16px;
+    transition: border-color 0.2s ease;
+}
+
+#searchQuery:focus {
+    outline: none;
+    border-color: var(--color-accent);
+}
+
+#searchQuery::placeholder {
+    color: var(--text-muted);
+}
+
+.search-btn {
+    padding: var(--spacing-sm) var(--spacing-md);
+    min-width: 80px;
+}
+
+/* ===========================================
+   RESULTS STYLES
+   =========================================== */
+.results {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-xl);
+}
+
+.user-result {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-sm) var(--spacing-md);
+    background-color: var(--color-secondary);
+    color: var(--text-primary);
+    text-decoration: none;
+    border-radius: var(--border-radius);
+    font-weight: 500;
+    font-size: 16px;
+    transition: all 0.2s ease;
+    border: 2px solid transparent;
+    text-align: left;
+}
+
+.user-result:hover {
+    transform: translateY(-2px);
+    background-color: var(--color-secondary-light);
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+}
+
+.user-result:hover .user-avatar {
+    border-color: var(--color-accent);
+}
+
+.user-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 7px;
+    object-fit: cover;
+    border: 2px solid var(--color-secondary);
+    transition: border-color 0.2s ease;
+    flex-shrink: 0;
+}
+
+.user-name {
+    flex: 1;
+}
+
+/* ===========================================
+   MESSAGES
+   =========================================== */
+.message {
+    text-align: center;
+    padding: var(--spacing-md);
+    border-radius: var(--border-radius);
+    margin-bottom: var(--spacing-md);
+}
+
+.message.error {
+    background-color: rgba(255, 85, 85, 0.1);
+    color: #ff5555;
+    border: 1px solid rgba(255, 85, 85, 0.3);
+}
+
+.message.no-results {
+    background-color: var(--color-primary-light);
+    color: var(--text-secondary);
+    border: 1px solid var(--color-primary-lighter);
+}
+
+/* ===========================================
+   BACK LINK
+   =========================================== */
+.back-link {
+    text-align: center;
+}
+
+/* ===========================================
+   RESPONSIVE DESIGN
+   =========================================== */
+@media (max-width: 480px) {
+    .container {
+        padding: var(--spacing-lg) var(--spacing-md);
+    }
+    
+    .search-input-group {
+        flex-direction: column;
+        max-width: none;
+    }
+    
+    .search-btn {
+        min-width: auto;
+    }
+    
+    #searchQuery {
+        font-size: 16px; /* Prevents zoom on iOS */
+    }
+}

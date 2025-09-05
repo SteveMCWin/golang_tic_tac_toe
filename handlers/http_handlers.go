@@ -49,6 +49,16 @@ func templateFuncs() template.FuncMap {
 		"float64": func(a int) float64 {
 			return float64(a)
 		},
+		"substr": func(s string, start, length int) string {
+			if start < 0 || start >= len(s) {
+				return ""
+			}
+			end := start + length
+			if end > len(s) {
+				end = len(s)
+			}
+			return s[start:end]
+		},
 	}
 }
 
@@ -129,6 +139,9 @@ func SetUpRouter(db *models.DataBase, lb *models.LeaderBoard, hub *game.Hub) htt
 	}
 
 	router := gin.Default()
+
+	router.Static("/css", "./css")
+	router.Static("/js", "./js")
 
 	router.GET("/", HandleGetHome())
 	router.GET("/error-page", HandleGetErrorPage())
@@ -270,10 +283,10 @@ func HandleGetProfile(db *models.DataBase) func(c *gin.Context) { // displays us
 	return func(c *gin.Context) {
 
 		requesting_user_id := GetUserId(c)
-		if requesting_user_id == defs.NO_USER_ID {
-			c.Redirect(http.StatusPermanentRedirect, "/") // TODO: add a login page to redirect to
-			return
-		}
+		// if requesting_user_id == defs.NO_USER_ID {
+		// 	c.Redirect(http.StatusPermanentRedirect, "/") // TODO: add a login page to redirect to
+		// 	return
+		// }
 
 		user_id_param := c.Param("user_id")
 		user_id, err := strconv.Atoi(user_id_param)
@@ -290,6 +303,10 @@ func HandleGetProfile(db *models.DataBase) func(c *gin.Context) { // displays us
 			log.Println("Couldn't load user, error: ", err)
 			c.Redirect(http.StatusTemporaryRedirect, "/error-page")
 			return
+		}
+
+		if requesting_user_id != user_id {
+			this_user.Email = ""
 		}
 
 		c.HTML(http.StatusOK, "profile.html", this_user)
@@ -325,10 +342,15 @@ func HandleGetUserGames(db *models.DataBase) func(c *gin.Context) {
 	}
 }
 
-// HandleGetGameReplay
-// TODO
 func HandleGetGameReplay(db *models.DataBase) func(c *gin.Context) {
 	return func(c *gin.Context) {
+		user_id_param := c.Query("user_id")
+		user_id, err := strconv.Atoi(user_id_param)
+		if err != nil {
+			log.Println("Error getting the user id from usrl:", err)
+			c.Redirect(http.StatusTemporaryRedirect, "/error-page")
+			return
+		}
 
 		requesting_user_id := GetUserId(c)
 		if requesting_user_id == defs.NO_USER_ID {
@@ -354,7 +376,7 @@ func HandleGetGameReplay(db *models.DataBase) func(c *gin.Context) {
 
 		game.InitGameReplay(requesting_user_id, rec)
 
-		c.HTML(http.StatusOK, "replay.html", gin.H{csrf.TemplateTag: csrf.TemplateField(c.Request)})
+		c.HTML(http.StatusOK, "replay.html", gin.H{csrf.TemplateTag: csrf.TemplateField(c.Request), "user_id": user_id})
 	}
 }
 
@@ -494,7 +516,7 @@ func HandleGetDeleteProfile() func(c *gin.Context) {
 			return
 		}
 
-		c.HTML(http.StatusOK, "delete_account.html", gin.H{ "user_id": user_id, csrf.TemplateTag: csrf.TemplateField(c.Request) })
+		c.HTML(http.StatusOK, "delete_account.html", gin.H{"user_id": user_id, csrf.TemplateTag: csrf.TemplateField(c.Request)})
 	}
 }
 
@@ -525,7 +547,7 @@ func HandleDeleteProfile(db *models.DataBase) func(c *gin.Context) {
 
 		err = db.DeleteUser(user_id)
 		if err != nil {
-			log.Println("Error deleting user profile")
+			log.Println("Error deleting user profile:", err)
 			c.JSON(http.StatusInternalServerError, gin.H{})
 			return
 		}

@@ -1,0 +1,62 @@
+/* ===========================================
+   HUB SPECIFIC STYLES
+   =========================================== */
+
+.container {
+    max-width: 500px;
+    padding: var(--spacing-xl);
+}
+
+h1 {
+    margin-bottom: var(--spacing-xl);
+}
+
+/* ===========================================
+   GAME MODES GRID
+   =========================================== */
+.game-modes {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-xl);
+}
+
+.game-modes .btn {
+    width: 100%;
+    min-height: 60px;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+/* ===========================================
+   BACK LINK
+   =========================================== */
+.back-link {
+    text-align: center;
+}
+
+/* ===========================================
+   RESPONSIVE DESIGN
+   =========================================== */
+@media (max-width: 600px) {
+    .game-modes {
+        grid-template-columns: 1fr;
+        gap: var(--spacing-md);
+    }
+}
+
+@media (max-width: 480px) {
+    .container {
+        padding: var(--spacing-lg) var(--spacing-md);
+    }
+    
+    .game-modes .btn {
+        min-height: 45px;
+        font-size: 14px;
+    }
+    
+    .normal-modes h3,
+    .increment-modes h3 {
+        font-size: 1.1rem;
+    }
+}

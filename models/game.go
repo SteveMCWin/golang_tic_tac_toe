@@ -1,6 +1,7 @@
 package models
 
 import (
+	"log"
 	"time"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -82,9 +83,12 @@ func (Db *DataBase) UpdateRecordsDeletedUser(user_id int) error {
 		return err
 	}
 
-	statement_update_records_p1 := "update records set p1 = ? where p1 = ?"
-	statement_update_records_p2 := "update records set p2 = ? where p2 = ?"
+	defer tx.Rollback()
 
+	statement_update_records_p1 := "update game_records set p1 = ? where p1 = ?"
+	statement_update_records_p2 := "update game_records set p2 = ? where p2 = ?"
+
+	log.Println("Preapring stmt1")
 	stmt_p1, err := tx.Prepare(statement_update_records_p1)
 	if err != nil {
 		return err
@@ -92,6 +96,7 @@ func (Db *DataBase) UpdateRecordsDeletedUser(user_id int) error {
 
 	defer stmt_p1.Close()
 
+	log.Println("Preapring stmt2")
 	stmt_p2, err := tx.Prepare(statement_update_records_p2)
 	if err != nil {
 		return err
@@ -99,29 +104,33 @@ func (Db *DataBase) UpdateRecordsDeletedUser(user_id int) error {
 
 	defer stmt_p2.Close()
 
+	log.Println("Executing stmt1")
 	_, err = stmt_p1.Exec(defs.DELETED_USER_ID, user_id)
 	if err != nil {
 		return err
 	}
+	log.Println("Executing stmt2")
 	_, err = stmt_p2.Exec(defs.DELETED_USER_ID, user_id)
-	if err != nil {
-		return err
-	}
-
-	err = Db.DeleteUnneededRecords()
 	if err != nil {
 		return err
 	}
 
 	err = tx.Commit()
 
+	log.Println("Going into DeleteUnneededRecords")
+	err = Db.DeleteUnneededRecords()
+	if err != nil {
+		return err
+	}
+
 	return err
 }
 
 func (Db *DataBase) DeleteUnneededRecords() error {
-	statement := "delete from records where p1 in (?, ?) and p2 in (?, ?)"
+	statement := "delete from game_records where p1 in (?, ?) and p2 in (?, ?)"
 	stmt, err := Db.Data.Prepare(statement)
 	if err != nil {
+		log.Println("Error preparing statement in DeleteUnneededRecords")
 		return err
 	}
 
@@ -146,6 +155,8 @@ func (Db *DataBase) ReadGameRecordsForUser(user_id int) ([]*GameRecord, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	defer rows.Close()
 
 	for rows.Next() {
 		rec := &GameRecord{

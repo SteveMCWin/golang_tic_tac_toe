@@ -118,6 +118,8 @@ func (g *Game) Run(db *models.DataBase) {
 		}
 	}()
 
+	g.updateBoardVisuals(defs.MSG_TYPE_FOUND_OPONENT)
+
 	go func() {
 		log.Println("GAME STARTS IN")
 		log.Println("3")
@@ -280,17 +282,29 @@ func (g *Game) parseGameStateToJSON(msg_type string) []byte { // note that the b
 	var err error
 
 	switch msg_type {
-	case defs.MSG_TYPE_START:
+	case defs.MSG_TYPE_FOUND_OPONENT:
 		msg := struct {
-			Type   string `json:"type"`
-			P1Name string `json:"p1name"`
-			P2Name string `json:"p2name"`
+			Type    string `json:"type"`
+			P1Name  string `json:"p1name"`
+			P2Name  string `json:"p2name"`
 		}{
-			Type:   msg_type,
-			P1Name: g.players[0].u.UserName,
-			P2Name: g.players[1].u.UserName,
+			Type:    msg_type,
+			P1Name:  g.players[0].u.UserName,
+			P2Name:  g.players[1].u.UserName,
 		}
 		
+		res, err = json.Marshal(msg)
+	case defs.MSG_TYPE_START:
+		msg := struct {
+			Type    string `json:"type"`
+			P1_time int64  `json:"p1_time"`
+			P2_time int64  `json:"p2_time"`
+		}{
+			Type:    msg_type,
+			P1_time: g.players[0].timer.TimeLeft.Milliseconds(),
+			P2_time: g.players[1].timer.TimeLeft.Milliseconds(),
+		}
+
 		res, err = json.Marshal(msg)
 	case defs.MSG_TYPE_STATE:
 		var board []string
@@ -313,6 +327,7 @@ func (g *Game) parseGameStateToJSON(msg_type string) []byte { // note that the b
 			P1_time        int64    `json:"p1_time"`
 			P2_time        int64    `json:"p2_time"`
 			P1_move        bool     `json:"p1_move"`
+			BoardToPlayIn  byte     `json:"board_to_play_in"`
 		}{
 			Type:           msg_type,
 			Board:          board,
@@ -320,6 +335,7 @@ func (g *Game) parseGameStateToJSON(msg_type string) []byte { // note that the b
 			P1_time:        g.players[0].timer.TimeLeft.Milliseconds(),
 			P2_time:        g.players[1].timer.TimeLeft.Milliseconds(),
 			P1_move:        g.p1_move,
+			BoardToPlayIn:  g.b.GetNextMiniBoard(),
 		}
 
 		for _, b := range g.b.Boards {
@@ -329,10 +345,10 @@ func (g *Game) parseGameStateToJSON(msg_type string) []byte { // note that the b
 		res, err = json.Marshal(msg)
 	case defs.MSG_TYPE_FINISH:
 		msg := struct {
-			Type string `json:"type"`
-			Winner byte `json:"winner"`
-		} {
-			Type: msg_type,
+			Type   string `json:"type"`
+			Winner byte   `json:"winner"`
+		}{
+			Type:   msg_type,
 			Winner: g.b.Result,
 		}
 

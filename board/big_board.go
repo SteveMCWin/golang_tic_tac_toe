@@ -44,16 +44,20 @@ func (bb *BigBoard) Initialize() {
 	bb.RedoStack = stack.CreateStack[Move]()
 }
 
+func (bb *BigBoard) GetNextMiniBoard() byte {
+	return bb.boardToPlayIn
+}
+
 // MakeMove updates the board corresponding to the Move passed in, if valid, and determines the next mini board to be played in.
 // Note that on every MakeMove call, the history of the board gets updated.
 // If the move made results in a mini board being won by a player, MakeMove checks if either player won the big board as well.
 func (bb *BigBoard) MakeMove(m Move) error {
 
-	if m.BigPos >= '0' && m.BigPos <= '9' { // the positions passed in are (probably) ascii characters representing digits
+	if m.BigPos >= '0' && m.BigPos < '9' { // the positions passed in are (probably) ascii characters representing digits
 		m.BigPos = m.BigPos - '0'
 	}
 
-	if m.SmallPos >= '0' && m.SmallPos <= '9' {
+	if m.SmallPos >= '0' && m.SmallPos < '9' {
 		m.SmallPos = m.SmallPos - '0'
 	}
 
@@ -99,8 +103,6 @@ func (bb *BigBoard) UndoLastMove() error {
 		return nil
 	}
 
-	// log.Println("Undo Move:", m)
-
 	if m.BigPos >= '0' && m.BigPos <= '9' { // the positions passed in are (probably) ascii characters representing digits
 		m.BigPos = m.BigPos - '0'
 	}
@@ -115,7 +117,6 @@ func (bb *BigBoard) UndoLastMove() error {
 	}
 
 	bb.RedoStack.Push(*m)
-	// NOTE: Should change it so that the top of history is pushed to a redo stack or something
 	bb.History.Pop() // not checking if pop returns ok since it will always do so if it got to this point
 
 	bb.Boards[m.BigPos].UndoMove(*m)
@@ -128,7 +129,6 @@ func (bb *BigBoard) UndoLastMove() error {
 	} else {
 		bb.boardToPlayIn = prev_m.SmallPos
 	}
-
 
 	return nil
 }

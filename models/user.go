@@ -34,6 +34,9 @@ func (Db *DataBase) ReadUser(user_id int) (*User, error) {
 	if user_id == defs.NO_USER_ID {
 		usr = &User{UserName: "Guest", Elo: defs.STARTING_ELO}
 		return usr, nil
+	} else if user_id == defs.DELETED_USER_ID {
+		usr = &User{UserName: "Deleted User"}
+		return usr, nil
 	}
 
 	err := Db.Data.QueryRow("select username, email, avatar_url, provider, games_played, games_won, elo from users where id = ?", user_id).Scan(
@@ -99,6 +102,7 @@ func (Db *DataBase) DeleteUser(user_id int) error {
 		return err
 	}
 
+	log.Println("Going into UpdateRecordsDeletedUser")
 	err = Db.UpdateRecordsDeletedUser(user_id)
 	return err
 }
@@ -142,8 +146,6 @@ func (Db *DataBase) UpdateGameStats(usr *User) error { // called at the end of t
 }
 
 func (Db *DataBase) SearchForUsers(username string, requesting_user_id int) ([]User, error) {
-	log.Println("Started searching for users!!")
-	log.Println("Username searching for:", username)
 	rows, err := Db.Data.Query("select id, username, avatar_url from spellfix_users inner join users on word = username where word match ? and id != ?", username, requesting_user_id)
 	if err != nil {
 		return nil, err
