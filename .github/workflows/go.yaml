@@ -20,6 +20,7 @@ jobs:
 
     - name: Install SQLite and build spellfix extension
       run: |
+        mkdir extensions
         sudo apt-get update
         sudo apt-get install -y sqlite3 libsqlite3-dev build-essential curl
         curl -L https://raw.githubusercontent.com/sqlite/sqlite/version-3.46.0/ext/misc/spellfix.c -o spellfix.c
