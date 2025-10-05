@@ -5,6 +5,8 @@ on:
     workflows: ["Go"]
     types:
       - completed
+    branches:
+      - master
 
 jobs:
   deploy:
