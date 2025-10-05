@@ -1,6 +1,6 @@
 services:
   app:
-    image: stevemcwin/tic_tac_toe.fun
+    image: stevemcwin/tic_tac_toe.fun:latest
     hostname: tic_tac_toe.fun
     volumes:
       - ./data:/app/data
