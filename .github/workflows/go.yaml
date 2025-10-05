@@ -27,13 +27,13 @@ jobs:
         gcc -shared -fPIC -I/usr/include -o extensions/spellfix.so spellfix.c -lsqlite3
         rm spellfix.c
 
-    - name: Setup test database
-      run: |
-        touch database.db
-        sqlite3 data/database.db < data/create_user_table.sql
-        sqlite3 data/database.db < data/create_game_table.sql
-        sqlite3 data/database.db < data/create_sessions_table.sql
-        sqlite3 data/database.db < data/create_spellfix_user_table.sql
+    # - name: Setup test database
+    #   run: |
+    #     touch database.db
+    #     sqlite3 data/database.db < data/create_user_table.sql
+    #     sqlite3 data/database.db < data/create_game_table.sql
+    #     sqlite3 data/database.db < data/create_sessions_table.sql
+    #     sqlite3 data/database.db < data/create_spellfix_user_table.sql
 
     - name: Build
       run: go build -v ./...

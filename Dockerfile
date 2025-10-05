@@ -23,13 +23,6 @@ RUN go mod download
 
 COPY . ./
 
-# set up the database
-RUN touch data/database.db
-RUN sqlite3 data/database.db < data/create_user_table.sql
-RUN sqlite3 data/database.db < data/create_spellfix_user_table.sql
-RUN sqlite3 data/database.db < data/create_sessions_table.sql
-RUN sqlite3 data/database.db < data/create_game_table.sql
-
 RUN CGO_ENABLED=1 GOOS=linux go build -o tic_tac_toe.fun
 
 EXPOSE 5000
