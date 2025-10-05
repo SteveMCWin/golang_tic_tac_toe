@@ -29,13 +29,11 @@ jobs:
 
     - name: Setup test database
       run: |
-        # cd data
         touch database.db
         sqlite3 data/database.db < data/create_user_table.sql
         sqlite3 data/database.db < data/create_game_table.sql
         sqlite3 data/database.db < data/create_sessions_table.sql
         sqlite3 data/database.db < data/create_spellfix_user_table.sql
-        # cd ..
 
     - name: Build
       run: go build -v ./...
