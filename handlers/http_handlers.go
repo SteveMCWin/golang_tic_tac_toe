@@ -76,10 +76,7 @@ func templateFuncs() template.FuncMap {
 // It sets up the goth package for OAuth 2.0, and also wraps the default gin handler with csrf protection and session management.
 func SetUpRouter(db *models.DataBase, lb *models.LeaderBoard, hub *game.Hub) http.Handler {
 
-	/* err :=  */godotenv.Load() // loads data like client secrets from the .env file in the project root dir
-	// if err != nil {
-	// 	log.Fatal(".env file failed to load!")
-	// }
+	godotenv.Load() // loads data like client secrets from the .env file in the project root dir
 
 	domain := os.Getenv("DOMAIN")
 	csrf_key := os.Getenv("CSRF_KEY")
