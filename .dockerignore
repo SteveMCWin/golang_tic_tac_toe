@@ -1,3 +1,4 @@
 /data/*.db
 /tic_tac_toe.fun
 /extensions/*.so
+.env
